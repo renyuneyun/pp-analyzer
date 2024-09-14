@@ -1,5 +1,7 @@
 import json
 import numpy as np
+from pprint import pprint
+from .external.json_parse import try_parse_json_object
 
 
 def precision_accuracy_f1(expected, predicted):
@@ -12,7 +14,7 @@ def precision_accuracy_f1(expected, predicted):
     # return sklm.precision_recall_fscore_support(expected, predicted)[:3]
 
 
-def calc_statistics(saved_queries):
+def calc_statistics(saved_queries, try_heuristic_parse=True):
     result_score_list = []
     empty_result_score_list = []
     non_empty_result_score_list = []
@@ -22,8 +24,17 @@ def calc_statistics(saved_queries):
         try:
             model_output_parsed = json.loads(model_output)
         except json.JSONDecodeError as e:
-            failed[i] = (model_output, correct_output)
-            continue
+            really_failed = True
+            if try_heuristic_parse:
+                try:
+                    _, model_output_parsed = try_parse_json_object(model_output)
+                    if model_output_parsed is not None:
+                        really_failed = False
+                except SyntaxError as e:
+                    pass
+            if really_failed:
+                failed[i] = (model_output, correct_output)
+                continue
         correct_output_parsed = json.loads(correct_output)
         try:
             result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed)
@@ -39,8 +50,8 @@ def calc_statistics(saved_queries):
     return result_score_list, non_empty_result_score_list, empty_result_score_list, failed
 
 
-def calc_and_print_statistics(desc, saved_queries):
-    result_score_list, non_empty_result_score_list, empty_result_score_list, failed = calc_statistics(saved_queries)
+def calc_and_print_statistics(desc, saved_queries, try_heuristic_parse=True):
+    result_score_list, non_empty_result_score_list, empty_result_score_list, failed = calc_statistics(saved_queries, try_heuristic_parse=try_heuristic_parse)
 
     print(f"Stat for eval with desc: {desc}")
     print(f"  {len(result_score_list)} valid datapoints, avg. precission, recall, f1:", np.mean(result_score_list, axis=0))
