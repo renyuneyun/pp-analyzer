@@ -239,13 +239,3 @@ def load_saved_llm_queries(dir_name=None):
             else:
                 queries.append(data)
     return desc, queries
-
-
-def precision_accuracy_f1(expected, predicted):
-    expected = set(expected)
-    predicted = set(predicted)
-    precision = len(expected.intersection(predicted)) / len(predicted) if predicted else 0 if expected else 1
-    recall = len(expected.intersection(predicted)) / len(expected) if expected else 0 if predicted else 1
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0 if expected or predicted else 1
-    return precision, recall, f1
-    # return sklm.precision_recall_fscore_support(expected, predicted)[:3]
