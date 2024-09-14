@@ -5,12 +5,14 @@ import datetime
 from tqdm import tqdm
 from pathlib import Path
 from dotenv import load_dotenv
+import openai
 from openai import OpenAI
 from . import annotation_utils as a_utils
 from .message_templates import (
     USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION,
     USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2,
 )
+from .utils import path_default
 
 load_dotenv()
 client = OpenAI()
@@ -154,18 +156,20 @@ def fine_tune_with_data(all_data, training_set_indices, validation_set_indices, 
     return job_desc_dir, fine_tune_job, test_set
 
 
-def get_fine_tune_job_id(job_desc_dir=F_LAST_FINE_TUNE):
-    if isinstance(job_desc_dir, str):
-        job_desc_dir = OUT_PATH / job_desc_dir
+def pd(some_dir):
+    return path_default(some_dir, OUT_PATH)
+
+
+@pd(F_LAST_FINE_TUNE)
+def get_fine_tune_job_id(job_desc_dir=None):
     with open(job_desc_dir / 'job_desc.json') as f:
         job_desc = json.load(f)
     fine_tune_job_id = job_desc['job_id']
     return fine_tune_job_id
 
 
-def update_fine_tune_job_info(job_desc_dir=F_LAST_FINE_TUNE, fine_tune_job_id=None):
-    if isinstance(job_desc_dir, str):
-        job_desc_dir = OUT_PATH / job_desc_dir
+@pd(F_LAST_FINE_TUNE)
+def update_fine_tune_job_info(job_desc_dir=None, fine_tune_job_id=None):
     if not fine_tune_job_id:
         fine_tune_job_id = get_fine_tune_job_id(job_desc_dir)
     stat = client.fine_tuning.jobs.retrieve(fine_tune_job_id)
@@ -177,9 +181,8 @@ def update_fine_tune_job_info(job_desc_dir=F_LAST_FINE_TUNE, fine_tune_job_id=No
     return job_info_file, stat
 
 
-def await_fine_tune_finish_and_clean_up(job_desc_dir: str|Path =F_LAST_FINE_TUNE, wait_for_job_completion=True):
-    if isinstance(job_desc_dir, str):
-        job_desc_dir = OUT_PATH / job_desc_dir
+@pd(F_LAST_FINE_TUNE)
+def await_fine_tune_finish_and_clean_up(job_desc_dir=None, wait_for_job_completion=True):
     with open(job_desc_dir / 'job_desc.json') as f:
         job_desc = json.load(f)
         
@@ -208,9 +211,8 @@ def await_fine_tune_finish_and_clean_up(job_desc_dir: str|Path =F_LAST_FINE_TUNE
     return stat
 
 
-def reconstruct_data_sets(job_desc_dir=F_LAST_FINE_TUNE):
-    if isinstance(job_desc_dir, str):
-        job_desc_dir = OUT_PATH / job_desc_dir
+@pd(F_LAST_FINE_TUNE)
+def reconstruct_data_sets(job_desc_dir=None):
     with open(job_desc_dir / F_JOB_DESC) as f:
         job_desc = json.load(f)
         
@@ -224,7 +226,8 @@ def reconstruct_data_sets(job_desc_dir=F_LAST_FINE_TUNE):
     return training_set, validation_set, test_set
 
 
-def load_eval_info(job_desc_dir=F_LAST_FINE_TUNE):
+@pd(F_LAST_FINE_TUNE)
+def load_eval_info(job_desc_dir=None):
     training_set, validation_set, test_set = reconstruct_data_sets(job_desc_dir)
     
     stat = await_fine_tune_finish_and_clean_up(job_desc_dir)
@@ -275,7 +278,8 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None):
     return dir_name, model_output_list
 
 
-def load_saved_llm_queries(dir_name=F_LAST_EVAL):
+@pd(F_LAST_EVAL)
+def load_saved_llm_queries(dir_name=None):
     dir_path = OUT_PATH / dir_name
     desc = None
     queries = []
