@@ -1,3 +1,6 @@
+SYSTEM_MESSAGE = 'You are an annotation expert. You will be given a segment of a privacy policy of a web or mobile application, and will be asked to annotate entities in it.'
+
+
 USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION = '''Please annotate the given segment of privacy policy for data entities, and adhere to the following guidelines:
 
 IMPORTANT: Filtering Out General Phrases
@@ -38,6 +41,7 @@ Here is the privacy policy segment to annotate:
 
 {segment}
 '''
+
 
 USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2 = '''Please annotate the given sentence of the given segment of privacy policy for data entities, and adhere to the following guidelines:
 
@@ -99,6 +103,7 @@ In the following prompt, you will receive a segment (between `<segment>...</segm
 The category must be STRICTLY of the categories in the "category" column of the attached csv file.
 Return the classifications as a JSON array of entries, matching the order of the given phrases.
 '''
+
 
 USER_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION = '''Please classify the phrases (given later) in the following segment:
 

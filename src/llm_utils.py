@@ -8,10 +8,6 @@ from dotenv import load_dotenv
 import openai
 from openai import OpenAI
 from . import annotation_utils as a_utils
-from .message_templates import (
-    USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION,
-    USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2,
-)
 from .utils import path_default
 
 load_dotenv()
@@ -25,56 +21,6 @@ F_EVAL_DESC = 'desc.json' # Contains the description of the evaluation job
 
 F_LAST_EVAL = 'last_evaluation'
 F_LAST_FINE_TUNE = 'last_fine_tune'
-
-SYSTEM_MESSAGE = 'You are an annotation expert. You will be given a segment of a privacy policy of a web or mobile application, and will be asked to annotate entities in it.'
-
-
-def as_training_data_for_data_span_of_segment(data_entities_of_segments):
-    # Prompt is adpted and very briefly modified based on Vlad's original prompt. It may not be the best one as usage is different.
-    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION
-    data_template = {
-        "messages": [
-            {"role": "system", "content": "You are an annotation expert. You will be given a segment of a privacy policy of a web or mobile application, and will be asked to annotate entities in it."},
-            {"role": "user", "content": None},
-            {"role": "assistant", "content": None},
-        ]}
-    
-    data_list = []
-
-    for segment in data_entities_of_segments:
-        prompt = prompt_template.format(segment=segment["segment"])
-        answers = segment["entities"]
-        # Keep only the text in answers
-        answers = [a["text"] for a in answers]
-        data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
-        data_list.append(data)
-    return data_list
-
-
-def as_training_data_for_data_span_of_sentence(data_entities_of_sentences):
-    # Prompt is adpted and very briefly modified based on Vlad's original prompt. It may not be the best one as usage is different.
-    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2
-    data_template = {
-        "messages": [
-            {"role": "system", "content": "You are an annotation expert. You will be given a segment of a privacy policy of a web or mobile application, and will be asked to annotate entities in it."},
-            {"role": "user", "content": None},
-            {"role": "assistant", "content": None},
-        ]}
-    
-    data_list = []
-
-    for segment in data_entities_of_sentences:
-        prompt = prompt_template.format(**segment)
-        answers = segment["entities"]
-        # Keep only the text in answers
-        answers = [a["text"] for a in answers]
-        data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
-        data_list.append(data)
-    return data_list
 
 
 def fine_tune_with_data(all_data, training_set_indices, validation_set_indices, annotation_data_path, annotation_data_def, basemodel='gpt-4o-mini-2024-07-18', fine_tune_args={}):
