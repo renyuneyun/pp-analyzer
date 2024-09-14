@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "fine-tune"
+version = "0.1.0"
+description = ""
+authors = ["renyuneyun (Rui Zhao) <renyuneyun@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+jupyter = "^1.1.1"
+pybrat = "^0.1.7"
+openai = "^1.44.1"
+python-dotenv = "^1.0.1"
+tiktoken = "^0.7.0"
+numpy = "^2.1.1"
+pydantic = "^2.9.1"
+scikit-learn = "^1.5.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
