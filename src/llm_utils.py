@@ -6,8 +6,8 @@ from tqdm import tqdm
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
-import annotation_utils as a_utils
-from message_templates import (
+from . import annotation_utils as a_utils
+from .message_templates import (
     USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION,
     USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2,
 )

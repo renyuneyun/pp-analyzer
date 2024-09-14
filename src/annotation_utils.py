@@ -109,7 +109,7 @@ def load_data_entities_of_segments(brat_data_path, data_def_file):
     return data_entities
 
 
-def load_data_entities_of_sentence(brat_data_path, data_def_file):
+def load_data_entities_of_sentences(brat_data_path, data_def_file):
     brat = BratParser(error="ignore")
     annotations = brat.parse(brat_data_path)
     data_entities = get_data_entities_of_sentences(annotations, data_def_file)
