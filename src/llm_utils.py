@@ -106,9 +106,11 @@ def fine_tune_with_data(all_data, training_set_indices, validation_set_indices, 
 
     with open(training_data_file, 'w') as f:
         f.write(to_jsonl(training_set))
+        f.flush()
         
     with open(validation_data_file, 'w') as f:
         f.write(to_jsonl(validation_set))
+        f.flush()
         
     us('Uploading training and validation data files...')
         
