@@ -27,7 +27,7 @@ if F_DATA_CATEGORY_DEFINITION:
     with open(F_DATA_CATEGORY_DEFINITION, "r") as f:
         _data_category_definitions_text = f.read()
     _data_category_definitions = get_data_category_definitions(F_DATA_CATEGORY_DEFINITION)
-        
+
 if F_DATA_CATEGORY_HIERARCHY:
     with open(F_DATA_CATEGORY_HIERARCHY, "r") as f:
         _data_category_hierarchy_text = f.read()
@@ -42,7 +42,7 @@ def as_training_data_for_data_span_of_segment(data_entities_of_segments):
             {"role": "user", "content": None},
             {"role": "assistant", "content": None},
         ]}
-    
+
     data_list = []
 
     for segment in data_entities_of_segments:
@@ -65,7 +65,7 @@ def as_training_data_for_data_span_of_sentence(data_entities_of_sentences):
             {"role": "user", "content": None},
             {"role": "assistant", "content": None},
         ]}
-    
+
     data_list = []
 
     for segment in data_entities_of_sentences:
@@ -85,7 +85,7 @@ def as_training_data_for_data_classification_of_segment(data_entities_of_segment
     prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION
     data_template = {
         "messages": [
-            {"role": "system", "content": 
+            {"role": "system", "content":
                 SYSTEM_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION.format(
                     hierarchy=_data_category_hierarchy_text,
                     definitions=_data_category_definitions_text,
@@ -112,9 +112,9 @@ def as_training_data_for_data_classification_of_segment_gradual(data_entities_of
         level = [level]
 
     prompt_template = USER_MESSAGE_TEMPLATE_DATA_CATEGORY_CLASSIFICATION_GRADUAL
-    
+
     data_list = []
-        
+
     for l in level:
         category_string = '\n'.join([
             f"{category}, {_data_category_definitions[category]}"
@@ -122,7 +122,7 @@ def as_training_data_for_data_classification_of_segment_gradual(data_entities_of
             ]),  #Level = 0
         data_template = {
             "messages": [
-                {"role": "system", "content": 
+                {"role": "system", "content":
                     SYSTEM_MESSAGE_TEMPLATE_DATA_CATEGORY_CLASSIFICATION_GRADUAL.format(
                         categories=category_string
                     )},

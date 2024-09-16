@@ -46,7 +46,7 @@ def calc_statistics(saved_queries, try_heuristic_parse=True):
             non_empty_result_score_list.append(result_score)
         else:
             empty_result_score_list.append(result_score)
-            
+
     return result_score_list, non_empty_result_score_list, empty_result_score_list, failed
 
 

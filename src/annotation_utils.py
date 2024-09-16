@@ -7,8 +7,8 @@ def get_data_entity_types(data_def_file):
         next(reader)
         for line in reader:
             yield line[0]
-            
-            
+
+
 def get_data_category_hierarchy(data_category_hierarchy_file):
     '''
     The data category hierarchy contains multiple lines, each representing one category; the number of indents (`\t`) at the beginning of a line indicates the level of the category.
@@ -30,10 +30,10 @@ def get_data_category_hierarchy(data_category_hierarchy_file):
             l = l[stack[i]]
         l[name] = {}
         stack = stack[:level] + [name]
-            
+
     return res
-                
-        
+
+
 def get_data_category_definitions(data_category_definition_file):
     '''
     The data category definition is a CSV file with two columns: category, definition.
@@ -85,7 +85,7 @@ def get_segment_type_entities(annotations, types):
     '''
     Get all text spans that are entities (of the specified types) in the same segment, and put them together.
     For example, the types can be data types, and this function gets all data entities, organised by segments.
-    Output structure is: 
+    Output structure is:
     [
         {
             "segment": segment_text,
@@ -117,7 +117,7 @@ def get_sentence_type_entities(annotations, types):
     '''
     Get all text spans that are entities (of the specified types) in the same sentence, and put them together.
     For example, the types can be data types, and this function gets all data entities, organised by sentences, then segments.
-    Output structure is: 
+    Output structure is:
     [
         {
             "segment": segment_text,
@@ -134,7 +134,7 @@ def get_sentence_type_entities(annotations, types):
     '''
     def is_within_sentence(span, sentence_span):
         return span.start >= sentence_span[0] and span.end <= sentence_span[1]
-    
+
     res = {}
     for x in annotations:
         segment = x.text
@@ -162,7 +162,7 @@ def get_data_entities_of_segments(annotations, data_def_file):
     data_types = list(get_data_entity_types(data_def_file))
 
     data_entities = get_segment_type_entities(annotations, data_types)
-    
+
     return data_entities
 
 
@@ -170,7 +170,7 @@ def get_data_entities_of_sentences(annotations, data_def_file):
     data_types = list(get_data_entity_types(data_def_file))
 
     data_entities = get_sentence_type_entities(annotations, data_types)
-    
+
     return data_entities
 
 
