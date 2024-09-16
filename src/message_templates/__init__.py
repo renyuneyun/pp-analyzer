@@ -117,3 +117,9 @@ The phrases to classify are:
 {phrases}
 </phrases>
 '''
+
+
+from .data_category_classification_gradual import (
+    SYSTEM_MESSAGE_TEMPLATE as SYSTEM_MESSAGE_TEMPLATE_DATA_CATEGORY_CLASSIFICATION_GRADUAL,
+    USER_MESSAGE_TEMPLATE as USER_MESSAGE_TEMPLATE_DATA_CATEGORY_CLASSIFICATION_GRADUAL,
+)

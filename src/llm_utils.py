@@ -186,7 +186,7 @@ def load_eval_info(job_desc_dir=None):
     return training_set, validation_set, test_set, fine_tuned_model_id
 
 
-def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc=None):
+def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc=None, batch=True):
     '''
     Query the LLM, and also automatically saves the responses in case needed further
 
