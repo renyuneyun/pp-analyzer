@@ -57,5 +57,5 @@ def calc_and_print_statistics(desc, saved_queries, try_heuristic_parse=True):
     print(f"  {len(result_score_list)} valid datapoints, avg. precission, recall, f1:", np.mean(result_score_list, axis=0))
     print(f"  {len(non_empty_result_score_list)} (ought to be) non-empty datapoints, avg. precission, recall, f1:", np.mean(non_empty_result_score_list, axis=0))
     print(f"  {len(empty_result_score_list)} (ought to be) empty datapoints, avg. precission, recall, f1:", np.mean(empty_result_score_list, axis=0))
-    print(f"  {len(failed)} datapoints are not valid JSON")
+    print(f"  {len(failed)} datapoints are not valid (e.g. not JSON; malformed model output)")
     print("  ", end=''), pprint(failed)
