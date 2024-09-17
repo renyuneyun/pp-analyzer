@@ -14,6 +14,21 @@ def precision_accuracy_f1(expected, predicted):
     # return sklm.precision_recall_fscore_support(expected, predicted)[:3]
 
 
+def heuristic_extract_data_entities(parsed_model_output):
+    extracted_output = []
+    for obj in parsed_model_output:
+        if isinstance(obj, str):
+            extracted_output.append(obj)
+        else:
+            if 'data_entity' in obj:
+                extracted_output.append(obj['data_entity'])
+            elif 'text' in obj:
+                extracted_output.append(obj['text'])
+            else:
+                extracted_output.append(obj)
+    return extracted_output
+
+
 def calc_statistics(saved_queries, try_heuristic_parse=True):
     result_score_list = []
     empty_result_score_list = []
@@ -35,6 +50,8 @@ def calc_statistics(saved_queries, try_heuristic_parse=True):
             if really_failed:
                 failed[i] = (model_output, correct_output)
                 continue
+        if try_heuristic_parse:
+            model_output_parsed = heuristic_extract_data_entities(model_output_parsed)
         correct_output_parsed = json.loads(correct_output)
         try:
             result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed)
