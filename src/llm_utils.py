@@ -85,6 +85,15 @@ def fine_tune_with_data(all_data, training_set_indices, validation_set_indices, 
         'model': basemodel,
         'training_file': training_data_remote_file.id,
         'validation_file': validation_data_remote_file.id,
+        "integrations": [
+            {
+                "type": "wandb",
+                "wandb": {
+                    "project": "renyuneyun-university-of-oxford",
+                    "tags": ["project:tag", "lineage"]
+                }
+            }
+        ],
         **fine_tune_args,
     }
 
@@ -305,6 +314,8 @@ def wait_for_batch_job_finish(batch_job_id):
 def _retrieve_batch_job_results(batch_job):
     if isinstance(batch_job, str):
         batch_job = wait_for_batch_job_finish(batch_job)
+    else:
+        batch_job = wait_for_batch_job_finish(batch_job.id)
     output_file_id = batch_job.output_file_id
     file_response = client.files.content(output_file_id)
     return file_response.text
