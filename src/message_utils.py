@@ -6,6 +6,7 @@ import os
 from .message_templates import (
     SYSTEM_MESSAGE,
     USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION,
+    USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_1_1,
     USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2,
     SYSTEM_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION,
     USER_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION,
@@ -36,6 +37,29 @@ if F_DATA_CATEGORY_HIERARCHY:
 
 def as_training_data_for_data_span_of_segment(data_entities_of_segments):
     prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION
+    data_template = {
+        "messages": [
+            {"role": "system", "content": SYSTEM_MESSAGE},
+            {"role": "user", "content": None},
+            {"role": "assistant", "content": None},
+        ]}
+
+    data_list = []
+
+    for segment in data_entities_of_segments:
+        prompt = prompt_template.format(segment=segment["segment"])
+        answers = segment["entities"]
+        # Keep only the text in answers
+        answers = [a["text"] for a in answers]
+        data = deepcopy(data_template)
+        data["messages"][1]["content"] = prompt
+        data["messages"][2]["content"] = json.dumps(answers)
+        data_list.append(data)
+    return data_list
+
+
+def as_training_data_for_data_span_of_segment_1_1(data_entities_of_segments):
+    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_1_1
     data_template = {
         "messages": [
             {"role": "system", "content": SYSTEM_MESSAGE},
