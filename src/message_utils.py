@@ -92,7 +92,7 @@ def as_training_data_for_data_classification_of_segment_gradual(data_entities_of
         category_string = '\n'.join([
             f"{category}, {_data_category_definitions[category]}"
             for category in _data_category_hierarchy.keys()
-            ]),  #Level = 0
+            ])  #Level = 0
         data_template = {
             "messages": [
                 {"role": "system", "content":
