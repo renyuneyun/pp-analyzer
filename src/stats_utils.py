@@ -46,6 +46,10 @@ def heuristic_extract_data_entities(parsed_model_output):
                 extracted_output.append(obj['data_entity'])
             elif 'context' in obj and 'data_entity' in obj:  # gpt-4o-mini-2024-07-18
                 extracted_output.append(obj['data_entity'])
+            elif 'context' in obj and 'purpose' in obj:  # gpt-4o
+                extracted_output.append(obj['purpose'])
+            elif 'type' in obj and 'text' in obj:  # gpt-4o
+                extracted_output.append(obj['text'])
             elif 'text' in obj:
                 extracted_output.append(obj['text'])
             elif 'type' in obj and 'dataEntity' in obj:  # Spark 4.0 Ultra

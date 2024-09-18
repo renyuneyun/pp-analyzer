@@ -189,3 +189,26 @@ def as_training_data_for_data_classification_of_segment_gradual(data_entities_of
             data["messages"][2]["content"] = json.dumps(answers)
             data_list.append(data)
     return data_list
+
+
+def as_training_data_for_purpose_span_of_sentence_only(purpose_entities_of_sentences):
+    prompt_template = USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY_RECOGNITION_SENTENCE
+    data_template = {
+        "messages": [
+            {"role": "system", "content": SYSTEM_MESSAGE_PURPOSE_ENTITY_RECOGNITION_SENTENCE},
+            {"role": "user", "content": None},
+            {"role": "assistant", "content": None},
+        ]}
+
+    data_list = []
+
+    for segment in purpose_entities_of_sentences:
+        prompt = prompt_template.format(**segment)
+        answers = segment["entities"]
+        # Keep only the text in answers
+        answers = [a["text"] for a in answers]
+        data = deepcopy(data_template)
+        data["messages"][1]["content"] = prompt
+        data["messages"][2]["content"] = json.dumps(answers)
+        data_list.append(data)
+    return data_list

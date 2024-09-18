@@ -2,12 +2,17 @@ from pybrat.parser import BratParser, Entity, Event, Example, Relation
 from .env import (
     BRAT_DATA_PATH,
     F_DATA_CATEGORY_DEFINITION,
-    get_data_category_definitions,
+    F_PURPOSE_CATEGORY_DEFINITION,
+    get_entity_category_definitions,
 )
 
 
 def get_data_entity_types(data_def_file=F_DATA_CATEGORY_DEFINITION):
-    return [k for k in get_data_category_definitions(data_def_file).keys()]
+    return [k for k in get_entity_category_definitions(data_def_file).keys()]
+
+
+def get_purpose_entity_types(purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
+    return [k for k in get_entity_category_definitions(purpose_def_file).keys()]
 
 
 def get_segment_type_entities(annotations, types):
@@ -115,3 +120,19 @@ def load_data_entities_of_sentences(brat_data_path=BRAT_DATA_PATH, data_def_file
     annotations = brat.parse(brat_data_path)
     data_entities = get_data_entities_of_sentences(annotations, data_def_file)
     return data_entities
+
+
+def get_purpose_entities_of_sentences(annotations, purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
+    purpose_types = list(get_purpose_entity_types(purpose_def_file))
+
+    purpose_entities = get_sentence_type_entities(annotations, purpose_types)
+
+    return purpose_entities
+
+
+def load_purpose_entities_of_sentences(brat_data_path=BRAT_DATA_PATH, purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
+    brat = BratParser(error="ignore")
+    annotations = brat.parse(brat_data_path)
+    purpose_entities = get_purpose_entities_of_sentences(annotations, purpose_def_file)
+    return purpose_entities
+
