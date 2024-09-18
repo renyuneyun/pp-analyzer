@@ -8,8 +8,10 @@ from .env import (
     _data_category_definitions_text,
     _data_category_hierarchy,
     _data_category_hierarchy_text,
-    F_DATA_CATEGORY_HIERARCHY,
-    F_DATA_CATEGORY_DEFINITION,
+    _purpose_category_definitions,
+    _purpose_category_definitions_text,
+    _purpose_category_hierarchy,
+    _purpose_category_hierarchy_text,
 )
 
 
@@ -120,6 +122,26 @@ def as_training_data_for_purpose_span_of_sentence_only(purpose_entities_of_sente
     return _as_training_data_entity_segment_text(purpose_entities_of_sentences,
                                             SYSTEM_MESSAGE_PURPOSE_ENTITY_RECOGNITION_SENTENCE,
                                             USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY_RECOGNITION_SENTENCE)
+
+
+def as_training_data_for_purpose_classification_of_segment(purpose_entities_of_segments):
+    return _as_training_data_entity_general(purpose_entities_of_segments,
+                                         SYSTEM_MESSAGE_TEMPLATE_PURPOSE_CATEGORY_CLASSIFICATION.format(
+                                                hierarchy=_purpose_category_hierarchy_text,
+                                                definitions=_purpose_category_definitions_text,
+                                            ),
+                                         lambda segment: USER_MESSAGE_TEMPLATE_PURPOSE_CATEGORY_CLASSIFICATION.format(**segment, phrases=json.dumps([e["text"] for e in segment["entities"]])),
+                                         lambda segment: json.dumps([e["type"] for e in segment["entities"]]))
+
+
+def as_training_data_for_purpose_classification_of_sentence(purpose_entities_of_sentence):
+    return _as_training_data_entity_general(purpose_entities_of_sentence,
+                                         SYSTEM_MESSAGE_TEMPLATE_PURPOSE_CATEGORY_CLASSIFICATION.format(
+                                                hierarchy=_purpose_category_hierarchy_text,
+                                                definitions=_purpose_category_definitions_text,
+                                            ),
+                                         lambda segment: USER_MESSAGE_TEMPLATE_PURPOSE_CATEGORY_CLASSIFICATION_SENTENCE.format(**segment, phrases=json.dumps([e["text"] for e in segment["entities"]])),
+                                         lambda segment: json.dumps([e["type"] for e in segment["entities"]]))
 
 
 def as_training_data_for_action_span_for_segment(action_entities_of_segments):

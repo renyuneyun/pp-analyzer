@@ -132,11 +132,26 @@ def load_data_entities_of_sentences(brat_data_path=BRAT_DATA_PATH, data_def_file
     return data_entities
 
 
+def get_purpose_entities_of_segments(annotations, purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
+    purpose_types = list(get_purpose_entity_types(purpose_def_file))
+
+    purpose_entities = get_segment_type_entities(annotations, purpose_types)
+
+    return purpose_entities
+
+
 def get_purpose_entities_of_sentences(annotations, purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
     purpose_types = list(get_purpose_entity_types(purpose_def_file))
 
     purpose_entities = get_sentence_type_entities(annotations, purpose_types)
 
+    return purpose_entities
+
+
+def load_purpose_entities_of_segments(brat_data_path=BRAT_DATA_PATH, purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
+    brat = BratParser(error="ignore")
+    annotations = brat.parse(brat_data_path)
+    purpose_entities = get_purpose_entities_of_segments(annotations, purpose_def_file)
     return purpose_entities
 
 
