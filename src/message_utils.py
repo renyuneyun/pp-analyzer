@@ -54,7 +54,7 @@ def as_training_data_for_data_span_of_segment_1_1(data_entities_of_segments):
 
 def as_training_data_for_data_span_of_sentence_only(data_entities_of_sentences):
     return _as_training_data_entity_segment_text(data_entities_of_sentences,
-                                            SYSTEM_MESSAGE,
+                                            SYSTEM_MESSAGE_DATA_ENTITY_RECOGNITION_SENTENCE,
                                             USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_SENTENCE)
 
 
