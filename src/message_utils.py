@@ -13,7 +13,7 @@ from .annotation_utils import (
 load_dotenv()
 
 F_DATA_CATEGORY_HIERARCHY = os.environ.get("DATA_CATEGORY_HIERARCHY")
-F_DATA_CATEGORY_DEFINITION = os.environ.get("DATA_CATEGORY_DEFINITION") or os.environ.get("DATA_DEF_FILE")
+F_DATA_CATEGORY_DEFINITION = os.environ.get("DATA_CATEGORY_DEFINITION")
 
 if F_DATA_CATEGORY_DEFINITION:
     with open(F_DATA_CATEGORY_DEFINITION, "r") as f:
