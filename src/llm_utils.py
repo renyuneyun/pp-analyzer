@@ -198,6 +198,13 @@ def reconstruct_data_sets(job_desc_dir=None, all_data=None):
 
 
 @pd(F_LAST_FINE_TUNE)
+def load_fine_tune_description(job_desc_dir=None):
+    with open(job_desc_dir / F_JOB_DESC) as f:
+        job_desc = json.load(f)
+    return job_desc['description']
+
+
+@pd(F_LAST_FINE_TUNE)
 def load_eval_info(job_desc_dir=None, all_data=None):
     training_set, validation_set, test_set = reconstruct_data_sets(job_desc_dir, all_data)
 
