@@ -10,6 +10,10 @@ from openai import OpenAI
 import time
 from . import annotation_utils as a_utils
 from .utils import path_default
+from .env import (
+    BRAT_DATA_PATH,
+    F_DATA_CATEGORY_DEFINITION,
+)
 
 load_dotenv()
 client = OpenAI()
@@ -30,7 +34,7 @@ F_LAST_EVAL = 'last_evaluation'
 F_LAST_FINE_TUNE = 'last_fine_tune'
 
 
-def fine_tune_with_data(all_data, training_set_indices, validation_set_indices, annotation_data_path, annotation_data_def, basemodel='gpt-4o-mini-2024-07-18', fine_tune_args={}, desc=None):
+def fine_tune_with_data(all_data, training_set_indices, validation_set_indices, annotation_data_path=BRAT_DATA_PATH, annotation_data_def=F_DATA_CATEGORY_DEFINITION, basemodel='gpt-4o-mini-2024-07-18', fine_tune_args={}, desc=None):
     job_desc_dir = OUT_PATH / f"fine_tune-{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}-{basemodel}"
     job_desc_dir.mkdir()
 

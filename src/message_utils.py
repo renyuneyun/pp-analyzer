@@ -1,29 +1,16 @@
 from copy import deepcopy
 import csv
-from dotenv import load_dotenv
 import json
 import os
 from .message_templates import *
-from .annotation_utils import (
-    get_data_category_definitions,
-    get_data_category_hierarchy,
+from .env import (
+    _data_category_definitions,
+    _data_category_definitions_text,
+    _data_category_hierarchy,
+    _data_category_hierarchy_text,
+    F_DATA_CATEGORY_HIERARCHY,
+    F_DATA_CATEGORY_DEFINITION,
 )
-
-
-load_dotenv()
-
-F_DATA_CATEGORY_HIERARCHY = os.environ.get("DATA_CATEGORY_HIERARCHY")
-F_DATA_CATEGORY_DEFINITION = os.environ.get("DATA_CATEGORY_DEFINITION")
-
-if F_DATA_CATEGORY_DEFINITION:
-    with open(F_DATA_CATEGORY_DEFINITION, "r") as f:
-        _data_category_definitions_text = f.read()
-    _data_category_definitions = get_data_category_definitions(F_DATA_CATEGORY_DEFINITION)
-
-if F_DATA_CATEGORY_HIERARCHY:
-    with open(F_DATA_CATEGORY_HIERARCHY, "r") as f:
-        _data_category_hierarchy_text = f.read()
-    _data_category_hierarchy = get_data_category_hierarchy(F_DATA_CATEGORY_HIERARCHY)
 
 
 def as_training_data_for_data_span_of_segment(data_entities_of_segments):

@@ -1,48 +1,13 @@
-import csv
 from pybrat.parser import BratParser, Entity, Event, Example, Relation
-
-def get_data_entity_types(data_def_file):
-    with open(data_def_file) as f:
-        reader = csv.reader(f)
-        next(reader)
-        for line in reader:
-            yield line[0]
+from .env import (
+    BRAT_DATA_PATH,
+    F_DATA_CATEGORY_DEFINITION,
+    get_data_category_definitions,
+)
 
 
-def get_data_category_hierarchy(data_category_hierarchy_file):
-    '''
-    The data category hierarchy contains multiple lines, each representing one category; the number of indents (`\t`) at the beginning of a line indicates the level of the category.
-    There will be no cycles. One category may belong to multiple parental-categories.
-    This function returns the category hierarchy as a nested dictionary, where the key is the category name, and the value is a list of subcategories.
-    '''
-    with open(data_category_hierarchy_file) as f:
-        lines = f.readlines()
-    lines = [line.rstrip() for line in lines]
-    res = {}
-    stack = []
-    for line in lines:
-        level = line.count('\t')
-        name = line.strip()
-        if level > len(stack):
-            raise ValueError("Invalid hierarchy with exceptional indentation")
-        l = res
-        for i in range(level):
-            l = l[stack[i]]
-        l[name] = {}
-        stack = stack[:level] + [name]
-
-    return res
-
-
-def get_data_category_definitions(data_category_definition_file):
-    '''
-    The data category definition is a CSV file with two columns: category, definition.
-    This function returns the category definitions as a dictionary, where the key is the category name, and the value is the definition.
-    '''
-    with open(data_category_definition_file) as f:
-        reader = csv.reader(f)
-        next(reader)
-        return {line[0]: line[1] for line in reader}
+def get_data_entity_types(data_def_file=F_DATA_CATEGORY_DEFINITION):
+    return [k for k in get_data_category_definitions(data_def_file).keys()]
 
 
 def get_segment_type_entities(annotations, types):
@@ -122,7 +87,7 @@ def get_sentence_type_entities(annotations, types):
     return [{"segment": seg, "sentence": sent, "entities": v} for (seg, sent), v in res.items()]
 
 
-def get_data_entities_of_segments(annotations, data_def_file):
+def get_data_entities_of_segments(annotations, data_def_file=F_DATA_CATEGORY_DEFINITION):
     data_types = list(get_data_entity_types(data_def_file))
 
     data_entities = get_segment_type_entities(annotations, data_types)
@@ -130,7 +95,7 @@ def get_data_entities_of_segments(annotations, data_def_file):
     return data_entities
 
 
-def get_data_entities_of_sentences(annotations, data_def_file):
+def get_data_entities_of_sentences(annotations, data_def_file=F_DATA_CATEGORY_DEFINITION):
     data_types = list(get_data_entity_types(data_def_file))
 
     data_entities = get_sentence_type_entities(annotations, data_types)
@@ -138,14 +103,14 @@ def get_data_entities_of_sentences(annotations, data_def_file):
     return data_entities
 
 
-def load_data_entities_of_segments(brat_data_path, data_def_file):
+def load_data_entities_of_segments(brat_data_path=BRAT_DATA_PATH, data_def_file=F_DATA_CATEGORY_DEFINITION):
     brat = BratParser(error="ignore")
     annotations = brat.parse(brat_data_path)
     data_entities = get_data_entities_of_segments(annotations, data_def_file)
     return data_entities
 
 
-def load_data_entities_of_sentences(brat_data_path, data_def_file):
+def load_data_entities_of_sentences(brat_data_path=BRAT_DATA_PATH, data_def_file=F_DATA_CATEGORY_DEFINITION):
     brat = BratParser(error="ignore")
     annotations = brat.parse(brat_data_path)
     data_entities = get_data_entities_of_sentences(annotations, data_def_file)
