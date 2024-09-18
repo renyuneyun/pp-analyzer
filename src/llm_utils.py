@@ -182,12 +182,13 @@ def await_fine_tune_finish_and_clean_up(job_desc_dir=None, wait_for_job_completi
 
 
 @pd(F_LAST_FINE_TUNE)
-def reconstruct_data_sets(job_desc_dir=None):
+def reconstruct_data_sets(job_desc_dir=None, all_data=None):
     with open(job_desc_dir / F_JOB_DESC) as f:
         job_desc = json.load(f)
 
-    data_entities = a_utils.load_data_entities_of_segments(job_desc['annotation_data_path'], job_desc['annotation_data_def'])
-    all_data = as_training_data_for_data_span_of_segment(data_entities)
+    if not all_data:
+        data_entities = a_utils.load_data_entities_of_segments(job_desc['annotation_data_path'], job_desc['annotation_data_def'])
+        all_data = as_training_data_for_data_span_of_segment(data_entities)
 
     training_set = [all_data[i] for i in job_desc['training_set_indices']]
     validation_set = [all_data[i] for i in job_desc['validation_set_indices']]
@@ -197,8 +198,8 @@ def reconstruct_data_sets(job_desc_dir=None):
 
 
 @pd(F_LAST_FINE_TUNE)
-def load_eval_info(job_desc_dir=None):
-    training_set, validation_set, test_set = reconstruct_data_sets(job_desc_dir)
+def load_eval_info(job_desc_dir=None, all_data=None):
+    training_set, validation_set, test_set = reconstruct_data_sets(job_desc_dir, all_data)
 
     stat = await_fine_tune_finish_and_clean_up(job_desc_dir)
     fine_tuned_model_id = stat.fine_tuned_model
