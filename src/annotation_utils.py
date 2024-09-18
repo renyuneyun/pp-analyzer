@@ -1,3 +1,4 @@
+from enum import Enum
 from pybrat.parser import BratParser, Entity, Event, Example, Relation
 from .env import (
     BRAT_DATA_PATH,
@@ -5,6 +6,15 @@ from .env import (
     F_PURPOSE_CATEGORY_DEFINITION,
     get_entity_category_definitions,
 )
+
+
+class ActionType(Enum):
+    COLLECTION_USE = "collection-use"
+    FIRST_PARTY_COLLECTION_USE = "first-party-collection-use"
+    THIRD_PARTY_COLLECTION_USE = "third-party-collection-use"
+    THIRD_PARTY_SHARING_DISCLOSURE = "third-party-sharing-disclosure"
+    STORAGE_RETENTION_DELETION = "data-storage-retention-deletion"
+    SECURITY_PROTECTION = "data-security-protection"
 
 
 def get_data_entity_types(data_def_file=F_DATA_CATEGORY_DEFINITION):
@@ -136,3 +146,95 @@ def load_purpose_entities_of_sentences(brat_data_path=BRAT_DATA_PATH, purpose_de
     purpose_entities = get_purpose_entities_of_sentences(annotations, purpose_def_file)
     return purpose_entities
 
+
+C_DATA_COLLECTOR = "Data-Collector"
+C_FIRST_PARTY_ENTITY = "First-party-entity"
+C_THIRD_PARTY_ENTITY = "Third-party-entity"
+
+
+def with_correct_use_type(annotations):
+    '''
+    Changes in-place
+    '''
+    for x in annotations:
+        for e in x.events:
+            if e.type == ActionType.COLLECTION_USE.value:
+                for arg in e.arguments:
+                    if arg.role == C_DATA_COLLECTOR:
+                        if arg.object.type == C_FIRST_PARTY_ENTITY:
+                            e.type = ActionType.FIRST_PARTY_COLLECTION_USE.value
+                            break
+                        elif arg.object.type == C_THIRD_PARTY_ENTITY:
+                            e.type = ActionType.THIRD_PARTY_COLLECTION_USE.value
+                            break
+    return annotations
+
+
+def is_within_sentence(span, sentence_span):
+    return span.start >= sentence_span[0] and span.end <= sentence_span[1]
+
+
+def get_sentences_with_spans(annotation):
+    segment = annotation.text
+    sentences = segment.split('\n')
+    #sentence_spans is a list of tuples, each tuple is the start and end index of a sentence
+    sentence_spans = [(segment.index(s), segment.index(s) + len(s)) for s in sentences]
+    sentences = [s.strip() for s in sentences]
+    return dict(zip(sentence_spans, sentences))
+
+
+def get_action_of_segment(annotations):
+    '''
+    Get all text spans and sentences that are actions.
+    Output structure is:
+    [
+        {
+            "segment": SEGMENT,
+            "entities": [
+                {
+                    "sentence": SENTENCE,
+                    "action_type": ACTION_TYPE,
+                    "text": TEXT_OF_THE_ACTION
+                }
+            ]
+        }
+    ]
+
+    where the same segment is always grouped together.
+    '''
+    res = []
+    for x in annotations:
+        segment_text = x.text
+        sentences = get_sentences_with_spans(x)
+
+        parts = []
+
+        for e in x.events:
+            type = e.type
+            text = e.trigger.mention
+            span = e.trigger.spans[0]
+            for span2 in sentences.keys():
+                if is_within_sentence(span, span2):
+                    sentence = sentences[span2]
+                    break
+            assert sentence
+            parts.append({
+                "action_type": type,
+                "text": text,
+                "sentence": sentence,
+            })
+
+        res.append({
+            "segment": segment_text,
+            "entities": parts,
+        })
+
+    return res
+
+
+def load_action_of_segment(brat_data_path=BRAT_DATA_PATH):
+    brat = BratParser(error="ignore")
+    annotations = brat.parse(brat_data_path)
+    annotations = with_correct_use_type(annotations)
+    actions = get_action_of_segment(annotations)
+    return actions

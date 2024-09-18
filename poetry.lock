@@ -1653,11 +1653,15 @@ name = "pybrat"
 version = "0.1.7"
 description = "Parser for brat rapid annotation tool (Brat)"
 optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "pybrat-0.1.7-py3-none-any.whl", hash = "sha256:6cbbe3d3ff7cd411784f15367747f917073d963f7b1269203b44f2b2d62f6c45"},
-    {file = "pybrat-0.1.7.tar.gz", hash = "sha256:830a5b7e93dd59bba922e720cdd6b121e3df912e4436f8f93f8ceb2b616b4afa"},
-]
+python-versions = "^3.8"
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/renyuneyun/pybrat"
+reference = "HEAD"
+resolved_reference = "8ddd33e09635962bf86f776d297631a5c4e6be92"
 
 [[package]]
 name = "pycparser"
@@ -2809,4 +2813,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "5421ceb7db35efb4a2ab0f08586e389969193ab1844c328e9aded1e6e9c64a12"
+content-hash = "fb109338ba11e2ebea1ad4a3b3413b092aff5b1bbfb7cff8ccb62bc63f730a05"

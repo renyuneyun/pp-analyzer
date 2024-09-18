@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 jupyter = "^1.1.1"
-pybrat = "^0.1.7"
+pybrat = {git = "https://github.com/renyuneyun/pybrat"}
 openai = "^1.44.1"
 python-dotenv = "^1.0.1"
 tiktoken = "^0.7.0"

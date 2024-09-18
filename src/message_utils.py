@@ -120,3 +120,23 @@ def as_training_data_for_purpose_span_of_sentence_only(purpose_entities_of_sente
     return _as_training_data_entity_segment_text(purpose_entities_of_sentences,
                                             SYSTEM_MESSAGE_PURPOSE_ENTITY_RECOGNITION_SENTENCE,
                                             USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY_RECOGNITION_SENTENCE)
+
+
+def as_training_data_for_action_span_for_segment(action_entities_of_segments):
+    data_template = {
+        "messages": [
+            {"role": "system", "content": SYSTEM_MESSAGE_ACTION_RECOGNITION},
+            {"role": "user", "content": None},
+            {"role": "assistant", "content": None},
+        ]}
+
+    data_list = []
+
+    for segment in action_entities_of_segments:
+        data = deepcopy(data_template)
+        data["messages"][1]["content"] = USER_MESSAGE_TEMPLATE_ACTION_RECOGNITION.format(**segment)
+        for entity in segment["entities"]:
+            data2 = deepcopy(data)
+            data2["messages"][2]["content"] = json.dumps(entity)
+            data_list.append(data2)
+    return data_list
