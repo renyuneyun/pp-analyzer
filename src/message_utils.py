@@ -13,147 +13,72 @@ from .env import (
 )
 
 
-def as_training_data_for_data_span_of_segment(data_entities_of_segments):
-    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION
+def _as_training_data_entity_general(entities, system_message, user_message_fn, assistant_message_fn):
     data_template = {
         "messages": [
-            {"role": "system", "content": SYSTEM_MESSAGE},
+            {"role": "system", "content": system_message},
             {"role": "user", "content": None},
             {"role": "assistant", "content": None},
         ]}
 
     data_list = []
 
-    for segment in data_entities_of_segments:
-        prompt = prompt_template.format(segment=segment["segment"])
-        answers = segment["entities"]
-        # Keep only the text in answers
-        answers = [a["text"] for a in answers]
+    for segment in entities:
         data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
+        data["messages"][1]["content"] = user_message_fn(segment)
+        data["messages"][2]["content"] = assistant_message_fn(segment)
         data_list.append(data)
     return data_list
+
+
+def _as_training_data_entity_text(entities, system_message, user_message_fn):
+    return _as_training_data_entity_general(entities, system_message, user_message_fn,
+                                            lambda segment: json.dumps([a["text"] for a in segment["entities"]]))
+
+
+def _as_training_data_entity_segment_text(entities, system_message, user_message_templace):
+    return _as_training_data_entity_text(entities, system_message, lambda segment: user_message_templace.format(**segment))
+
+
+def as_training_data_for_data_span_of_segment(data_entities_of_segments):
+    return _as_training_data_entity_segment_text(data_entities_of_segments,
+                                         SYSTEM_MESSAGE,
+                                         USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION)
 
 
 def as_training_data_for_data_span_of_segment_1_1(data_entities_of_segments):
-    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_1_1
-    data_template = {
-        "messages": [
-            {"role": "system", "content": SYSTEM_MESSAGE},
-            {"role": "user", "content": None},
-            {"role": "assistant", "content": None},
-        ]}
-
-    data_list = []
-
-    for segment in data_entities_of_segments:
-        prompt = prompt_template.format(segment=segment["segment"])
-        answers = segment["entities"]
-        # Keep only the text in answers
-        answers = [a["text"] for a in answers]
-        data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
-        data_list.append(data)
-    return data_list
+    return _as_training_data_entity_segment_text(data_entities_of_segments,
+                                            SYSTEM_MESSAGE,
+                                            USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_1_1)
 
 
 def as_training_data_for_data_span_of_sentence_only(data_entities_of_sentences):
-    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_SENTENCE
-    data_template = {
-        "messages": [
-            {"role": "system", "content": SYSTEM_MESSAGE_DATA_ENTITY_RECOGNITION_SENTENCE},
-            {"role": "user", "content": None},
-            {"role": "assistant", "content": None},
-        ]}
-
-    data_list = []
-
-    for segment in data_entities_of_sentences:
-        prompt = prompt_template.format(**segment)
-        answers = segment["entities"]
-        # Keep only the text in answers
-        answers = [a["text"] for a in answers]
-        data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
-        data_list.append(data)
-    return data_list
+    return _as_training_data_entity_segment_text(data_entities_of_sentences,
+                                            SYSTEM_MESSAGE,
+                                            USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_SENTENCE)
 
 
 def as_training_data_for_data_span_of_sentence(data_entities_of_sentences):
-    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2
-    data_template = {
-        "messages": [
-            {"role": "system", "content": SYSTEM_MESSAGE},
-            {"role": "user", "content": None},
-            {"role": "assistant", "content": None},
-        ]}
-
-    data_list = []
-
-    for segment in data_entities_of_sentences:
-        prompt = prompt_template.format(**segment)
-        answers = segment["entities"]
-        # Keep only the text in answers
-        answers = [a["text"] for a in answers]
-        data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
-        data_list.append(data)
-    return data_list
+    return _as_training_data_entity_segment_text(data_entities_of_sentences,
+                                            SYSTEM_MESSAGE,
+                                            USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2)
 
 
 def as_training_data_for_data_span_of_sentence_1(data_entities_of_sentences):
-    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2_1
-    data_template = {
-        "messages": [
-            {"role": "system", "content": SYSTEM_MESSAGE},
-            {"role": "user", "content": None},
-            {"role": "assistant", "content": None},
-        ]}
-
-    data_list = []
-
-    for segment in data_entities_of_sentences:
-        prompt = prompt_template.format(**segment)
-        answers = segment["entities"]
-        # Keep only the text in answers
-        answers = [a["text"] for a in answers]
-        data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
-        data_list.append(data)
-    return data_list
+    return _as_training_data_entity_segment_text(data_entities_of_sentences,
+                                            SYSTEM_MESSAGE,
+                                            USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2_1)
 
 
 def as_training_data_for_data_classification_of_segment(data_entities_of_segments):
-    # Prompt is adpted and very briefly modified based on Vlad's original prompt. It may not be the best one as usage is different.
-    prompt_template = USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION
-    data_template = {
-        "messages": [
-            {"role": "system", "content":
-                SYSTEM_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION.format(
-                    hierarchy=_data_category_hierarchy_text,
-                    definitions=_data_category_definitions_text,
-                )},
-            {"role": "user", "content": None},
-            {"role": "assistant", "content": None},
-        ]}
+    return _as_training_data_entity_general(data_entities_of_segments,
+                                         SYSTEM_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION.format(
+                                                hierarchy=_data_category_hierarchy_text,
+                                                definitions=_data_category_definitions_text,
+                                            ),
+                                         lambda segment: USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION.format(**segment, phrases=json.dumps([e["text"] for e in segment["entities"]])),
+                                         lambda segment: json.dumps([e["type"] for e in segment["entities"]]))
 
-    data_list = []
-
-    for segment in data_entities_of_segments:
-        entities = segment["entities"]
-        phrases = [e["text"] for e in entities]
-        answers = [e["type"] for e in entities]
-        prompt = prompt_template.format(segment=segment["segment"], phrases=json.dumps(phrases))
-        data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
-        data_list.append(data)
-    return data_list
 
 def as_training_data_for_data_classification_of_segment_gradual(data_entities_of_segments, level=0):
     if isinstance(level, int):
@@ -192,23 +117,6 @@ def as_training_data_for_data_classification_of_segment_gradual(data_entities_of
 
 
 def as_training_data_for_purpose_span_of_sentence_only(purpose_entities_of_sentences):
-    prompt_template = USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY_RECOGNITION_SENTENCE
-    data_template = {
-        "messages": [
-            {"role": "system", "content": SYSTEM_MESSAGE_PURPOSE_ENTITY_RECOGNITION_SENTENCE},
-            {"role": "user", "content": None},
-            {"role": "assistant", "content": None},
-        ]}
-
-    data_list = []
-
-    for segment in purpose_entities_of_sentences:
-        prompt = prompt_template.format(**segment)
-        answers = segment["entities"]
-        # Keep only the text in answers
-        answers = [a["text"] for a in answers]
-        data = deepcopy(data_template)
-        data["messages"][1]["content"] = prompt
-        data["messages"][2]["content"] = json.dumps(answers)
-        data_list.append(data)
-    return data_list
+    return _as_training_data_entity_segment_text(purpose_entities_of_sentences,
+                                            SYSTEM_MESSAGE_PURPOSE_ENTITY_RECOGNITION_SENTENCE,
+                                            USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY_RECOGNITION_SENTENCE)
