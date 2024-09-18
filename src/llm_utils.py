@@ -386,3 +386,9 @@ def load_saved_llm_queries(dir_name=None):
             else:
                 queries.append(data)
     return desc, queries
+
+
+def clear_fine_tune_data():
+    previous_files = client.files.list(purpose="fine-tune")
+    for file in previous_files:
+        client.files.delete(file.id)
