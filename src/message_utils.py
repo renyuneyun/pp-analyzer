@@ -76,7 +76,7 @@ def as_training_data_for_data_classification_of_segment(data_entities_of_segment
                                                 hierarchy=_data_category_hierarchy_text,
                                                 definitions=_data_category_definitions_text,
                                             ),
-                                         lambda segment: USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION.format(**segment, phrases=json.dumps([e["text"] for e in segment["entities"]])),
+                                         lambda segment: USER_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION.format(**segment, phrases=json.dumps([e["text"] for e in segment["entities"]])),
                                          lambda segment: json.dumps([e["type"] for e in segment["entities"]]))
 
 
