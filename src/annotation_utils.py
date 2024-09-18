@@ -45,42 +45,6 @@ def get_data_category_definitions(data_category_definition_file):
         return {line[0]: line[1] for line in reader}
 
 
-def get_data_category_hierarchy(data_category_hierarchy_file):
-    '''
-    The data category hierarchy contains multiple lines, each representing one category; the number of indents (`\t`) at the beginning of a line indicates the level of the category.
-    There will be no cycles. One category may belong to multiple parental-categories.
-    This function returns the category hierarchy as a nested dictionary, where the key is the category name, and the value is a list of subcategories.
-    '''
-    with open(data_category_hierarchy_file) as f:
-        lines = f.readlines()
-    lines = [line.rstrip() for line in lines]
-    res = {}
-    stack = []
-    for line in lines:
-        level = line.count('\t')
-        name = line.strip()
-        if level > len(stack):
-            raise ValueError("Invalid hierarchy with exceptional indentation")
-        l = res
-        for i in range(level):
-            l = l[stack[i]]
-        l[name] = {}
-        stack = stack[:level] + [name]
-
-    return res
-
-
-def get_data_category_definitions(data_category_definition_file):
-    '''
-    The data category definition is a CSV file with two columns: category, definition.
-    This function returns the category definitions as a dictionary, where the key is the category name, and the value is the definition.
-    '''
-    with open(data_category_definition_file) as f:
-        reader = csv.reader(f)
-        next(reader)
-        return {line[0]: line[1] for line in reader}
-
-
 def get_segment_type_entities(annotations, types):
     '''
     Get all text spans that are entities (of the specified types) in the same segment, and put them together.
