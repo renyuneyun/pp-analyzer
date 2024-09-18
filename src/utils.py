@@ -1,3 +1,4 @@
+import numpy as np
 from pathlib import Path
 from typing import Callable
 
@@ -22,3 +23,12 @@ def path_default(default: str|Path, base_dir=None) -> Callable:
         return inner
 
     return decorator
+
+
+def evenly_get(arr, n):
+    '''
+    Get n elements from arr as evenly as possible.
+    Return both the elements and their indices.
+    '''
+    idx = np.round(np.linspace(0, len(arr) - 1, n)).astype(int)
+    return np.asarray(arr)[idx], idx
