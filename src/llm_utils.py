@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import openai
 from openai import OpenAI
 import time
+import logging
 from . import annotation_utils as a_utils
 from .utils import path_default
 from .env import (
@@ -32,6 +33,9 @@ F_EVAL_AUX = {
 
 F_LAST_EVAL = 'last_evaluation'
 F_LAST_FINE_TUNE = 'last_fine_tune'
+
+
+logger = logging.getLogger(__name__)
 
 
 def fine_tune_with_data(all_data, training_set_indices, validation_set_indices, annotation_data_path=BRAT_DATA_PATH, annotation_data_def=F_DATA_CATEGORY_DEFINITION, basemodel='gpt-4o-mini-2024-07-18', fine_tune_args={}, desc=None):
@@ -296,10 +300,21 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
             json.dump(d, f)
         model_output_list = []
         for i, messages in enumerate(tqdm(messages_list)):
-            completion = client.chat.completions.create(
-                model=model,
-                messages=messages
-            )
+            query_counter = 0
+            while True:
+                try:
+                    completion = client.chat.completions.create(
+                        model=model,
+                        messages=messages
+                    )
+                    break
+                except openai.RateLimitError as e:
+                    query_counter += 1
+                    if query_counter >= 3:
+                        logger.error(f"LLM query (at dir <{dir_name}> ) reached rate limit {query_counter}-th time. Won't retry anymore. Error message: {e}")
+                        raise e
+                    logger.warning(f"LLM query reached rate limit {query_counter}-th time. Will wait and retry. Error message: {e}")
+                    time.sleep(60)
             model_output = completion.choices[0].message
             output_file_path = dir_path / f'{i}.json'
             output = {
