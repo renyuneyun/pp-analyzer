@@ -5,6 +5,7 @@ from .env import (
     BRAT_DATA_PATH,
     F_DATA_CATEGORY_DEFINITION,
     F_PURPOSE_CATEGORY_DEFINITION,
+    PROTECTION_METHODS,
     get_entity_category_definitions,
 )
 
@@ -290,3 +291,11 @@ def get_actions_of_sentences(annotations):
 
 def load_actions_of_segments(brat_data_path=BRAT_DATA_PATH):
     return load_and_get(get_actions_of_segments, brat_data_path)
+
+
+def get_protection_methods_of_segments(annotations):
+    return get_segment_type_entities(annotations, PROTECTION_METHODS)
+
+
+def get_protection_methods_of_sentences(annotations):
+    return get_sentence_type_entities(annotations, PROTECTION_METHODS)

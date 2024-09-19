@@ -72,3 +72,11 @@ if F_PURPOSE_CATEGORY_HIERARCHY:
     with open(F_PURPOSE_CATEGORY_HIERARCHY, "r") as f:
         _purpose_category_hierarchy_text = f.read()
     _purpose_category_hierarchy = get_entity_category_hierarchy(F_PURPOSE_CATEGORY_HIERARCHY)
+
+PROTECTION_METHODS = [
+    'general-safeguard-method',
+	'User-authentication',
+	'encryptions',
+	'Access-limitation',
+	'Protection-other',
+]

@@ -314,7 +314,7 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
                         logger.error(f"LLM query (at dir <{dir_name}> ) reached rate limit {query_counter}-th time. Won't retry anymore. Error message: {e}")
                         raise e
                     logger.warning(f"LLM query reached rate limit {query_counter}-th time. Will wait and retry. Error message: {e}")
-                    time.sleep(60)
+                    time.sleep(90)
             model_output = completion.choices[0].message
             output_file_path = dir_path / f'{i}.json'
             output = {
