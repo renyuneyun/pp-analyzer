@@ -76,6 +76,18 @@ _job_presets = [
         as_training_data=m_utils.as_training_data_for_purpose_classification_of_sentence,
         training_data_splitter=std.better_split,
     ),
+    JobPreset(
+        desc="action-seg-v2",
+        load_data=a_utils.load_and_get(a_utils.get_actions_of_segments),
+        as_training_data=m_utils.as_training_data_for_action_span_for_segment,
+        training_data_splitter=std.better_split,
+    ),
+    JobPreset(
+        desc="action-sent-v2",
+        load_data=a_utils.load_and_get(a_utils.get_actions_of_sentences),
+        as_training_data=m_utils.as_training_data_for_action_span_of_sentence_only,
+        training_data_splitter=std.better_split,
+    ),
 ]
 
 

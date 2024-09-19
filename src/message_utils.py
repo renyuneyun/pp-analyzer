@@ -162,3 +162,10 @@ def as_training_data_for_action_span_for_segment(action_entities_of_segments):
             data2["messages"][2]["content"] = json.dumps(entity)
             data_list.append(data2)
     return data_list
+
+
+def as_training_data_for_action_span_of_sentence_only(action_entities_of_segments):
+    return _as_training_data_entity_general(action_entities_of_segments,
+                                            SYSTEM_MESSAGE_ACTION_RECOGNITION_SENTENCE,
+                                         lambda segment: USER_MESSAGE_TEMPLATE_ACTION_RECOGNITION_SENTENCE.format(**segment),
+                                         lambda segment: json.dumps([a for a in segment["entities"]]))

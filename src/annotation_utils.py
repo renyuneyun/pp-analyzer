@@ -243,5 +243,50 @@ def get_actions_of_segments(annotations):
     return res
 
 
+def get_actions_of_sentences(annotations):
+    '''
+    Get all text spans and sentences that are actions, for each sentence.
+    Output structure is:
+    [
+        {
+            "segment": SEGMENT,
+            "sentence": SENTENCE,
+            "entities": [
+                {
+                    "action_type": ACTION_TYPE,
+                    "text": TEXT_OF_THE_ACTION
+                }
+            ]
+        }
+    ]
+
+    where the same segment and sentence is always grouped together.
+    '''
+    res = {}
+    for x in annotations:
+        segment_text = x.text
+        sentences = get_sentences_with_spans(x)
+
+        for span, sentence in sentences.items():
+            res[(segment_text, sentence)] = []
+
+        for e in x.events:
+            type = e.type
+            text = e.trigger.mention
+            span = e.trigger.spans[0]
+            for span2 in sentences.keys():
+                if is_within_sentence(span, span2):
+                    sentence = sentences[span2]
+                    break
+            assert sentence
+            parts = res[(segment_text, sentence)]
+            parts.append({
+                "action_type": type,
+                "text": text,
+            })
+
+    return [{"segment": seg, "sentence": sent, "entities": v} for (seg, sent), v in res.items()]
+
+
 def load_actions_of_segments(brat_data_path=BRAT_DATA_PATH):
     return load_and_get(get_actions_of_segments, brat_data_path)
