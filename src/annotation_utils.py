@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import partial
 from pybrat.parser import BratParser, Entity, Event, Example, Relation
 from .env import (
     BRAT_DATA_PATH,
@@ -23,6 +24,13 @@ def get_data_entity_types(data_def_file=F_DATA_CATEGORY_DEFINITION):
 
 def get_purpose_entity_types(purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
     return [k for k in get_entity_category_definitions(purpose_def_file).keys()]
+
+
+def load_and_get(get_fn, brat_data_path=BRAT_DATA_PATH):
+    brat = BratParser(error="ignore")
+    annotations = brat.parse(brat_data_path)
+    annotations = with_correct_use_type(annotations)
+    return get_fn(annotations)
 
 
 def get_segment_type_entities(annotations, types):
@@ -119,17 +127,11 @@ def get_data_entities_of_sentences(annotations, data_def_file=F_DATA_CATEGORY_DE
 
 
 def load_data_entities_of_segments(brat_data_path=BRAT_DATA_PATH, data_def_file=F_DATA_CATEGORY_DEFINITION):
-    brat = BratParser(error="ignore")
-    annotations = brat.parse(brat_data_path)
-    data_entities = get_data_entities_of_segments(annotations, data_def_file)
-    return data_entities
+    return load_and_get(partial(get_data_entities_of_segments, data_def_file=data_def_file), brat_data_path)
 
 
 def load_data_entities_of_sentences(brat_data_path=BRAT_DATA_PATH, data_def_file=F_DATA_CATEGORY_DEFINITION):
-    brat = BratParser(error="ignore")
-    annotations = brat.parse(brat_data_path)
-    data_entities = get_data_entities_of_sentences(annotations, data_def_file)
-    return data_entities
+    return load_and_get(partial(get_data_entities_of_sentences, data_def_file=data_def_file), brat_data_path)
 
 
 def get_purpose_entities_of_segments(annotations, purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
@@ -149,17 +151,11 @@ def get_purpose_entities_of_sentences(annotations, purpose_def_file=F_PURPOSE_CA
 
 
 def load_purpose_entities_of_segments(brat_data_path=BRAT_DATA_PATH, purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
-    brat = BratParser(error="ignore")
-    annotations = brat.parse(brat_data_path)
-    purpose_entities = get_purpose_entities_of_segments(annotations, purpose_def_file)
-    return purpose_entities
+    return load_and_get(partial(get_purpose_entities_of_segments, purpose_def_file=purpose_def_file), brat_data_path)
 
 
 def load_purpose_entities_of_sentences(brat_data_path=BRAT_DATA_PATH, purpose_def_file=F_PURPOSE_CATEGORY_DEFINITION):
-    brat = BratParser(error="ignore")
-    annotations = brat.parse(brat_data_path)
-    purpose_entities = get_purpose_entities_of_sentences(annotations, purpose_def_file)
-    return purpose_entities
+    return load_and_get(partial(get_purpose_entities_of_sentences, purpose_def_file=purpose_def_file), brat_data_path)
 
 
 C_DATA_COLLECTOR = "Data-Collector"
@@ -248,8 +244,4 @@ def get_actions_of_segments(annotations):
 
 
 def load_actions_of_segments(brat_data_path=BRAT_DATA_PATH):
-    brat = BratParser(error="ignore")
-    annotations = brat.parse(brat_data_path)
-    annotations = with_correct_use_type(annotations)
-    actions = get_actions_of_segments(annotations)
-    return actions
+    return load_and_get(get_actions_of_segments, brat_data_path)
