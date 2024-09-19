@@ -198,7 +198,7 @@ def get_sentences_with_spans(annotation):
     return dict(zip(sentence_spans, sentences))
 
 
-def get_action_of_segment(annotations):
+def get_actions_of_segments(annotations):
     '''
     Get all text spans and sentences that are actions.
     Output structure is:
@@ -247,9 +247,9 @@ def get_action_of_segment(annotations):
     return res
 
 
-def load_action_of_segment(brat_data_path=BRAT_DATA_PATH):
+def load_actions_of_segments(brat_data_path=BRAT_DATA_PATH):
     brat = BratParser(error="ignore")
     annotations = brat.parse(brat_data_path)
     annotations = with_correct_use_type(annotations)
-    actions = get_action_of_segment(annotations)
+    actions = get_actions_of_segments(annotations)
     return actions
