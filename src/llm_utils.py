@@ -9,6 +9,7 @@ import openai
 from openai import OpenAI
 import time
 import logging
+import re
 from . import annotation_utils as a_utils
 from .utils import path_default
 from .env import (
@@ -218,6 +219,9 @@ def load_eval_info(job_desc_dir=None, all_data=None):
     return training_set, validation_set, test_set, fine_tuned_model_id
 
 
+RE_QUERY_RESULTS = re.compile(r'^(\d+)\.json$')
+
+
 def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc=None, batch=True):
     '''
     Query the LLM, and also automatically saves the responses in case needed further
@@ -228,7 +232,15 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
     if not dir_name:
         dir_name = f"eval-{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}-{model}"
     dir_path = OUT_PATH / dir_name
-    dir_path.mkdir()
+    existing_queries = []
+    if dir_path.exists():
+        for file_path in dir_path.iterdir():
+            if file_path.name in F_EVAL_AUX.values():
+                continue
+            if m := RE_QUERY_RESULTS.match(file_path.name):
+                existing_queries.append(int(m.group(1)))
+    else:
+        dir_path.mkdir()
 
     fl = OUT_PATH / F_LAST_EVAL
     if fl.exists(follow_symlinks=False): fl.unlink()
@@ -300,6 +312,8 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
             json.dump(d, f)
         model_output_list = []
         for i, messages in enumerate(tqdm(messages_list)):
+            if i in existing_queries:
+                continue
             query_counter = 0
             while True:
                 try:
