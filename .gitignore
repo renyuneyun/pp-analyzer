@@ -3,3 +3,5 @@ out/
 .env
 tmp/
 __pycache__/
+dist/
+res/
