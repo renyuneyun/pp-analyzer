@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import partial
 from typing import Callable
 import src.annotation_utils as a_utils
 import src.llm_utils as llm_utils
@@ -78,25 +79,25 @@ _job_presets = [
     ),
     JobPreset(
         desc="action-seg-v2",
-        load_data=a_utils.load_and_get(a_utils.get_actions_of_segments),
+        load_data=partial(a_utils.load_and_get, a_utils.get_actions_of_segments),
         as_training_data=m_utils.as_training_data_for_action_span_for_segment,
         training_data_splitter=std.better_split,
     ),
     JobPreset(
         desc="action-sent-v2",
-        load_data=a_utils.load_and_get(a_utils.get_actions_of_sentences),
+        load_data=partial(a_utils.load_and_get, a_utils.get_actions_of_sentences),
         as_training_data=m_utils.as_training_data_for_action_span_of_sentence_only,
         training_data_splitter=std.better_split,
     ),
     JobPreset(
         desc="pm-seg-v2",
-        load_data=a_utils.load_and_get(a_utils.get_protection_methods_of_segments),
+        load_data=partial(a_utils.load_and_get, a_utils.get_protection_methods_of_segments),
         as_training_data=m_utils.as_training_data_for_protection_method_of_segment,
         training_data_splitter=std.better_split,
     ),
     JobPreset(
         desc="pm-sent-v2",
-        load_data=a_utils.load_and_get(a_utils.get_protection_methods_of_sentences),
+        load_data=partial(a_utils.load_and_get, a_utils.get_protection_methods_of_sentences),
         as_training_data=m_utils.as_training_data_for_protection_method_of_sentence_only,
         training_data_splitter=std.better_split,
     ),
