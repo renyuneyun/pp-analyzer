@@ -183,3 +183,17 @@ def as_training_data_for_protection_method_of_sentence_only(protection_method_en
                                          SYSTEM_MESSAGE_PROTECTION_METHOD,
                                          lambda segment: USER_MESSAGE_TEMPLATE_PROTECTION_METHOD_SENTENCE.format(**segment),
                                          lambda segment: json.dumps([{"protection-method": e["type"], "text": e["text"]} for e in segment["entities"]]))
+
+
+def as_training_data_for_party_entity_of_segment(protection_method_entities_of_segments):
+    return _as_training_data_entity_general(protection_method_entities_of_segments,
+                                            SYSTEM_MESSAGE_PARTY_RECOGNITION,
+                                         lambda segment: USER_MESSAGE_TEMPLATE_PARTY_RECOGNITION.format(**segment),
+                                         lambda segment: json.dumps([{"party_type": e["type"], "text": e["text"]} for e in segment["entities"]]))
+
+
+def as_training_data_for_party_entity_of_sentence(protection_method_entities_of_sentences):
+    return _as_training_data_entity_general(protection_method_entities_of_sentences,
+                                            SYSTEM_MESSAGE_PARTY_RECOGNITION,
+                                         lambda segment: USER_MESSAGE_TEMPLATE_PARTY_RECOGNITION_SENTENCE.format(**segment),
+                                         lambda segment: json.dumps([{"party_type": e["type"], "text": e["text"]} for e in segment["entities"]]))

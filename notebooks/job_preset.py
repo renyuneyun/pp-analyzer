@@ -101,6 +101,18 @@ _job_presets = [
         as_training_data=m_utils.as_training_data_for_protection_method_of_sentence_only,
         training_data_splitter=std.better_split,
     ),
+    JobPreset(
+        desc="party-seg-v2",
+        load_data=partial(a_utils.load_and_get, a_utils.get_party_entities_of_segments),
+        as_training_data=m_utils.as_training_data_for_party_entity_of_segment,
+        training_data_splitter=std.better_split,
+    ),
+    JobPreset(
+        desc="party-sent-v2",
+        load_data=partial(a_utils.load_and_get, a_utils.get_party_entities_of_sentences),
+        as_training_data=m_utils.as_training_data_for_party_entity_of_sentence,
+        training_data_splitter=std.better_split,
+    ),
 ]
 
 

@@ -80,3 +80,11 @@ PROTECTION_METHODS = [
 	'Access-limitation',
 	'Protection-other',
 ]
+
+PARTY_ENTITIES = [
+    'First-party-entity',
+    'Third-party-entity',
+    'Third-party-name',
+    'User',
+]
+

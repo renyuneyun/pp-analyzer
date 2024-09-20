@@ -420,6 +420,8 @@ def load_saved_llm_queries(dir_name=None):
     for file_path in dir_path.iterdir():
         if file_path.name in F_EVAL_AUX.values() and file_path.name != F_EVAL_DESC:
             continue
+        if file_path.is_dir():
+            continue
         with open(file_path, 'r') as f:
             data = json.load(f)
             if file_path.name == F_EVAL_DESC:

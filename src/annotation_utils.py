@@ -6,6 +6,7 @@ from .env import (
     F_DATA_CATEGORY_DEFINITION,
     F_PURPOSE_CATEGORY_DEFINITION,
     PROTECTION_METHODS,
+    PARTY_ENTITIES,
     get_entity_category_definitions,
 )
 
@@ -299,3 +300,11 @@ def get_protection_methods_of_segments(annotations):
 
 def get_protection_methods_of_sentences(annotations):
     return get_sentence_type_entities(annotations, PROTECTION_METHODS)
+
+
+def get_party_entities_of_segments(annotations):
+    return get_segment_type_entities(annotations, PARTY_ENTITIES)
+
+
+def get_party_entities_of_sentences(annotations):
+    return get_sentence_type_entities(annotations, PARTY_ENTITIES)
