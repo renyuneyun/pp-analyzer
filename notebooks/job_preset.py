@@ -113,6 +113,12 @@ _job_presets = [
         as_training_data=m_utils.as_training_data_for_party_entity_of_sentence,
         training_data_splitter=std.better_split,
     ),
+    JobPreset(
+        desc="relation-seg-v2",
+        load_data=partial(a_utils.load_and_get, a_utils.get_relations_of_segment_sentences_no_subsume),
+        as_training_data=m_utils.as_training_data_for_relation_of_segment,
+        training_data_splitter=std.better_split,
+    )
 ]
 
 

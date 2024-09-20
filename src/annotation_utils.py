@@ -308,3 +308,79 @@ def get_party_entities_of_segments(annotations):
 
 def get_party_entities_of_sentences(annotations):
     return get_sentence_type_entities(annotations, PARTY_ENTITIES)
+
+
+def get_relations_of_segment_sentences_no_subsume(annotations):
+    '''
+    Get all relations of each action in sentences in the same segment, paired together.
+    Output has the structure:
+    [
+        {
+            "segment": SEGMENT,
+            "entities": [
+                {
+                    "sentence": SENTENCE,
+                    "action_type": ACTION_TYPE,
+                    "relations": [
+                        {
+                            "relation_type": RELATION_TYPE,
+                            "entity": TEXT_OF_THE_RELATED_ENTITY,
+                            "entity_type": ENTITY_TYPE
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    where the same action type of the same sentence is always grouped together.
+    '''
+
+    action_entities = get_actions_of_sentences(annotations)
+    action_entities_dict = {(x["segment"], x["sentence"]): x["entities"] for x in action_entities}
+
+    res = {}
+    for x in annotations:
+        segment_text = x.text
+        sentences = get_sentences_with_spans(x)
+
+        for span, sentence in sentences.items():
+            res[segment_text] = {}
+
+        for e in x.events:
+            action_type = e.type
+            span = e.trigger.spans[0]
+            for span2 in sentences.keys():
+                if is_within_sentence(span, span2):
+                    sentence = sentences[span2]
+                    break
+            assert sentence
+            sub_dict = res[segment_text]
+            if action_type not in sub_dict:
+                sub_dict[(sentence, action_type)] = []
+            parts = sub_dict[(sentence, action_type)]
+            for arg in e.arguments:
+                role = arg.role
+                entity = arg.object
+                entity_type = entity.type
+                entity_mention = entity.mention
+                parts.append({
+                    "relation_type": role,
+                    "entity": entity_mention,
+                    "entity_type": entity_type,
+                })
+
+    ret = []
+    for segement_text, v in res.items():
+        l2 = []
+        for (sentence, action_type), relations in v.items():
+            l2.append({
+                "sentence": sentence,
+                "action_type": action_type,
+                "relations": relations,
+            })
+        l1 = {
+            'segment': segement_text,
+            'entities': l2,
+        }
+        ret.append(l1)
+    return ret
