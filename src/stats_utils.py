@@ -1,33 +1,94 @@
+from dataclasses import dataclass
 import json
 import numpy as np
 from pprint import pprint
 import pylcs
+from typing import Optional
 from .external.json_parse import try_parse_json_object
 
 
-def precision_accuracy_f1(expected, predicted, lcs_threshold=None):
-    expected = set(expected)
-    predicted = set(predicted)
+T_ENTITY = 'entity'
+T_ACTION = 'action'
 
-    intersection = expected.intersection(predicted)
-    intersection_with_lcs = len(intersection)
-    if lcs_threshold is not None:
-        only_in_expected = list(expected - predicted)
-        only_in_predicted = list(predicted - expected)
-        used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
-        for e1 in only_in_expected:
-            maximum_lcs_length = 0
-            maximum_lcs_index = -1
-            for i, e2 in enumerate(only_in_predicted):
-                if i in used: continue
-                lcs_length = pylcs.lcs_sequence_length(e1, e2)
-                if lcs_length > maximum_lcs_length:
-                    maximum_lcs_length = lcs_length
-                    maximum_lcs_index = i
-            maximum_lcs_rate = maximum_lcs_length / len(e1) if e1 else 0  # Similar to precision
-            if maximum_lcs_rate >= lcs_threshold:
-                intersection_with_lcs += maximum_lcs_rate
-                used.append(maximum_lcs_index)
+
+@dataclass
+class ActionDataPoint:
+    action_type: str
+    text: str
+    sentence: Optional[str] = None
+
+    def __eq__(self, o):
+        if not isinstance(o, ActionDataPoint):
+            return False
+        return self.action_type == o.action_type and self.text == o.text and (self.sentence == o.sentence if self.sentence is not None else True)
+
+    def __hash__(self):
+        return hash((self.action_type, self.text))
+
+    def lcs_rate(self, o):
+        if self.action_type != o.action_type:
+            return 0
+        if self.sentence is None:
+            return pylcs.lcs_sequence_length(self.text, o.text) / len(self.text)
+        else:
+            return min(pylcs.lcs_sequence_length(self.text, o.text) / len(self.text), pylcs.lcs_sequence_length(self.sentence, o.sentence) / len(self.sentence))
+
+
+def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None):
+    if data_type == T_ENTITY:
+        expected = set(expected)
+        predicted = set(predicted)
+
+        intersection = expected.intersection(predicted)
+        intersection_with_lcs = len(intersection)
+        if lcs_threshold is not None:
+            only_in_expected = list(expected - predicted)
+            only_in_predicted = list(predicted - expected)
+            used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
+            for e1 in only_in_expected:
+                maximum_lcs_length = 0
+                maximum_lcs_index = -1
+                for i, e2 in enumerate(only_in_predicted):
+                    if i in used: continue
+                    lcs_length = pylcs.lcs_sequence_length(e1, e2)
+                    if lcs_length > maximum_lcs_length:
+                        maximum_lcs_length = lcs_length
+                        maximum_lcs_index = i
+                maximum_lcs_rate = maximum_lcs_length / len(e1) if e1 else 0  # Similar to precision
+                if maximum_lcs_rate >= lcs_threshold:
+                    intersection_with_lcs += maximum_lcs_rate
+                    used.append(maximum_lcs_index)
+    elif data_type == T_ACTION:
+        if isinstance(expected, dict):
+            expected = [expected]
+        try:
+            expected = set([ActionDataPoint(**obj) for obj in expected])
+            predicted = set([ActionDataPoint(**obj) for obj in predicted])
+        except Exception as e:
+            # print(f"Error in parsing action data point: {e};\n  expected: {expected};\n  predicted: {predicted}")
+            raise e
+
+        intersection = expected.intersection(predicted)
+        intersection_with_lcs = len(intersection)
+        if lcs_threshold is not None:
+            only_in_expected = list(expected - predicted)
+            only_in_predicted = list(predicted - expected)
+            used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
+            for e1 in only_in_expected:
+                maximum_lcs_rate = 0
+                maximum_lcs_index = -1
+                for i, e2 in enumerate(only_in_predicted):
+                    if i in used: continue
+                    lcs_rate = e1.lcs_rate(e2)
+                    if lcs_rate > maximum_lcs_rate:
+                        maximum_lcs_rate = lcs_rate
+                        maximum_lcs_index = i
+                if maximum_lcs_rate >= lcs_threshold:
+                    intersection_with_lcs += maximum_lcs_rate
+                    used.append(maximum_lcs_index)
+    else:
+        raise ValueError(f"Unrecognised data_type: {data_type}")
+
 
     precision = intersection_with_lcs / len(predicted) if predicted else 0 if expected else 1
     recall = intersection_with_lcs / len(expected) if expected else 0 if predicted else 1
@@ -36,7 +97,9 @@ def precision_accuracy_f1(expected, predicted, lcs_threshold=None):
     # return sklm.precision_recall_fscore_support(expected, predicted)[:3]
 
 
-def heuristic_extract_data_entities(parsed_model_output):
+def heuristic_extract_data_entities(parsed_model_output, data_type=T_ENTITY):
+    if data_type == T_ACTION:
+        return parsed_model_output
     extracted_output = []
     for obj in parsed_model_output:
         if isinstance(obj, str):
@@ -69,7 +132,7 @@ def heuristic_extract_data_entities(parsed_model_output):
     return extracted_output
 
 
-def calc_statistics(saved_queries, try_heuristic_parse=True, lcs_threshold=None):
+def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None):
     result_score_list = []
     empty_result_score_list = []
     non_empty_result_score_list = []
@@ -91,10 +154,10 @@ def calc_statistics(saved_queries, try_heuristic_parse=True, lcs_threshold=None)
                 failed[i] = (model_output, correct_output)
                 continue
         if try_heuristic_parse:
-            model_output_parsed = heuristic_extract_data_entities(model_output_parsed)
+            model_output_parsed = heuristic_extract_data_entities(model_output_parsed, data_type=data_type)
         correct_output_parsed = json.loads(correct_output)
         try:
-            result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed, lcs_threshold=lcs_threshold)
+            result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed, data_type=data_type, lcs_threshold=lcs_threshold)
         except TypeError as e:
             failed[i] = (model_output, correct_output)
             continue
@@ -107,8 +170,8 @@ def calc_statistics(saved_queries, try_heuristic_parse=True, lcs_threshold=None)
     return result_score_list, non_empty_result_score_list, empty_result_score_list, failed
 
 
-def calc_and_print_statistics(desc, saved_queries, try_heuristic_parse=True, lcs_threshold=None):
-    result_score_list, non_empty_result_score_list, empty_result_score_list, failed = calc_statistics(saved_queries, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold)
+def calc_and_print_statistics(desc, saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None):
+    result_score_list, non_empty_result_score_list, empty_result_score_list, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold)
 
     print(f"Stat for eval with desc: {desc}")
     print(f"  {len(result_score_list)} valid datapoints, avg. precission, recall, f1:", np.mean(result_score_list, axis=0))
