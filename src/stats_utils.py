@@ -11,6 +11,12 @@ T_ENTITY = 'entity'
 T_ACTION = 'action'
 
 
+def lcs_rate(a, b):
+    if isinstance(a, str) and isinstance(b, str):
+        return pylcs.lcs_sequence_length(a, b) / len(a) if a else 0  # Similar to precision
+    return a.lcs_rate(b)
+
+
 @dataclass
 class ActionDataPoint:
     action_type: str
@@ -38,26 +44,6 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
     if data_type == T_ENTITY:
         expected = set(expected)
         predicted = set(predicted)
-
-        intersection = expected.intersection(predicted)
-        intersection_with_lcs = len(intersection)
-        if lcs_threshold is not None:
-            only_in_expected = list(expected - predicted)
-            only_in_predicted = list(predicted - expected)
-            used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
-            for e1 in only_in_expected:
-                maximum_lcs_length = 0
-                maximum_lcs_index = -1
-                for i, e2 in enumerate(only_in_predicted):
-                    if i in used: continue
-                    lcs_length = pylcs.lcs_sequence_length(e1, e2)
-                    if lcs_length > maximum_lcs_length:
-                        maximum_lcs_length = lcs_length
-                        maximum_lcs_index = i
-                maximum_lcs_rate = maximum_lcs_length / len(e1) if e1 else 0  # Similar to precision
-                if maximum_lcs_rate >= lcs_threshold:
-                    intersection_with_lcs += maximum_lcs_rate
-                    used.append(maximum_lcs_index)
     elif data_type == T_ACTION:
         if isinstance(expected, dict):
             expected = [expected]
@@ -67,28 +53,27 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
         except Exception as e:
             # print(f"Error in parsing action data point: {e};\n  expected: {expected};\n  predicted: {predicted}")
             raise e
-
-        intersection = expected.intersection(predicted)
-        intersection_with_lcs = len(intersection)
-        if lcs_threshold is not None:
-            only_in_expected = list(expected - predicted)
-            only_in_predicted = list(predicted - expected)
-            used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
-            for e1 in only_in_expected:
-                maximum_lcs_rate = 0
-                maximum_lcs_index = -1
-                for i, e2 in enumerate(only_in_predicted):
-                    if i in used: continue
-                    lcs_rate = e1.lcs_rate(e2)
-                    if lcs_rate > maximum_lcs_rate:
-                        maximum_lcs_rate = lcs_rate
-                        maximum_lcs_index = i
-                if maximum_lcs_rate >= lcs_threshold:
-                    intersection_with_lcs += maximum_lcs_rate
-                    used.append(maximum_lcs_index)
     else:
         raise ValueError(f"Unrecognised data_type: {data_type}")
 
+    intersection = expected.intersection(predicted)
+    intersection_with_lcs = len(intersection)
+    if lcs_threshold is not None:
+        only_in_expected = list(expected - predicted)
+        only_in_predicted = list(predicted - expected)
+        used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
+        for e1 in only_in_expected:
+            maximum_lcs_rate = 0
+            maximum_lcs_index = -1
+            for i, e2 in enumerate(only_in_predicted):
+                if i in used: continue
+                ilcs_rate = lcs_rate(e1, e2)
+                if ilcs_rate > maximum_lcs_rate:
+                    maximum_lcs_rate = ilcs_rate
+                    maximum_lcs_index = i
+            if maximum_lcs_rate >= lcs_threshold:
+                intersection_with_lcs += maximum_lcs_rate
+                used.append(maximum_lcs_index)
 
     precision = intersection_with_lcs / len(predicted) if predicted else 0 if expected else 1
     recall = intersection_with_lcs / len(expected) if expected else 0 if predicted else 1
