@@ -65,7 +65,7 @@ class RelationDataPoint(DataPoint):
     entity_id: str
 
     def lcs_rate(self, o):
-        return 1 if self.relation == o.relation else 0
+        return pylcs.lcs_sequence_length(self.relation, o.relation) / len(self.relation) if self.relation else 0
 
 
 _data_type_to_class = {
