@@ -60,6 +60,32 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
     except json.JSONDecodeError:
         pass
 
+    # Check if the multi-line input has or ends with a JSON object/array, without Markdown code block.
+    input = input.strip()
+    _patterns = [
+        r"(\[.*\{.*\}.*\])",
+        r"(\{.*\[.*\].*\})",
+        (r"(\{.*\})$", True),
+        (r"(\[.*\])$", True),
+    ]
+    for _pattern in _patterns:
+        if isinstance(_pattern, str):
+            _pattern, _must_be_end = _pattern, False
+        elif len(_pattern) == 2:
+            _pattern, _must_be_end = _pattern
+        else:
+            raise ValueError("Unexpected pattern definition format")
+        _match = re.search(_pattern, input, re.DOTALL)
+        if _match:
+            if _must_be_end and _match.endpos != len(input):
+                continue
+            input = _match.group(1)
+            try:
+                result = json.loads(input)
+                return input, result
+            except json.JSONDecodeError:
+                pass
+
     # Clean up json string.
     input = (
         input.replace("{{", "{")
