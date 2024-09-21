@@ -19,18 +19,15 @@ def lcs_rate(a, b):
     return a.lcs_rate(b)
 
 
-class ActionDataPoint(BaseModel):
+class DataPoint(BaseModel):
+    class Config:
+        frozen = True
+
+
+class ActionDataPoint(DataPoint):
     action_type: str
     text: str
     sentence: Optional[str] = None
-
-    def __eq__(self, o):
-        if not isinstance(o, ActionDataPoint):
-            return False
-        return self.action_type == o.action_type and self.text == o.text and (self.sentence == o.sentence if self.sentence is not None else True)
-
-    def __hash__(self):
-        return hash((self.action_type, self.text))
 
     def lcs_rate(self, o):
         if self.action_type != o.action_type:
@@ -41,17 +38,9 @@ class ActionDataPoint(BaseModel):
             return min(pylcs.lcs_sequence_length(self.text, o.text) / len(self.text), pylcs.lcs_sequence_length(self.sentence, o.sentence) / len(self.sentence))
 
 
-class ProtectionMethodDataPoint(BaseModel):
+class ProtectionMethodDataPoint(DataPoint):
     protection_method: str = Field(alias='protection-method')
     text: str
-
-    def __eq__(self, o):
-        if not isinstance(o, ProtectionMethodDataPoint):
-            return False
-        return self.protection_method == o.protection_method and self.text == o.text
-
-    def __hash__(self):
-        return hash((self.protection_method, self.text))
 
     def lcs_rate(self, o):
         if self.protection_method != o.protection_method:
@@ -59,17 +48,9 @@ class ProtectionMethodDataPoint(BaseModel):
         return pylcs.lcs_sequence_length(self.text, o.text) / len(self.text) if self.text else 0
 
 
-class PartyDataPoint(BaseModel):
+class PartyDataPoint(DataPoint):
     party_type: str
     text: str
-
-    def __eq__(self, o):
-        if not isinstance(o, PartyDataPoint):
-            return False
-        return self.party_type == o.party_type and self.text == o.text
-
-    def __hash__(self):
-        return hash((self.party_type, self.text))
 
     def lcs_rate(self, o):
         if self.party_type != o.party_type:
