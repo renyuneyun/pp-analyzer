@@ -306,6 +306,32 @@ def get_party_entities_of_sentences(annotations):
     return get_sentence_type_entities(annotations, PARTY_ENTITIES)
 
 
+def get_party_entities_of_segments_v2(annotations):
+    '''
+    On top of the output of get_party_entities_of_segments, this function will:
+    Also merge Third-party-name into Third-party-entity.
+    '''
+    res = get_segment_type_entities(annotations, PARTY_ENTITIES)
+    for x in res:
+        for y in x['entities']:
+            if y['type'] == 'Third-party-name':
+                y['type'] = 'Third-party-entity'
+    return res
+
+
+def get_party_entities_of_sentences_v2(annotations):
+    '''
+    On top of the output of get_party_entities_of_sentences, this function will:
+    Also merge Third-party-name into Third-party-entity.
+    '''
+    res = get_sentence_type_entities(annotations, PARTY_ENTITIES)
+    for x in res:
+        for y in x['entities']:
+            if y['type'] == 'Third-party-name':
+                y['type'] = 'Third-party-entity'
+    return res
+
+
 def get_relations_of_segment_sentences_no_subsume(annotations):
     '''
     Get all relations of each action in sentences in the same segment, paired together.
