@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import json
 import numpy as np
 from pprint import pprint
+from pydantic import BaseModel, Field
 import pylcs
 from typing import Optional
 from .external.json_parse import try_parse_json_object
@@ -9,6 +10,7 @@ from .external.json_parse import try_parse_json_object
 
 T_ENTITY = 'entity'
 T_ACTION = 'action'
+T_PROTECTION_METHOD = 'protection_method'
 
 
 def lcs_rate(a, b):
@@ -40,6 +42,24 @@ class ActionDataPoint:
             return min(pylcs.lcs_sequence_length(self.text, o.text) / len(self.text), pylcs.lcs_sequence_length(self.sentence, o.sentence) / len(self.sentence))
 
 
+class ProtectionMethodDataPoint(BaseModel):
+    protection_method: str = Field(alias='protection-method')
+    text: str
+
+    def __eq__(self, o):
+        if not isinstance(o, ProtectionMethodDataPoint):
+            return False
+        return self.protection_method == o.protection_method and self.text == o.text
+
+    def __hash__(self):
+        return hash((self.protection_method, self.text))
+
+    def lcs_rate(self, o):
+        if self.protection_method != o.protection_method:
+            return 0
+        return pylcs.lcs_sequence_length(self.text, o.text) / len(self.text) if self.text else 0
+
+
 def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None):
     if data_type == T_ENTITY:
         expected = set(expected)
@@ -53,6 +73,9 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
         except Exception as e:
             # print(f"Error in parsing action data point: {e};\n  expected: {expected};\n  predicted: {predicted}")
             raise e
+    elif data_type == T_PROTECTION_METHOD:
+        expected = set([ProtectionMethodDataPoint(**obj) for obj in expected])
+        predicted = set([ProtectionMethodDataPoint(**obj) for obj in predicted])
     else:
         raise ValueError(f"Unrecognised data_type: {data_type}")
 
@@ -83,7 +106,7 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
 
 
 def heuristic_extract_data_entities(parsed_model_output, data_type=T_ENTITY):
-    if data_type == T_ACTION:
+    if data_type != T_ENTITY:  # Not all data types should/can be heuristic-extracted
         return parsed_model_output
     extracted_output = []
     for obj in parsed_model_output:
