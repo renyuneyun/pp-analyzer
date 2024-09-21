@@ -35,6 +35,19 @@ def load_and_get(get_fn, brat_data_path=BRAT_DATA_PATH):
     return get_fn(annotations)
 
 
+def is_within_sentence(span, sentence_span):
+    return span.start >= sentence_span[0] and span.end <= sentence_span[1]
+
+
+def get_sentences_with_spans(annotation):
+    segment = annotation.text
+    sentences = segment.split('\n')
+    #sentence_spans is a list of tuples, each tuple is the start and end index of a sentence
+    sentence_spans = [(segment.index(s), segment.index(s) + len(s)) for s in sentences]
+    sentences = [s.strip() for s in sentences]
+    return dict(zip(sentence_spans, sentences))
+
+
 def get_segment_type_entities(annotations, types):
     '''
     Get all text spans that are entities (of the specified types) in the same segment, and put them together.
@@ -86,21 +99,17 @@ def get_sentence_type_entities(annotations, types):
     ]
     where the same segment is always grouped together.
     '''
-    def is_within_sentence(span, sentence_span):
-        return span.start >= sentence_span[0] and span.end <= sentence_span[1]
 
     res = {}
     for x in annotations:
         segment = x.text
-        sentences = segment.split('\n')
-        #sentence_spans is a list of tuples, each tuple is the start and end index of a sentence
-        sentence_spans = [(segment.index(s), segment.index(s) + len(s)) for s in sentences]
-        sentences = [s.strip() for s in sentences]
-        for sentence in sentences:
+        sentences = get_sentences_with_spans(x)
+
+        for sentence in sentences.values():
             if (segment, sentence) not in res:
                 res[(segment, sentence)] = []
-        for i, sentence_span in enumerate(sentence_spans):
-            part = res[(segment, sentences[i])]
+        for sentence_span, sentence in sentences.items():
+            part = res[(segment, sentence)]
             for e in x.entities:
                 if e.type in types:
                     for span in e.spans:
@@ -181,19 +190,6 @@ def with_correct_use_type(annotations):
                             e.type = ActionType.THIRD_PARTY_COLLECTION_USE.value
                             break
     return annotations
-
-
-def is_within_sentence(span, sentence_span):
-    return span.start >= sentence_span[0] and span.end <= sentence_span[1]
-
-
-def get_sentences_with_spans(annotation):
-    segment = annotation.text
-    sentences = segment.split('\n')
-    #sentence_spans is a list of tuples, each tuple is the start and end index of a sentence
-    sentence_spans = [(segment.index(s), segment.index(s) + len(s)) for s in sentences]
-    sentences = [s.strip() for s in sentences]
-    return dict(zip(sentence_spans, sentences))
 
 
 def get_actions_of_segments(annotations):
