@@ -51,6 +51,15 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
     if result:
         return input, result
 
+    _pattern = '```(?:json)?\n(.*)\n```'
+    _match = re.search(_pattern, input, re.DOTALL)
+    input = _match.group(1) if _match else input
+    try:
+        result = json.loads(input)
+        return input, result
+    except json.JSONDecodeError:
+        pass
+
     # Clean up json string.
     input = (
         input.replace("{{", "{")
@@ -63,20 +72,6 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
         .replace("\r", "")
         .strip()
     )
-
-    try:
-        result = json.loads(input)
-        return input, result
-    except json.JSONDecodeError:
-        pass
-
-    # Remove JSON Markdown Frame
-    if input.startswith("```json"):
-        input = input[len("```json"):]
-    if input.startswith("```"):
-        input = input[len("```"):]
-    if input.endswith("```"):
-        input = input[: len(input) - len("```")]
 
     try:
         result = json.loads(input)
