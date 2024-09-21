@@ -17,6 +17,7 @@ T_ENTITY = 'entity'
 T_ACTION = 'action'
 T_PROTECTION_METHOD = 'protection_method'
 T_PARTY = 'party'
+T_RELATION = 'relation'
 
 
 class DataPoint(BaseModel):
@@ -58,10 +59,20 @@ class PartyDataPoint(DataPoint):
         return pylcs.lcs_sequence_length(self.text, o.text) / len(self.text) if self.text else 0
 
 
+class RelationDataPoint(DataPoint):
+    relation: str
+    action_id: str
+    entity_id: str
+
+    def lcs_rate(self, o):
+        return 1 if self.relation == o.relation else 0
+
+
 _data_type_to_class = {
     T_ACTION: ActionDataPoint,
     T_PROTECTION_METHOD: ProtectionMethodDataPoint,
     T_PARTY: PartyDataPoint,
+    T_RELATION: RelationDataPoint,
 }
 
 
