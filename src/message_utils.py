@@ -206,10 +206,10 @@ def as_training_data_for_party_entity_of_sentence(protection_method_entities_of_
                                          lambda segment: json.dumps([{"party_type": e["type"], "text": e["text"]} for e in segment["entities"]]))
 
 
-def as_training_data_for_relation_of_segment(relation_entities_of_segments):
+def _as_training_data_for_relation_of_segment(relation_entities_of_segments, system_message, user_message_templace):
     data_template = {
         "messages": [
-            {"role": "system", "content": SYSTEM_MESSAGE_RELATION_RECOGNITION},
+            {"role": "system", "content": system_message},
             {"role": "user", "content": None},
             {"role": "assistant", "content": None},
         ]}
@@ -245,7 +245,7 @@ def as_training_data_for_relation_of_segment(relation_entities_of_segments):
                     "entity_id": entity_id,
                     "relation": relation_type,
                 })
-        user_message = USER_MESSAGE_TEMPLATE_RELATION_RECOGNITION.format(**{
+        user_message = user_message_templace.format(**{
             'segment': segment_text,
             'targets': {
                 "action_contexts": action_type_list,
@@ -259,3 +259,15 @@ def as_training_data_for_relation_of_segment(relation_entities_of_segments):
         data["messages"][2]["content"] = reply
         data_list.append(data)
     return data_list
+
+
+def as_training_data_for_relation_of_segment(relation_entities_of_segments):
+    return _as_training_data_for_relation_of_segment(relation_entities_of_segments,
+                                                     SYSTEM_MESSAGE_RELATION_RECOGNITION,
+                                                     USER_MESSAGE_TEMPLATE_RELATION_RECOGNITION)
+
+
+def as_training_data_for_relation_of_segment_renamed(relation_entities_of_segments):
+    return _as_training_data_for_relation_of_segment(relation_entities_of_segments,
+                                                     SYSTEM_MESSAGE_RELATION_RECOGNITION_RENAMED,
+                                                     USER_MESSAGE_TEMPLATE_RELATION_RECOGNITION)

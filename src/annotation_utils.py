@@ -380,3 +380,63 @@ def get_relations_of_segment_sentences_no_subsume(annotations):
         }
         ret.append(l1)
     return ret
+
+
+def get_relations_of_segment_sentences_no_subsume_v2(annotations):
+    '''
+    Get all relations of each action in sentences in the same segment, paired together.
+    On top of the output of get_relations_of_segment_sentences_no_subsume, this function will:
+    Also replace the specific data and purpose entity types with general types (Data and Purpose).
+    '''
+
+    res = get_relations_of_segment_sentences_no_subsume(annotations)
+
+    data_entity_types = get_data_entity_types()
+    data_entity_types += ['Data-general', 'Data-other']
+    data_entity_type_replace = 'Data'
+    purpose_entity_types = get_purpose_entity_types()
+    purpose_entity_types += ['Purpose-general', 'Purpose-other']
+    purpose_entity_type_replace = 'Purpose'
+
+    for x in res:
+        for y in x['entities']:
+            for z in y['relations']:
+                if z['entity_type'] in data_entity_types:
+                    z['entity_type'] = data_entity_type_replace
+                elif z['entity_type'] in purpose_entity_types:
+                    z['entity_type'] = purpose_entity_type_replace
+
+    return res
+
+
+def get_relations_of_segment_sentences_no_subsume_v3(annotations):
+    '''
+    Get all relations of each action in sentences in the same segment, paired together.
+    On top of the output of get_relations_of_segment_sentences_no_subsume, this function will:
+    Also replace the specific data and purpose entity types with general types (Data and Purpose).
+    Also merge Third-party-name into Third-party-entity.
+    '''
+
+    res = get_relations_of_segment_sentences_no_subsume(annotations)
+
+    data_entity_types = get_data_entity_types()
+    data_entity_types += ['Data-general', 'Data-other']
+    data_entity_type_replace = 'Data'
+    purpose_entity_types = get_purpose_entity_types()
+    purpose_entity_types += ['Purpose-general', 'Purpose-other']
+    purpose_entity_type_replace = 'Purpose'
+    party_entity_override = {
+        'Third-party-name': 'Third-party-entity',
+    }
+
+    for x in res:
+        for y in x['entities']:
+            for z in y['relations']:
+                if z['entity_type'] in data_entity_types:
+                    z['entity_type'] = data_entity_type_replace
+                elif z['entity_type'] in purpose_entity_types:
+                    z['entity_type'] = purpose_entity_type_replace
+                elif z['entity_type'] in party_entity_override:
+                    z['entity_type'] = party_entity_override[z['entity_type']]
+
+    return res
