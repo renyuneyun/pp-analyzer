@@ -44,6 +44,9 @@ class ProtectionMethodDataPoint(DataPoint):
     text: str
 
     def lcs_rate(self, o):
+        rate1 = pylcs.lcs_sequence_length(self.protection_method, o.protection_method) / len(self.protection_method) if self.protection_method else 0
+        rate2 = pylcs.lcs_sequence_length(self.text, o.text) / len(self.text) if self.text else 0
+        return min(rate1, rate2)
         if self.protection_method != o.protection_method:
             return 0
         return pylcs.lcs_sequence_length(self.text, o.text) / len(self.text) if self.text else 0
@@ -112,7 +115,14 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
                     maximum_lcs_rate = ilcs_rate
                     maximum_lcs_index = i
             if maximum_lcs_rate >= lcs_threshold:
-                intersection_with_lcs += maximum_lcs_rate
+                if lcs_threshold == -1 and data_type == T_ENTITY:
+                    if maximum_lcs_rate > 0:
+                        words1 = e1.split()
+                        words2 = only_in_predicted[maximum_lcs_index].split()
+                        if set(words1) & set(words2):
+                            intersection_with_lcs += 1
+                else:
+                    intersection_with_lcs += maximum_lcs_rate
                 used.append(maximum_lcs_index)
 
     precision = intersection_with_lcs / len(predicted) if predicted else 0 if expected else 1
