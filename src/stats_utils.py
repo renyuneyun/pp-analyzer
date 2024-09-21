@@ -7,16 +7,16 @@ from typing import Optional
 from .external.json_parse import try_parse_json_object
 
 
-T_ENTITY = 'entity'
-T_ACTION = 'action'
-T_PROTECTION_METHOD = 'protection_method'
-T_PARTY = 'party'
-
-
 def lcs_rate(a, b):
     if isinstance(a, str) and isinstance(b, str):
         return pylcs.lcs_sequence_length(a, b) / len(a) if a else 0  # Similar to precision
     return a.lcs_rate(b)
+
+
+T_ENTITY = 'entity'
+T_ACTION = 'action'
+T_PROTECTION_METHOD = 'protection_method'
+T_PARTY = 'party'
 
 
 class DataPoint(BaseModel):
@@ -58,6 +58,13 @@ class PartyDataPoint(DataPoint):
         return pylcs.lcs_sequence_length(self.text, o.text) / len(self.text) if self.text else 0
 
 
+_data_type_to_class = {
+    T_ACTION: ActionDataPoint,
+    T_PROTECTION_METHOD: ProtectionMethodDataPoint,
+    T_PARTY: PartyDataPoint,
+}
+
+
 def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None):
     if data_type == T_ENTITY:
         expected = set(expected)
@@ -71,12 +78,10 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
         except Exception as e:
             # print(f"Error in parsing action data point: {e};\n  expected: {expected};\n  predicted: {predicted}")
             raise e
-    elif data_type == T_PROTECTION_METHOD:
-        expected = set([ProtectionMethodDataPoint(**obj) for obj in expected])
-        predicted = set([ProtectionMethodDataPoint(**obj) for obj in predicted])
-    elif data_type == T_PARTY:
-        expected = set([PartyDataPoint(**obj) for obj in expected])
-        predicted = set([PartyDataPoint(**obj) for obj in predicted])
+    elif data_type in _data_type_to_class:
+        cls = _data_type_to_class[data_type]
+        expected = set([cls(**obj) for obj in expected])
+        predicted = set([cls(**obj) for obj in predicted])
     else:
         raise ValueError(f"Unrecognised data_type: {data_type}")
 
