@@ -271,3 +271,9 @@ def as_training_data_for_relation_of_segment_renamed(relation_entities_of_segmen
     return _as_training_data_for_relation_of_segment(relation_entities_of_segments,
                                                      SYSTEM_MESSAGE_RELATION_RECOGNITION_RENAMED,
                                                      USER_MESSAGE_TEMPLATE_RELATION_RECOGNITION)
+
+
+def as_training_data_for_relation_of_segment_renamed_more_instruct(relation_entities_of_segments):
+    return _as_training_data_for_relation_of_segment(relation_entities_of_segments,
+                                                     SYSTEM_MESSAGE_RELATION_RECOGNITION_RENAMED_MORE_INSTRUCT,
+                                                     USER_MESSAGE_TEMPLATE_RELATION_RECOGNITION)
