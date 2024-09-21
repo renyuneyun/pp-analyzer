@@ -164,6 +164,13 @@ def as_training_data_for_action_span_for_segment(action_entities_of_segments):
     return data_list
 
 
+def as_training_data_for_action_span_for_segment_v2(action_entities_of_segments):
+    return _as_training_data_entity_general(action_entities_of_segments,
+                                            SYSTEM_MESSAGE_ACTION_RECOGNITION,
+                                         lambda segment: USER_MESSAGE_TEMPLATE_ACTION_RECOGNITION.format(**segment),
+                                         lambda segment: json.dumps(segment["entities"]))
+
+
 def as_training_data_for_action_span_of_sentence_only(action_entities_of_segments):
     return _as_training_data_entity_general(action_entities_of_segments,
                                             SYSTEM_MESSAGE_ACTION_RECOGNITION_SENTENCE,
