@@ -1,5 +1,5 @@
 # Description: JSON cleaning and parsing utilities.
-# From https://bigmodel.cn/dev/howuse/jsonformat
+# Modified from https://bigmodel.cn/dev/howuse/jsonformat
 # Unknown license; unknown author; unknown date; probably also unknown origin
 
 import json
@@ -51,10 +51,6 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
     if result:
         return input, result
 
-    _pattern = r"\{(.*)\}"
-    _match = re.search(_pattern, input)
-    input = "{" + _match.group(1) + "}" if _match else input
-
     # Clean up json string.
     input = (
         input.replace("{{", "{")
@@ -68,6 +64,12 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
         .strip()
     )
 
+    try:
+        result = json.loads(input)
+        return input, result
+    except json.JSONDecodeError:
+        pass
+
     # Remove JSON Markdown Frame
     if input.startswith("```json"):
         input = input[len("```json"):]
@@ -75,6 +77,22 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
         input = input[len("```"):]
     if input.endswith("```"):
         input = input[: len(input) - len("```")]
+
+    try:
+        result = json.loads(input)
+        return input, result
+    except json.JSONDecodeError:
+        pass
+
+    _pattern = r"\{(.*)\}"
+    _match = re.search(_pattern, input)
+    input = "{" + _match.group(1) + "}" if _match else input
+
+    try:
+        result = json.loads(input)
+        return input, result
+    except json.JSONDecodeError:
+        pass
 
     try:
         result = json.loads(input)
