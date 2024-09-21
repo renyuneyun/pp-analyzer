@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import json
 import numpy as np
 from pprint import pprint
@@ -19,8 +18,7 @@ def lcs_rate(a, b):
     return a.lcs_rate(b)
 
 
-@dataclass
-class ActionDataPoint:
+class ActionDataPoint(BaseModel):
     action_type: str
     text: str
     sentence: Optional[str] = None
