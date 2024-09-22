@@ -9,8 +9,12 @@ from .external.json_parse import try_parse_json_object
 
 def lcs_rate(a, b):
     if isinstance(a, str) and isinstance(b, str):
-        return pylcs.lcs_sequence_length(a, b) / len(a) if a else 0  # Similar to precision
-    return a.lcs_rate(b)
+        rate = pylcs.lcs_sequence_length(a, b) / len(a) if a else 0  # Similar to precision
+    else:
+        rate = a.lcs_rate(b)
+    if rate > 1:
+        rate = 1
+    return rate
 
 
 T_ENTITY = 'entity'
