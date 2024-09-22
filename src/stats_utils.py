@@ -83,7 +83,9 @@ _data_type_to_class = {
 }
 
 
-def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None):
+def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None):
+    if data_type == T_PARTY and tolerate_additionally_predicted is None:
+        tolerate_additional_in_predicted = True
     if data_type == T_ENTITY:
         expected = set(expected)
         predicted = set(predicted)
@@ -105,9 +107,9 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
 
     intersection = expected.intersection(predicted)
     intersection_with_lcs = len(intersection)
+    only_in_expected = list(expected - predicted)
+    only_in_predicted = list(predicted - expected)
     if lcs_threshold is not None:
-        only_in_expected = list(expected - predicted)
-        only_in_predicted = list(predicted - expected)
         used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
         for e1 in only_in_expected:
             maximum_lcs_rate = 0
@@ -129,9 +131,14 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
                     intersection_with_lcs += maximum_lcs_rate
                 used.append(maximum_lcs_index)
 
-    precision = intersection_with_lcs / len(predicted) if predicted else 1
-    recall = intersection_with_lcs / len(expected) if expected else 1
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0 if expected or predicted else 1
+    if not expected and not predicted:
+        precision = recall = f1 = 1
+    else:
+        precision = intersection_with_lcs / len(predicted) if predicted else 0
+        recall = intersection_with_lcs / len(expected) if expected else 0
+        if tolerate_additionally_predicted and not only_in_expected:
+            recall = 1
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0 if expected or predicted else 1
     return precision, recall, f1
     # return sklm.precision_recall_fscore_support(expected, predicted)[:3]
 
@@ -171,7 +178,7 @@ def heuristic_extract_data_entities(parsed_model_output, data_type=T_ENTITY):
     return extracted_output
 
 
-def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None):
+def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None):
     result_score_list = []
     empty_result_score_list = []
     non_empty_result_score_list = []
@@ -196,7 +203,7 @@ def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True,
             model_output_parsed = heuristic_extract_data_entities(model_output_parsed, data_type=data_type)
         correct_output_parsed = json.loads(correct_output)
         try:
-            result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed, data_type=data_type, lcs_threshold=lcs_threshold)
+            result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed, data_type=data_type, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted)
         except TypeError as e:
             failed[i] = (model_output, correct_output)
             continue
@@ -209,8 +216,8 @@ def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True,
     return result_score_list, non_empty_result_score_list, empty_result_score_list, failed
 
 
-def calc_and_print_statistics(desc, saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None):
-    result_score_list, non_empty_result_score_list, empty_result_score_list, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold)
+def calc_and_print_statistics(desc, saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None):
+    result_score_list, non_empty_result_score_list, empty_result_score_list, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted)
 
     print(f"Stat for eval with desc: {desc}")
     print(f"  {len(result_score_list)} valid datapoints, avg. precission, recall, f1:", np.mean(result_score_list, axis=0))
