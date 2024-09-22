@@ -125,8 +125,8 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
                     intersection_with_lcs += maximum_lcs_rate
                 used.append(maximum_lcs_index)
 
-    precision = intersection_with_lcs / len(predicted) if predicted else 0 if expected else 1
-    recall = intersection_with_lcs / len(expected) if expected else 0 if predicted else 1
+    precision = intersection_with_lcs / len(predicted) if predicted else 1
+    recall = intersection_with_lcs / len(expected) if expected else 1
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0 if expected or predicted else 1
     return precision, recall, f1
     # return sklm.precision_recall_fscore_support(expected, predicted)[:3]
