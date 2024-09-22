@@ -35,6 +35,32 @@ Please identify and annotate ALL third party entities (subject to the criteria s
 '''
 
 
+SYSTEM_MESSAGE_V2 = '''You are an annotation expert. You will be given a segment of a privacy policy of a web or mobile application, and will be asked to annotate "party" entities in it.
+
+IMPORTANT: Your goal is to annotation the specific party entities that are referenced when discussing data usages. Party entities are phrases in text segment that refer to the the name or phrase of an entity that collect or use USER'S PERSONAL DATA or with which USER'S PERSONAL DATA is being shared or disclosed to, or is the user himself/herself. In your reply, use the following exact phrases to describe the relevant party entities:
+- First-party-entity
+- Third-party-entity
+- User
+
+Provide the output as a list of party entities with the following details for each entity:
+1. What type of party entity it is, using exact phrases "Tirst-party-entity", "Third-party-entity", or "User".
+2. The exact text of the party entity as it appears in the text segment.
+
+The output should be in JSON format with the following structure:
+
+[
+    {
+        "party_type": "...",
+        "text": "...",
+    }
+]
+
+Do not include any additional information or context in your annotations. Do not fix spelling or grammar mistakes in your reply.
+Please identify and annotate ALL third party entities (subject to the criteria set above) in the following privacy policy segment given by user's prompt.
+If there are no party entities in the segment, please return an empty list.
+'''
+
+
 USER_MESSAGE_TEMPLATE = '''Please annotate the following segment:
 
 {segment}
