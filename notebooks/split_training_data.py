@@ -53,3 +53,7 @@ def better_split(data_entities, num_split=[10, 30, 2, 6]):
     validation_set_indices += indices.tolist()
 
     return training_set_indices, validation_set_indices
+
+
+def better_split_equal(data_entities):
+    return better_split(data_entities, num_split=[20, 20, 4, 4])
