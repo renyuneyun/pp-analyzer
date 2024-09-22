@@ -179,9 +179,18 @@ def heuristic_extract_data_entities(parsed_model_output, data_type=T_ENTITY):
 
 
 def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None):
+    K_EXPECT_EMPTY = '(Expected) Empty'
+    K_EXPECT_NON_EMPTY = '(Expected) Non-empty'
+    K_PREDICT_EMPTY = '(Predicted) Empty'
+    K_PREDICT_NON_EMPTY = '(Predicted) Non-empty'
+
     result_score_list = []
-    empty_result_score_list = []
-    non_empty_result_score_list = []
+    addition_scoring = {
+        K_EXPECT_NON_EMPTY: [],
+        K_EXPECT_EMPTY: [],
+        K_PREDICT_NON_EMPTY: [],
+        K_PREDICT_EMPTY: [],
+    }
 
     failed = {}
     for i, (model_output, correct_output) in enumerate([(query['output'], query['correct_output']) for query in saved_queries]):
@@ -209,19 +218,26 @@ def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True,
             continue
         result_score_list.append(result_score)
         if correct_output_parsed:
-            non_empty_result_score_list.append(result_score)
+            addition_scoring[K_EXPECT_NON_EMPTY].append(result_score)
         else:
-            empty_result_score_list.append(result_score)
+            addition_scoring[K_EXPECT_EMPTY].append(result_score)
+        if model_output_parsed:
+            addition_scoring[K_PREDICT_NON_EMPTY].append(result_score)
+        else:
+            addition_scoring[K_PREDICT_EMPTY].append(result_score)
 
-    return result_score_list, non_empty_result_score_list, empty_result_score_list, failed
+    return result_score_list, addition_scoring, failed
 
 
 def calc_and_print_statistics(desc, saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None):
-    result_score_list, non_empty_result_score_list, empty_result_score_list, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted)
+    result_score_list, addition_scoring, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted)
 
     print(f"Stat for eval with desc: {desc}")
     print(f"  {len(result_score_list)} valid datapoints, avg. precission, recall, f1:", np.mean(result_score_list, axis=0))
-    print(f"  {len(non_empty_result_score_list)} (ought to be) non-empty datapoints, avg. precission, recall, f1:", np.mean(non_empty_result_score_list, axis=0))
-    print(f"  {len(empty_result_score_list)} (ought to be) empty datapoints, avg. precission, recall, f1:", np.mean(empty_result_score_list, axis=0))
+    for k, score_list in addition_scoring.items():
+        if not score_list: continue
+        print(f"  {len(score_list)} datapoints for {k}, with avg. precission, recall, f1:", np.mean(score_list, axis=0))
+    # print(f"  {len(non_empty_result_score_list)} (ought to be) non-empty datapoints, avg. precission, recall, f1:", np.mean(non_empty_result_score_list, axis=0))
+    # print(f"  {len(empty_result_score_list)} (ought to be) empty datapoints, avg. precission, recall, f1:", np.mean(empty_result_score_list, axis=0))
     print(f"  {len(failed)} datapoints are not valid (e.g. not JSON; malformed model output)")
     print("  ", end=''), pprint(failed)
