@@ -102,6 +102,12 @@ _job_presets = [
         training_data_splitter=std.better_split,
     ),
     JobPreset(
+        desc="action-sent-v3-d3",
+        load_data=partial(a_utils.load_and_get, a_utils.get_actions_of_sentences),
+        as_training_data=m_utils.as_training_data_for_action_span_of_sentence_only_improved,
+        training_data_splitter=std.better_split_equal,
+    ),
+    JobPreset(
         desc="pm-seg-v2",
         load_data=partial(a_utils.load_and_get, a_utils.get_protection_methods_of_segments),
         as_training_data=m_utils.as_training_data_for_protection_method_of_segment,
