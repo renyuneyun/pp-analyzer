@@ -238,3 +238,17 @@ The action contexts and entities that you need to annotate are the following:
 {targets}
 </targets>
 '''
+
+
+USER_MESSAGE_TEMPLATE_SENTENCE = '''Please annotate the relations between the action contexts and the entities in the following privacy policy fraction:
+
+<policy>
+{sentence}
+</policy>
+
+The action contexts and entities that you need to annotate are the following:
+
+<targets>
+{targets}
+</targets>
+'''

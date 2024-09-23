@@ -90,6 +90,12 @@ _job_presets = [
         training_data_splitter=std.better_split,
     ),
     JobPreset(
+        desc="action-seg-v2-d3",
+        load_data=partial(a_utils.load_and_get, a_utils.get_actions_of_segments),
+        as_training_data=m_utils.as_training_data_for_action_span_for_segment_v2,
+        training_data_splitter=std.better_split_equal,
+    ),
+    JobPreset(
         desc="action-sent-v2",
         load_data=partial(a_utils.load_and_get, a_utils.get_actions_of_sentences),
         as_training_data=m_utils.as_training_data_for_action_span_of_sentence_only,
@@ -178,6 +184,18 @@ _job_presets = [
         load_data=partial(a_utils.load_and_get, a_utils.get_relations_of_segment_sentences_no_subsume_v3),
         as_training_data=m_utils.as_training_data_for_relation_of_segment_renamed_more_instruct,
         training_data_splitter=std.better_split,
+    ),
+    JobPreset(
+        desc="relation-sent-v4-d2",
+        load_data=partial(a_utils.load_and_get, a_utils.get_relations_of_segment_sentences_no_subsume_v3),
+        as_training_data=m_utils.as_training_data_for_relation_of_sentence,
+        training_data_splitter=std.better_split,
+    ),
+    JobPreset(
+        desc="relation-sent-v4-d3",
+        load_data=partial(a_utils.load_and_get, a_utils.get_relations_of_segment_sentences_no_subsume_v3),
+        as_training_data=m_utils.as_training_data_for_relation_of_sentence,
+        training_data_splitter=std.better_split_equal,
     ),
 ]
 
