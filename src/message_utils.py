@@ -118,9 +118,21 @@ def as_training_data_for_data_classification_of_segment_gradual(data_entities_of
     return data_list
 
 
+def as_training_data_for_purpose_span_of_segment(purpose_entities_of_segments):
+    return _as_training_data_entity_segment_text(purpose_entities_of_segments,
+                                            SYSTEM_MESSAGE_PURPOSE_ENTITY_RECOGNITION_SENTENCE_IMPROVED,
+                                            USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY_RECOGNITION)
+
+
 def as_training_data_for_purpose_span_of_sentence_only(purpose_entities_of_sentences):
     return _as_training_data_entity_segment_text(purpose_entities_of_sentences,
                                             SYSTEM_MESSAGE_PURPOSE_ENTITY_RECOGNITION_SENTENCE,
+                                            USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY_RECOGNITION_SENTENCE)
+
+
+def as_training_data_for_purpose_span_of_sentence_only_improved(purpose_entities_of_sentences):
+    return _as_training_data_entity_segment_text(purpose_entities_of_sentences,
+                                            SYSTEM_MESSAGE_PURPOSE_ENTITY_RECOGNITION_SENTENCE_IMPROVED,
                                             USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY_RECOGNITION_SENTENCE)
 
 
