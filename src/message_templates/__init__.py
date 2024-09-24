@@ -182,6 +182,12 @@ from .data_entity_recognition_sentence import (
 )
 
 
+from .data_entity_with_action import (
+    SYSTEM_MESSAGE as SYSTEM_MESSAGE_DATA_ENTITY_RECOGNITION_WITH_ACTION,
+    USER_MESSAGE_TEMPLATE as USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_WITH_ACTION,
+)
+
+
 SYSTEM_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION = '''You are an annotation expert, and your task is to map phrases concerning user private data to one of the 211 categories below.
 You will be given a list of categories/terms as a hierarchy, meaning that some categories will have subcategories.
 You will also be given definitions of each of these categories. Please rely on these definitions.

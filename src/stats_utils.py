@@ -18,6 +18,7 @@ def lcs_rate(a, b):
 
 
 T_ENTITY = 'entity'
+T_ENTITY_WITH_ACTION = 'entity_with_action'
 T_ACTION = 'action'
 T_PROTECTION_METHOD = 'protection_method'
 T_PARTY = 'party'
@@ -27,6 +28,17 @@ T_RELATION = 'relation'
 class DataPoint(BaseModel):
     class Config:
         frozen = True
+
+
+class EntityWithActionDataPoint(DataPoint):
+    action_context: str
+    text: str
+
+    def lcs_rate(self, o):
+        return min(
+            pylcs.lcs_sequence_length(self.action_context, o.action_context) / len(self.action_context),
+            pylcs.lcs_sequence_length(self.text, o.text) / len(self.text)
+            )
 
 
 class ActionDataPoint(DataPoint):
@@ -76,6 +88,7 @@ class RelationDataPoint(DataPoint):
 
 
 _data_type_to_class = {
+    T_ENTITY_WITH_ACTION: EntityWithActionDataPoint,
     T_ACTION: ActionDataPoint,
     T_PROTECTION_METHOD: ProtectionMethodDataPoint,
     T_PARTY: PartyDataPoint,

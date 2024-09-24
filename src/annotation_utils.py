@@ -137,6 +137,54 @@ def get_data_entities_of_sentences(annotations, data_def_file=F_DATA_CATEGORY_DE
     return data_entities
 
 
+def get_data_entities_with_actions_of_segments(annotations, data_def_file=F_DATA_CATEGORY_DEFINITION):
+    data_types = list(get_data_entity_types(data_def_file))
+
+    res = {}
+    for x in annotations:
+        segment_text = x.text
+        res[segment_text] = []
+        parts = res[segment_text]
+        for e in x.events:
+            for arg in e.arguments:
+                if arg.object.type in data_types:
+                    parts.append({
+                        "action_context": e.type,
+                        "text": arg.object.mention,
+                        "type": arg.object.type
+                    })
+    return [{"segment": k, "entities": v} for k, v in res.items()]
+
+
+def get_data_entities_with_actions_of_sentences(annotations, data_def_file=F_DATA_CATEGORY_DEFINITION):
+    data_types = list(get_data_entity_types(data_def_file))
+
+    data_entities = get_segment_type_entities(annotations, data_types)
+
+    res = {}
+    for x in annotations:
+        segment = x.text
+        sentences = get_sentences_with_spans(x)
+
+        for sentence in sentences.values():
+            if (segment, sentence) not in res:
+                res[(segment, sentence)] = []
+        for sentence_span, sentence in sentences.items():
+            part = res[(segment, sentence)]
+            for e in x.events:
+                for arg in e.arguments:
+                    e1 = arg.object
+                    if e1.type in data_types:
+                        for span in e1.spans:
+                            if is_within_sentence(span, sentence_span):
+                                part.append({
+                                    "action_context": e.type,
+                                    "text": e1.mention,
+                                    "type": e1.type,
+                                })
+    return [{"segment": seg, "sentence": sent, "entities": v} for (seg, sent), v in res.items()]
+
+
 def load_data_entities_of_segments(brat_data_path=BRAT_DATA_PATH, data_def_file=F_DATA_CATEGORY_DEFINITION):
     return load_and_get(partial(get_data_entities_of_segments, data_def_file=data_def_file), brat_data_path)
 

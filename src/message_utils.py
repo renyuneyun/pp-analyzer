@@ -72,6 +72,27 @@ def as_training_data_for_data_span_of_sentence_1(data_entities_of_sentences):
                                             USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_2_1)
 
 
+def as_training_data_for_data_span_with_action_of_segment(data_entities_of_segments):
+    return _as_training_data_entity_general(data_entities_of_segments,
+                                            SYSTEM_MESSAGE_DATA_ENTITY_RECOGNITION_WITH_ACTION,
+                                            lambda segment: USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_WITH_ACTION.format(**segment),
+                                            lambda segment: json.dumps([{
+                                                "action_context": a["action_context"],
+                                                "text": a["text"],
+                                            } for a in segment["entities"]]))
+
+
+def as_training_data_for_data_span_with_action_of_sentence(data_entities_of_sentence):
+    return _as_training_data_entity_general(data_entities_of_sentence,
+                                            SYSTEM_MESSAGE_DATA_ENTITY_RECOGNITION_WITH_ACTION,
+                                            lambda segment: USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_WITH_ACTION.format(
+                                                **{'segment': segment['sentence']}),
+                                            lambda segment: json.dumps([{
+                                                "action_context": a["action_context"],
+                                                "text": a["text"],
+                                            } for a in segment["entities"]]))
+
+
 def as_training_data_for_data_classification_of_segment(data_entities_of_segments):
     return _as_training_data_entity_general(data_entities_of_segments,
                                          SYSTEM_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION.format(
