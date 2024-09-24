@@ -54,6 +54,12 @@ _job_presets = [
         training_data_splitter=std.better_split_equal,
     ),
     JobPreset(
+        desc="data_entity_action-sent_data-v2-d3",
+        load_data=partial(a_utils.load_and_get, a_utils.get_data_entities_with_actions_of_sentences),
+        as_training_data=m_utils.as_training_data_for_data_span_with_action_of_sentence_weak_filter,
+        training_data_splitter=std.better_split_equal,
+    ),
+    JobPreset(
         desc="data_class-sent_data-v2",
         load_data=a_utils.load_data_entities_of_sentences,
         as_training_data=m_utils.as_training_data_for_data_classification_of_segment,
