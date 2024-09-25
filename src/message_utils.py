@@ -60,6 +60,12 @@ def as_training_data_for_data_span_of_sentence_only(data_entities_of_sentences):
                                             USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_SENTENCE)
 
 
+def as_training_data_for_data_span_of_sentence_only_weak_filter(data_entities_of_sentences):
+    return _as_training_data_entity_segment_text(data_entities_of_sentences,
+                                            SYSTEM_MESSAGE_DATA_ENTITY_RECOGNITION_SENTENCE_WEAK_FILTER,
+                                            USER_MESSAGE_TEMPLATE_DATA_ENTITY_RECOGNITION_SENTENCE)
+
+
 def as_training_data_for_data_span_of_sentence(data_entities_of_sentences):
     return _as_training_data_entity_segment_text(data_entities_of_sentences,
                                             SYSTEM_MESSAGE,
