@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 pydantic = "^2.9.2"
 openai = "^1.47.1"
+json-repair = "^0.29.5"
 
 
 [build-system]

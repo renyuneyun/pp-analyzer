@@ -26,12 +26,7 @@ from .data_model import (
     DATA_PRACTICE_NAME_MAP,
     DATA_PRACTICE_CLASS_MAP,
 )
-from .query_helper import (
-    Q_DATA_ENTITY,
-    Q_DATA_CLASSIFICATION,
-    Q_ACTION_RECOGNITION,
-    Q_RELATION_RECOGNITION,
-)
+from . import query_helper as qh
 
 
 log = Logger(__name__)
@@ -106,16 +101,10 @@ def identify_data_entities(pp_text: str, segments: list[str]) -> list[SWDataEnti
     ]
     """
     def call_llm_for_segment(segment_text):
-        parsed_model_output = Q_DATA_ENTITY.run_query({"segment": segment_text})
+        parsed_model_output = qh.Q_DATA_ENTITY.run_query({"segment": segment_text})
         res = []
         for entity in parsed_model_output:
-            entity_text = None
-            if isinstance(entity, str):
-                entity_text = entity
-            elif isinstance(entity, dict):
-                entity_text = entity['text']
-            else:
-                raise ValueError(f"Unexpected entity type: {type(entity)}")
+            entity_text = entity
             start_pos = segment_text.find(entity_text)
             end_pos = start_pos + len(entity_text)
             span = (start_pos, end_pos)
@@ -152,7 +141,7 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities: l
     ]
     """
     def call_llm_for_data_point(data_point):
-        return Q_DATA_CLASSIFICATION.run_query({
+        return qh.Q_DATA_CLASSIFICATION.run_query({
             'segment': data_point['segment'],
             'phrases': [entity['text'] for entity in data_point['entities']]
         })
@@ -175,11 +164,11 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities: l
     return classified_data_entities
 
 
-def identity_purpose_entities(pp_text: str, segments: list[str]):
+def identity_purpose_entities(pp_text: str, segments: list[str]) -> list[SWPurposeEntities]:
     """
     Split pp_text into segments, and call LLM to obtain purpose entities
     Takes privacy policy (segment or any other form) as input
-    Return results in the following form:
+    Return results in the following form (as a list of SegmentWithEntitiesList):
     [
         {
             'segment': SEGMENT_TEXT,
@@ -194,22 +183,30 @@ def identity_purpose_entities(pp_text: str, segments: list[str]):
     """
 
     def call_llm_for_segment(segment_text):
-        pass
+        parsed_model_output = qh.Q_PURPOSE_ENTITY.run_query({"segment": segment_text})
+        res = []
+        for entity in parsed_model_output:
+            entity_text = entity
+            start_pos = segment_text.find(entity_text)
+            end_pos = start_pos + len(entity_text)
+            span = (start_pos, end_pos)
+            res.append({"text": entity_text, "span": span})
+        return res
 
     res = []
     for segment in segments:
         entities = call_llm_for_segment(segment)
-        res.append({"segment": segment, "entities": entities})
+        res.append(SWPurposeEntities(**{"segment": segment, "entities": entities}))
     return res
 
 
-def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entities):
+def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entities: list[SWPurposeEntities]) -> list[SWClassifiedPurposeEntities]:
     """
     Identify the formal categories of purpose entities, as in DPV
 
     @param pp_text: privacy policy text
     @param purpose_entities: list of purpose entities, obtained from identify_purpose_entities
-    @return: list of purpose entities with categories, in the following form:
+    @return: list of purpose entities with categories, in the following form (as a list of SegmentWithClassifiedEntitiesList):
     [
         {
             'segment': SEGMENT_TEXT,
@@ -225,14 +222,25 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
     """
 
     def call_llm_for_data_point(data_point):
-        pass
+        return qh.Q_PURPOSE_CLASSIFICATION.run_query({
+            'segment': data_point['segment'],
+            'phrases': [entity['text'] for entity in data_point['entities']]
+        })
 
     purpose_entities = deepcopy(purpose_entities)
+    classified_purpose_entities = []
     for x in purpose_entities:
-        categories = call_llm_for_data_point(x)
-        for i, entity in enumerate(x["entities"]):
-            entity["category"] = categories[i]
-    return purpose_entities
+        x_dict = to_dict(x)
+        categories = call_llm_for_data_point(x_dict)
+        classified_entities = []
+        for i, entity in enumerate(x_dict["entities"]):
+            classified_entities.append(ClassifiedPurposeEntity(**{
+                "category": categories[i],
+                **entity
+            }))
+        classified_purpose_entities.append(SWClassifiedPurposeEntities(**{"segment": x_dict["segment"], "entities": classified_entities}))
+
+    return classified_purpose_entities
 
 
 def identify_parties(pp_text: str, segments: list[str]):
@@ -286,7 +294,7 @@ def identify_data_practices(pp_text: str, segments: list[str]) -> list[SWDataPra
     ]
     """
     def call_llm_for_segment(segment_text):
-        parsed_model_output = Q_ACTION_RECOGNITION.run_query({"segment": segment_text})
+        parsed_model_output = qh.Q_ACTION_RECOGNITION.run_query({"segment": segment_text})
         res = []
         for segment_action in parsed_model_output:
             practice = {
@@ -324,11 +332,11 @@ def identify_relations(relation_query):
     """
     log.info("Identifying relations")
 
-    return Q_RELATION_RECOGNITION.run_query(relation_query)
+    return qh.Q_RELATION_RECOGNITION.run_query(relation_query)
 
 
 def group_data_practices_and_entities(
-    data_practices: list[SWDataPractices], classified_data_entities: list[SWClassifiedDataEntities], classified_purpose_entities, parties
+    data_practices: list[SWDataPractices], classified_data_entities: list[SWClassifiedDataEntities], classified_purpose_entities: list[SWClassifiedPurposeEntities], parties
 ):
     """
     Group relevant information into the data practices.
@@ -360,7 +368,7 @@ def group_data_practices_and_entities(
     }
     indexed_purpose_entities = {
         segment["segment"]: segment["entities"] if "entities" in segment else []
-        for segment in classified_purpose_entities
+        for segment in to_dict(classified_purpose_entities)
     }
     indexed_parties = {
         segment["segment"]: segment["entities"] if "entities" in segment else []
@@ -595,11 +603,10 @@ def analyze_pp(pp_text: str) -> list[DataPractice]:
     classified_data_entities = classify_data_categories(
         pp_text, segments, raw_data_entities
     )
-    # raw_purpose_entities = identity_purpose_entities(pp_text, segments)
-    # classified_purpose_entities = classify_purpose_categories(
-    #     pp_text, segments, raw_purpose_entities
-    # )
-    classified_purpose_entities = []
+    raw_purpose_entities = identity_purpose_entities(pp_text, segments)
+    classified_purpose_entities = classify_purpose_categories(
+        pp_text, segments, raw_purpose_entities
+    )
     # parties = identify_parties(pp_text, segments)
     parties = []
     practices = identify_data_practices(pp_text, segments)

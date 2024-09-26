@@ -16,19 +16,35 @@ def parse(model_output_text: str):
     return obj
 
 
+def retrieve_entity_from_ambiguious_data(data: str|dict) -> str:
+    entity_text = None
+    if isinstance(data, str):
+        entity_text = data
+    elif isinstance(data, dict):
+        entity_text = data['text']
+    else:
+        raise ValueError(f"Unexpected entity type: {type(data)}")
+    return entity_text
+
+
 class QueryHelper(BaseModel):
     system_message: str
     user_message_template: str
     llm_model: str
     user_message_fn: Optional[Callable] = None
 
+    _parse_ambiguous_data: bool = False
+
     def run_query(self, data: dict):
         '''
         Run query, and return the parsed result (usually either a list or a dict).
         If anything wrong happens (e.g., API error, parsing error), throw an exception.
+
+        For consistency, the passed `data` dictionary should always contain the following keys:
+        - segment: str (the text segment to be analyzed)
         '''
         if self.user_message_fn:
-            data = self.user_message_fn(data)
+            data.update(self.user_message_fn(data))
         user_message = self.user_message_template.format(**data)
         completion = client.chat.completions.create(
             model=self.llm_model,
@@ -43,6 +59,8 @@ class QueryHelper(BaseModel):
         model_output = completion.choices[0].message
         model_output_text = model_output.content
         parsed_result = parse(model_output_text)
+        if self._parse_ambiguous_data:
+            parsed_result = retrieve_entity_from_ambiguious_data(parsed_result)
         return parsed_result
 
 
@@ -54,12 +72,32 @@ Q_DATA_ENTITY = QueryHelper(
         "sentence": data["segment"],
         "segment": data["segment"],
     },
+    _parse_ambiguous_data=True,
 )
 
 Q_DATA_CLASSIFICATION = QueryHelper(
     system_message=prompt.SYSTEM_MESSAGE_DATA_ENTITY_CLASSIFICATION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION,
     llm_model="ft:gpt-4o-2024-08-06:rui:data-class-sent-data-v2:A9HochjC",
+)
+
+Q_PURPOSE_ENTITY = QueryHelper(
+    system_message=prompt.SYSTEM_MESSAGE_PURPOSE_ENTITY,
+    user_message_template=prompt.USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY,
+    llm_model="ft:gpt-4o-mini-2024-07-18:rui:purpose-span-sent-entity-v2:A97HPDpd",
+    user_message_fn=lambda data: {
+        "sentence": data["segment"],
+    },
+    _parse_ambiguous_data=True,
+)
+
+Q_PURPOSE_CLASSIFICATION = QueryHelper(
+    system_message=prompt.SYSTEM_MESSAGE_PURPOSE_CATEGORY_CLASSIFICATION,
+    user_message_template=prompt.USER_MESSAGE_TEMPLATE_PURPOSE_CATEGORY,
+    llm_model="ft:gpt-4o-2024-08-06:rui:purpose-class-sent-purpose-v2:A9KGkDmD",
+    user_message_fn=lambda data: {
+        "sentence": data["segment"],
+    },
 )
 
 Q_ACTION_RECOGNITION = QueryHelper(
