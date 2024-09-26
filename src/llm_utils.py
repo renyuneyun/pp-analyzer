@@ -36,6 +36,11 @@ F_LAST_EVAL = 'last_evaluation'
 F_LAST_FINE_TUNE = 'last_fine_tune'
 
 
+SEED = 10000
+TEMPERATURE = 0
+MAX_TOKENS = 1000
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -269,8 +274,10 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
                 'url': '/v1/chat/completions',
                 'body': {
                     'model': model,
+                    'temperature': TEMPERATURE,
+                    'seed': SEED,
                     'messages': messages,
-                    'max_tokens': 1000,
+                    'max_tokens': MAX_TOKENS,
                 }
             }
             batch_input_list.append(data_item)
@@ -319,6 +326,9 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
                 try:
                     completion = client.chat.completions.create(
                         model=model,
+                        temperature=TEMPERATURE,
+                        seed=SEED,
+                        max_tokens=MAX_TOKENS,
                         messages=messages
                     )
                     break
