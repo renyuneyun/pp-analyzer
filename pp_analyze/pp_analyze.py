@@ -6,6 +6,9 @@ By default, we assume all segments share the same segmentation method, which is 
 
 from copy import deepcopy
 from logging import Logger
+from typing import Generic, TypeVar, Type
+from pydantic import BaseModel
+# from pydantic.generics import GenericModel
 from . import policy_text_utils as ptu
 from .data_model import (
     DataEntity,
@@ -34,7 +37,58 @@ from .query_helper import (
 log = Logger(__name__)
 
 
-def identify_data_entities(pp_text: str, segments: list[str]):
+def to_dict(obj_or_list: list[BaseModel] | BaseModel) -> dict | list[dict]:
+    if isinstance(obj_or_list, list):
+        return [to_dict(x) for x in obj_or_list]
+    return obj_or_list.model_dump()
+
+
+class _BaseModel(BaseModel):
+    class Config:
+        frozen = True
+
+
+T = TypeVar('T')
+
+
+class IEntity(_BaseModel):
+    text: str
+    span: tuple[int, int]
+
+
+class ClassifiedEntity(IEntity):
+    category: str
+
+
+class SWEntities(_BaseModel, Generic[T]):
+    segment: str
+    entities: list[T]
+
+
+IDataEntity = IEntity
+IPurposeEntity = IEntity
+ClassifiedDataEntity = ClassifiedEntity
+ClassifiedPurposeEntity = ClassifiedEntity
+
+SWDataEntities = SWEntities[IDataEntity]
+SWClassifiedDataEntities = SWEntities[ClassifiedDataEntity]
+SWPurposeEntities = SWEntities[IPurposeEntity]
+SWClassifiedPurposeEntities = SWEntities[ClassifiedPurposeEntity]
+
+
+class IDataPractice(_BaseModel):
+    type: str
+    text: str
+    span: tuple[int, int]
+
+
+class SWDataPractices(_BaseModel):
+
+    segment: str
+    practices: list[IDataPractice]
+
+
+def identify_data_entities(pp_text: str, segments: list[str]) -> list[SWDataEntities]:
     """
     Split pp_text into segments, and call LLM to obtain data entities
     Takes privacy policy (segment or any other form) as input
@@ -73,17 +127,17 @@ def identify_data_entities(pp_text: str, segments: list[str]):
     res = []
     for segment in segments:
         entities = call_llm_for_segment(segment)
-        res.append({"segment": segment, "entities": entities})
+        res.append(SWDataEntities(**{"segment": segment, "entities": entities}))
     return res
 
 
-def classify_data_categories(pp_text: str, segments: list[str], data_entities):
+def classify_data_categories(pp_text: str, segments: list[str], data_entities: list[SWDataEntities]) -> list[SWClassifiedDataEntities]:
     """
     Identify the formal categories of data entities, as in DPV
 
     @param segments: list of pp segments, obtained from, e.g., convert_into_segments
     @param data_entities: list of data entities, obtained from identify_data_entities
-    @return: list of data entities with categories, in the following form:
+    @return: list of data entities with categories, in the following form (of type SegmentWithClassifiedEntitiesList):
     [
         {
             'segment': SEGMENT_TEXT,
@@ -105,12 +159,20 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities):
 
     log.info("Classifying data categories")
 
-    data_entities = deepcopy(data_entities)
-    for x in data_entities:
-        categories = call_llm_for_data_point(x)
-        for i, entity in enumerate(x["entities"]):
-            entity["category"] = categories[i]
-    return data_entities
+    classified_data_entities = []
+    for x in deepcopy(data_entities):
+        x_dict = to_dict(x)
+        categories = call_llm_for_data_point(x_dict)
+        classified_entities = []
+        for i, entity in enumerate(x_dict["entities"]):
+            classified_entity = ClassifiedDataEntity({
+                "category": categories[i],
+                **entity
+            })
+            classified_entities.append(classified_entity)
+        x_dict.update({"entities": classified_entities})
+        classified_data_entities.append(SWClassifiedDataEntities(**x_dict))
+    return classified_data_entities
 
 
 def identity_purpose_entities(pp_text: str, segments: list[str]):
@@ -204,7 +266,7 @@ def identify_data_storage_durations(pp_text: str, segments: list[str]):
     pass
 
 
-def identify_data_practices(pp_text: str, segments: list[str]):
+def identify_data_practices(pp_text: str, segments: list[str]) -> list[SWDataPractices]:
     """
     Identify data practices in the privacy policy
 
@@ -242,7 +304,7 @@ def identify_data_practices(pp_text: str, segments: list[str]):
     res = []
     for segment in segments:
         practices = call_llm_for_segment(segment)
-        res.append({"segment": segment, "practices": practices})
+        res.append(SWDataPractices(**{"segment": segment, "practices": practices}))
     return res
 
 
@@ -266,7 +328,7 @@ def identify_relations(relation_query):
 
 
 def group_data_practices_and_entities(
-    data_practices, classified_data_entities, classified_purpose_entities, parties
+    data_practices: list[SWDataPractices], classified_data_entities: list[SWClassifiedDataEntities], classified_purpose_entities, parties
 ):
     """
     Group relevant information into the data practices.
@@ -294,7 +356,7 @@ def group_data_practices_and_entities(
     """
     indexed_data_entities = {
         segment["segment"]: segment["entities"] if "entities" in segment else []
-        for segment in classified_data_entities
+        for segment in to_dict(classified_data_entities)
     }
     indexed_purpose_entities = {
         segment["segment"]: segment["entities"] if "entities" in segment else []
@@ -307,7 +369,8 @@ def group_data_practices_and_entities(
 
     res = []
 
-    for segment in data_practices:
+    for isegment in data_practices:
+        segment = to_dict(isegment)
         segment_text = segment["segment"]
         practices = segment["practices"]
         practice_parties = indexed_parties[segment_text] if segment_text in indexed_parties else []
