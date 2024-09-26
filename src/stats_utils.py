@@ -98,7 +98,7 @@ _data_type_to_class = {
 
 def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None):
     if data_type == T_PARTY and tolerate_additionally_predicted is None:
-        tolerate_additional_in_predicted = True
+        tolerate_additionally_predicted = True
     if data_type == T_ENTITY:
         expected = set(expected)
         predicted = set(predicted)
