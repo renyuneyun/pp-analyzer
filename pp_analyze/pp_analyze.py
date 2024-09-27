@@ -6,7 +6,7 @@ By default, we assume all segments share the same segmentation method, which is 
 
 from copy import deepcopy
 from logging import Logger
-from typing import Generic, TypeVar, Type
+from typing import Generic, TypeVar, Type, Optional
 from pydantic import BaseModel
 # from pydantic.generics import GenericModel
 from . import policy_text_utils as ptu
@@ -44,6 +44,12 @@ class _BaseModel(BaseModel):
 
 
 T = TypeVar('T')
+T2 = TypeVar('T2')
+T3 = TypeVar('T3')
+
+
+class WithId(_BaseModel):
+    id: str
 
 
 class IEntity(_BaseModel):
@@ -53,6 +59,11 @@ class IEntity(_BaseModel):
 
 class ClassifiedEntity(IEntity):
     category: str
+
+
+class IPartyEntity(_BaseModel):
+    text: str
+    party_type: str
 
 
 class SWEntities(_BaseModel, Generic[T]):
@@ -69,6 +80,7 @@ SWDataEntities = SWEntities[IDataEntity]
 SWClassifiedDataEntities = SWEntities[ClassifiedDataEntity]
 SWPurposeEntities = SWEntities[IPurposeEntity]
 SWClassifiedPurposeEntities = SWEntities[ClassifiedPurposeEntity]
+SWPartyEntities = SWEntities[IPartyEntity]
 
 
 class IDataPractice(_BaseModel):
@@ -77,10 +89,37 @@ class IDataPractice(_BaseModel):
     span: tuple[int, int]
 
 
-class SWDataPractices(_BaseModel):
-
+class GenericSWDataPractices(_BaseModel, Generic[T]):
     segment: str
-    practices: list[IDataPractice]
+    practices: list[T]
+
+
+SWDataPractices = GenericSWDataPractices[IDataPractice]
+
+
+class GenericGroupedDataPractice(IDataPractice, Generic[T, T2, T3]):
+    data: list[T]
+    purpose: list[T2]
+    parties: list[T3]
+
+
+GroupedDataPractice = GenericGroupedDataPractice[ClassifiedDataEntity, ClassifiedPurposeEntity, IPartyEntity]
+SWGroupedDataPractice = GenericSWDataPractices[GroupedDataPractice]
+
+
+class ClassifiedDataEntityWithId(ClassifiedDataEntity, WithId): pass
+class ClassifiedPurposeEntityWithId(ClassifiedPurposeEntity, WithId): pass
+class PartyEntityWithId(IPartyEntity, WithId): pass
+class GroupedDataPracticeWithId(GenericGroupedDataPractice[ClassifiedDataEntityWithId, ClassifiedPurposeEntityWithId, PartyEntityWithId], WithId): pass
+
+
+SWGroupedDataPracticeWithId = GenericSWDataPractices[GroupedDataPracticeWithId]
+
+
+class Relation(_BaseModel):
+    action_id: str
+    entity_id: str
+    relation: str
 
 
 def identify_data_entities(pp_text: str, segments: list[str]) -> list[SWDataEntities]:
@@ -243,12 +282,12 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
     return classified_purpose_entities
 
 
-def identify_parties(pp_text: str, segments: list[str]):
+def identify_parties(pp_text: str, segments: list[str]) -> list[SWPartyEntities]:
     """
     Identify the parties involved in the privacy policy
 
     @param pp_text: privacy policy text
-    @return: list of parties, in the following form:
+    @return: list of parties, in the following form (as a list of SWPartyEntities):
     [
         {
             'segment': SEGMENT_TEXT,
@@ -262,6 +301,14 @@ def identify_parties(pp_text: str, segments: list[str]):
         }
     ]
     """
+    def call_llm_for_segment(segment_text):
+        return qh.Q_PARTY_RECOGNITION.run_query({"segment": segment_text})
+
+    res = []
+    for segment in segments:
+        entities = call_llm_for_segment(segment)
+        res.append(SWPartyEntities(**{"segment": segment, "entities": entities}))
+    return res
 
 
 def identify_data_storage_locations(pp_text: str, segments: list[str]):
@@ -316,12 +363,12 @@ def identify_data_practices(pp_text: str, segments: list[str]) -> list[SWDataPra
     return res
 
 
-def identify_relations(relation_query):
+def identify_relations(relation_query) -> list[Relation]:
     """
     Identify relations between data practice actions and entities in the privacy policy, through LLM
 
     @param relation_query: a query data for the LLM, which are elements from convert_grouped_practices_to_query_data
-    @return: list of identified relations, in the following form:
+    @return: list of identified relations, in the following form (as a list of Relation):
     [
         {
             "action_id": ACTION_ID,
@@ -336,8 +383,8 @@ def identify_relations(relation_query):
 
 
 def group_data_practices_and_entities(
-    data_practices: list[SWDataPractices], classified_data_entities: list[SWClassifiedDataEntities], classified_purpose_entities: list[SWClassifiedPurposeEntities], parties
-):
+    data_practices: list[SWDataPractices], classified_data_entities: list[SWClassifiedDataEntities], classified_purpose_entities: list[SWClassifiedPurposeEntities], parties: list[SWPartyEntities]
+) -> list[SWGroupedDataPractice]:
     """
     Group relevant information into the data practices.
 
@@ -345,7 +392,7 @@ def group_data_practices_and_entities(
     @param classified_data_entities: list of data entities with categories, obtained from classify_data_categories
     @param classified_purpose_entities: list of purpose entities with categories, obtained from classify_purpose_categories
     @param parties: list of parties, obtained from identify_parties
-    @return: list of data practices with relevant information, in the following form:
+    @return: list of data practices with relevant information, in the following form (as a list of SWGroupedDataPractice):
     [
         {
             'segment': SEGMENT_TEXT,
@@ -372,7 +419,7 @@ def group_data_practices_and_entities(
     }
     indexed_parties = {
         segment["segment"]: segment["entities"] if "entities" in segment else []
-        for segment in parties
+        for segment in to_dict(parties)
     }
 
     res = []
@@ -384,8 +431,8 @@ def group_data_practices_and_entities(
         practice_parties = indexed_parties[segment_text] if segment_text in indexed_parties else []
         practice_data = indexed_data_entities[segment_text] if segment_text in indexed_data_entities else []
         practice_purpose = indexed_purpose_entities[segment_text] if segment_text in indexed_purpose_entities else []
-        res.append(
-            {
+        res.append(SWGroupedDataPractice(
+            **{
                 "segment": segment_text,
                 "practices": [
                     {
@@ -411,19 +458,19 @@ def group_data_practices_and_entities(
                     }
                     for practice in practices
                 ],
-            }
+            })
         )
     return res
 
 
-def add_ids_into_grouped_practices(grouped_practices):
+def add_ids_into_grouped_practices(grouped_practices: list[SWGroupedDataPractice]) -> list[SWGroupedDataPracticeWithId]:
     """
     Add IDs into the grouped practices, for both practices and entities.
     The ID is simply the index of the data practice or entity in the list, and only serves the purpose of internal identification.
     Note that IDs are grouped by segments, so the same ID may appear in different segments.
 
     @param grouped_practices: list of grouped data practices, obtained from group_data_practices_and_entities
-    @return: list of grouped data practices with IDs, in the following form:
+    @return: list of grouped data practices with IDs, in the following form (as a list of SWGroupedDataPracticeWithId):
     [
         {
             'segment': SEGMENT_TEXT,
@@ -462,26 +509,35 @@ def add_ids_into_grouped_practices(grouped_practices):
         }
     ]
     """
-    res = deepcopy(grouped_practices)
-    for segment in res:
-        segment_text = segment["segment"]
+    res = []
+    for segment in grouped_practices:
+        segment_text = segment.segment
         entity_counter = 0
-        practices = segment["practices"]
+        practices_with_id = []
+        practices = to_dict(segment.practices)
         for practice_index, practice in enumerate(practices):
-            practice["id"] = f"C{practice_index+1}"
-            for party in practice["parties"]:
+            practice_with_id = {
+                "id": f"C{practice_index+1}",
+                **practice
+            }
+            for party in practice_with_id["parties"]:
                 entity_counter += 1
                 party["id"] = f"D{entity_counter}"
-            for data in practice["data"]:
+            for data in practice_with_id["data"]:
                 entity_counter += 1
                 data["id"] = f"D{entity_counter}"
-            for purpose in practice["purpose"]:
+            for purpose in practice_with_id["purpose"]:
                 entity_counter += 1
                 purpose["id"] = f"D{entity_counter}"
+            practices_with_id.append(practice_with_id)
+        res.append(SWGroupedDataPracticeWithId(**{
+            "segment": segment_text,
+            "practices": practices_with_id
+            }))
     return res
 
 
-def convert_grouped_practices_to_query_data(grouped_practices_with_id):
+def convert_grouped_practices_to_query_data(grouped_practices_with_id: SWGroupedDataPracticeWithId):
     """
     Convert grouped practices to query data for the LLM.
 
@@ -507,7 +563,7 @@ def convert_grouped_practices_to_query_data(grouped_practices_with_id):
         }
     }
     """
-    segment = grouped_practices_with_id
+    segment = to_dict(grouped_practices_with_id)
     segment_text = segment["segment"]
     practices = segment["practices"]
     action_contexts = [
@@ -534,7 +590,7 @@ def convert_grouped_practices_to_query_data(grouped_practices_with_id):
             entity_info = {
                 "id": entity["id"],
                 "text": entity["text"],
-                "type": entity["category"],
+                "type": entity["party_type"],
             }
             entities.append(entity_info)
     res = {
@@ -544,7 +600,7 @@ def convert_grouped_practices_to_query_data(grouped_practices_with_id):
     return res
 
 
-def assemble_data_practices(relations, grouped_practices_with_id):
+def assemble_data_practices(relations: list[Relation], grouped_practices_with_id: SWGroupedDataPracticeWithId) -> list[DataPractice]:
     """
     Assemble the data practices with the identified relations, into DataPractice objects.
 
@@ -552,7 +608,7 @@ def assemble_data_practices(relations, grouped_practices_with_id):
     @param grouped_practices_with_id: list of grouped data practices with IDs, obtained from add_ids_into_grouped_practices, but only the segment relevant to the relations
     @return: list of DataPractice objects
     """
-    grouped_practices_with_id = deepcopy(grouped_practices_with_id)
+    grouped_practices_with_id = to_dict(grouped_practices_with_id)
     segment_text = grouped_practices_with_id["segment"]
     practices = grouped_practices_with_id["practices"]
     indexed_practices = {}
@@ -568,14 +624,14 @@ def assemble_data_practices(relations, grouped_practices_with_id):
             obj = PurposeEntity(text=entity["text"], category=entity["category"])
             indexed_entity_objs[entity["id"]] = obj
         for entity in practice["parties"]:
-            obj = PartyEntity(text=entity["text"], category=entity["category"])
+            obj = PartyEntity(text=entity["text"], category=entity["party_type"])
             indexed_entity_objs[entity["id"]] = obj
 
     indexed_relations = {}
     for relation in relations:
-        action_id = relation["action_id"]
-        entity_id = relation["entity_id"]
-        relation_type = relation["relation"]
+        action_id = relation.action_id
+        entity_id = relation.entity_id
+        relation_type = relation.relation
         if action_id not in indexed_relations:
             indexed_relations[action_id] = {}
         if relation_type not in indexed_relations[action_id]:
@@ -607,8 +663,7 @@ def analyze_pp(pp_text: str) -> list[DataPractice]:
     classified_purpose_entities = classify_purpose_categories(
         pp_text, segments, raw_purpose_entities
     )
-    # parties = identify_parties(pp_text, segments)
-    parties = []
+    parties = identify_parties(pp_text, segments)
     practices = identify_data_practices(pp_text, segments)
 
     grouped_practices = group_data_practices_and_entities(

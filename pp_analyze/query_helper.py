@@ -110,6 +110,15 @@ Q_ACTION_RECOGNITION = QueryHelper(
     },
 )
 
+Q_PARTY_RECOGNITION = QueryHelper(
+    system_message=prompt.SYSTEM_MESSAGE_PARTY_RECOGNITION,
+    user_message_template=prompt.USER_MESSAGE_TEMPLATE_PARTY_RECOGNITION,
+    llm_model="ft:gpt-4o-mini-2024-07-18:rui:party-sent-v3-d3:AAOzdio9",
+    user_message_fn=lambda data: {
+        "sentence": data["segment"],
+    },
+)
+
 Q_RELATION_RECOGNITION = QueryHelper(
     system_message=prompt.SYSTEM_MESSAGE_RELATION_RECOGNITION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_RELATION_RECOGNITION,
