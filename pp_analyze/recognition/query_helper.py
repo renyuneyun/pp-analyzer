@@ -4,7 +4,7 @@ from openai import OpenAI
 from pydantic import BaseModel
 from typing import Optional, Callable
 from . import prompt
-from .external import json_parse
+from pp_analyze.external import json_parse
 
 
 load_dotenv()
