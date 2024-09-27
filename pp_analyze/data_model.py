@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional
 
 
@@ -25,6 +25,17 @@ class PurposeEntity(BaseModel):
 class PartyEntity(BaseModel):
     text: str
     category: Party
+
+    @validator("category", pre=True)
+    def convert_party_name(cls, v):
+        if v == "Third-party-entity":
+            return "third_party"
+        elif v == "First-party-entity":
+            return "first_party"
+        elif v == "User":
+            return "user"
+        else:
+            return v
 
 
 class Location(BaseModel):

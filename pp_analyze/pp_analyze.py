@@ -379,7 +379,7 @@ def identify_relations(relation_query) -> list[Relation]:
     """
     log.info("Identifying relations")
 
-    return qh.Q_RELATION_RECOGNITION.run_query(relation_query)
+    return [Relation(**relation) for relation in qh.Q_RELATION_RECOGNITION.run_query(relation_query)]
 
 
 def group_data_practices_and_entities(
