@@ -4,24 +4,12 @@ Main module for the privacy policy analysis.
 By default, we assume all segments share the same segmentation method, which is by line breaks.
 """
 
-from copy import deepcopy
-from typing import Generic, TypeVar, Type, Optional
-from pydantic import BaseModel
-# from pydantic.generics import GenericModel
 from . import policy_text_utils as ptu
 from .data_model import (
     DataEntity,
     PurposeEntity,
     PartyEntity,
     DataPractice,
-    DataCollectionUse,
-    DataSharingDisclosure,
-    DataStorageRetention,
-    DataSecurityProtection,
-    K_DATA_PRACTICE_DATA_COLLECTION_USE,
-    K_DATA_PRACTICE_DATA_SHARING_DISCLOSURE,
-    K_DATA_PRACTICE_DATA_STORAGE_RETENTION,
-    K_DATA_PRACTICE_DATA_SECURITY_PROTECTION,
     DATA_PRACTICE_NAME_MAP,
     DATA_PRACTICE_CLASS_MAP,
 )
