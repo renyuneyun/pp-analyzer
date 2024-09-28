@@ -160,6 +160,7 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
         x_dict = to_dict(x)
         categories = call_llm_for_data_point(x_dict)
         classified_entities = []
+        assert len(categories) == len(x_dict["entities"]), 'LLM did not return the correct number of categories'
         for i, entity in enumerate(x_dict["entities"]):
             classified_entities.append(ClassifiedPurposeEntity(**{
                 "category": categories[i],

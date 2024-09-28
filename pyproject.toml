@@ -11,6 +11,10 @@ pydantic = "^2.9.2"
 openai = "^1.47.1"
 json-repair = "^0.29.5"
 deepdiff = "^8.0.1"
+sqlite-zstd = { git = "https://github.com/phiresky/sqlite-zstd.git", subdirectory = "python" }
+sqlalchemy = "^2.0.35"
+sqlmodel = "^0.0.22"
+sqlalchemy-utils = "^0.41.2"
 
 
 [build-system]
