@@ -89,9 +89,7 @@ class SQLiteCacheManager:
             statement = select(db.QueryRecord).where(db.QueryRecord.hash_key == hash_key)
             for record in session.exec(statement):
                 if dict_equal(record.query_params_dict(), query_params):
-                    print('Cache hit')
                     return record.lm_response
-        print('Cache miss')
         return None
 
     def save_to_cache(self, query_params: dict, result: dict):
