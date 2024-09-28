@@ -5,12 +5,9 @@ import os
 from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy import event
-from sqlalchemy.event import listen
-from sqlalchemy_utils import database_exists, create_database
-import sqlite3
 import sqlite_zstd
-from sqlmodel import Field, Session, SQLModel, create_engine, select, DateTime
-from typing import Optional, Callable
+from sqlmodel import Field, SQLModel, create_engine
+from typing import Optional
 from .utils import dict_hash
 
 
@@ -18,60 +15,8 @@ load_dotenv()
 
 _CACHE_DIR = Path(os.getenv("LLM_QUERY_CACHE_DIR")) if os.getenv("LLM_QUERY_CACHE_DIR") else None
 
-# class QueryRecord(SQLModel, table=True):
-#     __table_args__ = {'extend_existing': True}
-
-#     id: Optional[int] = Field(default=None, primary_key=True)
-#     hash_key: str
-#     timestamp: str = Field(default_factory=datetime.now().isoformat)
-#     model: str
-#     temperature: float
-#     seed: int
-#     max_tokens: int
-#     system_message: str
-#     user_message: str
-#     lm_response: str
-
-#     @classmethod
-#     def from_dict(cls, data: dict):
-#         query_params = data['query_params']
-#         lm_response = data['lm_response']
-#         if 'timestamp' in data:
-#             timestamp = data['timestamp']
-#         return cls(
-#             hash_key=dict_hash(query_params),
-#             model=query_params["model"],
-#             temperature=query_params["temperature"],
-#             seed=query_params["seed"],
-#             max_tokens=query_params["max_tokens"],
-#             system_message=query_params['messages'][0]['content'],
-#             user_message=query_params['messages'][1]['content'],
-#             lm_response=lm_response,
-#         )
-
-#     def to_dict(self):
-#         '''
-#         Convert back to the query parameters dictionary.
-#         Will drop the ID and hash_key fields.
-#         '''
-#         return {
-#             "query_params": {
-#                 "model": self.model,
-#                 "temperature": self.temperature,
-#                 "seed": self.seed,
-#                 "max_tokens": self.max_tokens,
-#                 "messages": [
-#                     {"role": "system", "content": self.system_message},
-#                     {"role": "user", "content": self.user_message}
-#                 ]
-#             },
-#             "lm_response": self.lm_response,
-#             "timestamp": self.timestamp,
-#         }
 
 class QueryRecord(SQLModel, table=True):
-    # __table_args__ = {'extend_existing': True}
-
     id: Optional[int] = Field(default=None, primary_key=True)
     hash_key: str
     query_params: str
@@ -92,9 +37,27 @@ class QueryRecord(SQLModel, table=True):
         return json.loads(self.query_params)
 
 
+def enable_zstd_extension(dbapi_conn, *args):
+    dbapi_conn.enable_load_extension(True)
+    sqlite_zstd.load(dbapi_conn)
+    dbapi_conn.enable_load_extension(False)
+
+
+def enable_compression(dbapi_conn, *args):
+    dbapi_conn.execute('''SELECT
+        zstd_enable_transparent('{"table": "queryrecord", "column": "query_params", "compression_level": 19, "dict_chooser": "''a''"}'),
+        zstd_enable_transparent('{"table": "queryrecord", "column": "lm_response", "compression_level": 19, "dict_chooser": "''a''"}')
+;''')
+
+
 engine = None
 if _CACHE_DIR is not None:
-    db_url = f'sqlite:///{(_CACHE_DIR / "llm_query_cache.sqlite").absolute()}'
+    db_file = _CACHE_DIR / "llm_query_cache.sqlite"
+    db_exists = db_file.exists()
+    db_url = f'sqlite:///{db_file.absolute()}'
     engine = create_engine(db_url)
-
-    SQLModel.metadata.create_all(engine)
+    event.listen(engine, 'connect', enable_zstd_extension)
+    if not db_exists:
+        SQLModel.metadata.create_all(engine)
+        dbapi_conn = engine.raw_connection()
+        enable_compression(dbapi_conn)
