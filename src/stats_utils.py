@@ -96,64 +96,75 @@ _data_type_to_class = {
 }
 
 
-def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None):
+def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True, **kwargs):
     if data_type == T_PARTY and tolerate_additionally_predicted is None:
         tolerate_additionally_predicted = True
-    if data_type == T_ENTITY:
-        expected = set(expected)
-        predicted = set(predicted)
-    elif data_type == T_ACTION:
-        if isinstance(expected, dict):
-            expected = [expected]
-        try:
-            expected = set([ActionDataPoint(**obj) for obj in expected])
-            predicted = set([ActionDataPoint(**obj) for obj in predicted])
-        except Exception as e:
-            # print(f"Error in parsing action data point: {e};\n  expected: {expected};\n  predicted: {predicted}")
-            raise e
-    elif data_type in _data_type_to_class:
-        cls = _data_type_to_class[data_type]
-        expected = set([cls(**obj) for obj in expected])
-        predicted = set([cls(**obj) for obj in predicted])
-    else:
-        raise ValueError(f"Unrecognised data_type: {data_type}")
+    if ignore_order:
+        if data_type == T_ENTITY:
+            expected = set(expected)
+            predicted = set(predicted)
+        elif data_type == T_ACTION:
+            if isinstance(expected, dict):
+                expected = [expected]
+            try:
+                expected = set([ActionDataPoint(**obj) for obj in expected])
+                predicted = set([ActionDataPoint(**obj) for obj in predicted])
+            except Exception as e:
+                # print(f"Error in parsing action data point: {e};\n  expected: {expected};\n  predicted: {predicted}")
+                raise e
+        elif data_type in _data_type_to_class:
+            cls = _data_type_to_class[data_type]
+            expected = set([cls(**obj) for obj in expected])
+            predicted = set([cls(**obj) for obj in predicted])
+        else:
+            raise ValueError(f"Unrecognised data_type: {data_type}")
 
-    intersection = expected.intersection(predicted)
-    intersection_with_lcs = len(intersection)
-    only_in_expected = list(expected - predicted)
-    only_in_predicted = list(predicted - expected)
-    if lcs_threshold is not None:
-        used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
-        for e1 in only_in_expected:
-            maximum_lcs_rate = 0
-            maximum_lcs_index = -1
-            for i, e2 in enumerate(only_in_predicted):
-                if i in used: continue
-                ilcs_rate = lcs_rate(e1, e2)
-                if ilcs_rate > maximum_lcs_rate:
-                    maximum_lcs_rate = ilcs_rate
-                    maximum_lcs_index = i
-            if maximum_lcs_rate >= lcs_threshold:
-                if lcs_threshold == -1 and data_type == T_ENTITY:
-                    if maximum_lcs_rate > 0:
-                        words1 = e1.split()
-                        words2 = only_in_predicted[maximum_lcs_index].split()
-                        if set(words1) & set(words2):
-                            intersection_with_lcs += 1
-                else:
-                    intersection_with_lcs += maximum_lcs_rate
-                used.append(maximum_lcs_index)
+        intersection = expected.intersection(predicted)
+        intersection_with_lcs = len(intersection)
+        only_in_expected = list(expected - predicted)
+        only_in_predicted = list(predicted - expected)
+        if lcs_threshold is not None:
+            used = []  # Greedy. Probably underestimating, but efficient and mostly near-correct.
+            for e1 in only_in_expected:
+                maximum_lcs_rate = 0
+                maximum_lcs_index = -1
+                for i, e2 in enumerate(only_in_predicted):
+                    if i in used: continue
+                    ilcs_rate = lcs_rate(e1, e2)
+                    if ilcs_rate > maximum_lcs_rate:
+                        maximum_lcs_rate = ilcs_rate
+                        maximum_lcs_index = i
+                if maximum_lcs_rate >= lcs_threshold:
+                    if lcs_threshold == -1 and data_type == T_ENTITY:
+                        if maximum_lcs_rate > 0:
+                            words1 = e1.split()
+                            words2 = only_in_predicted[maximum_lcs_index].split()
+                            if set(words1) & set(words2):
+                                intersection_with_lcs += 1
+                    else:
+                        intersection_with_lcs += maximum_lcs_rate
+                    used.append(maximum_lcs_index)
 
-    if not expected and not predicted:
-        precision = recall = f1 = 1
+        if not expected and not predicted:
+            precision = recall = f1 = 1
+        else:
+            precision = intersection_with_lcs / len(predicted) if predicted else 0
+            recall = intersection_with_lcs / len(expected) if expected else 0
+            if tolerate_additionally_predicted and not only_in_expected:
+                recall = 1
+            f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0 if expected or predicted else 1
+        return precision, recall, f1
     else:
-        precision = intersection_with_lcs / len(predicted) if predicted else 0
-        recall = intersection_with_lcs / len(expected) if expected else 0
-        if tolerate_additionally_predicted and not only_in_expected:
-            recall = 1
-        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0 if expected or predicted else 1
-    return precision, recall, f1
-    # return sklm.precision_recall_fscore_support(expected, predicted)[:3]
+        if not expected and not predicted:
+            return 1, 1, 1
+        tp = 0
+        for i in range(min(len(expected), len(predicted))):
+            if expected[i] == predicted[i]:
+                tp += 1
+        precision = tp / len(predicted) if predicted else 0
+        recall = tp / len(expected) if expected else 0
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0
+        return precision, recall, f1
 
 
 def heuristic_extract_data_entities(parsed_model_output, data_type=T_ENTITY):
@@ -191,7 +202,7 @@ def heuristic_extract_data_entities(parsed_model_output, data_type=T_ENTITY):
     return extracted_output
 
 
-def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None):
+def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, **kwargs):
     K_EXPECT_EMPTY = '(Expected) Empty'
     K_EXPECT_NON_EMPTY = '(Expected) Non-empty'
     K_PREDICT_EMPTY = '(Predicted) Empty'
@@ -225,7 +236,7 @@ def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True,
             model_output_parsed = heuristic_extract_data_entities(model_output_parsed, data_type=data_type)
         correct_output_parsed = json.loads(correct_output)
         try:
-            result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed, data_type=data_type, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted)
+            result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed, data_type=data_type, **kwargs)
         except TypeError as e:
             failed[i] = (model_output, correct_output)
             continue
@@ -242,8 +253,8 @@ def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True,
     return result_score_list, addition_scoring, failed
 
 
-def calc_and_print_statistics(desc, saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None):
-    result_score_list, addition_scoring, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted)
+def calc_and_print_statistics(desc, saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True):
+    result_score_list, addition_scoring, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted, ignore_order=ignore_order)
 
     print(f"Stat for eval with desc: {desc}")
     print(f"  {len(result_score_list)} valid datapoints, avg. precission, recall, f1:", np.mean(result_score_list, axis=0))
