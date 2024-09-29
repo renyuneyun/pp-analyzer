@@ -15,7 +15,7 @@ sqlite-zstd = { git = "https://github.com/phiresky/sqlite-zstd.git", subdirector
 sqlalchemy = "^2.0.35"
 sqlmodel = "^0.0.22"
 sqlalchemy-utils = "^0.41.2"
-ppa-commons = {path = "../ppa-commons", develop = true}
+ppa-commons = {path = "third_party/ppa-commons", develop = true}
 
 
 [tool.poetry.group.dev.dependencies]
