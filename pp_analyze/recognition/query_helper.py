@@ -38,45 +38,6 @@ def retrieve_entity_from_ambiguious_data(data: str|dict) -> str:
     return entity_text
 
 
-# class CacheManager:
-
-#     def __init__(self, cache_category: str, llm_model: str):
-#         self.cache_category = cache_category
-#         self.llm_model = llm_model
-
-#     def _cache_dir(self, query_params: dict, auto_create: bool = True):
-#         query_hash = DeepHash(query_params)[query_params]
-#         cache_dir: Path = _CACHE_DIR / self.cache_category / self.llm_model / query_hash
-#         if not cache_dir.exists() and auto_create:
-#             cache_dir.mkdir(parents=True)
-#         return cache_dir
-
-#     def get_from_cache(self, query_params: dict):
-#         if _CACHE_DIR is None:
-#             return None
-#         cache_dir = self._cache_dir(query_params)
-#         for file in cache_dir.iterdir():
-#             if file.is_file() and file.suffix == '.json':
-#                 with file.open("r") as f:
-#                     cached_obj = json.load(f)
-#                     if _dict_equal(cached_obj['query_params'], query_params):
-#                         return cached_obj['result']
-#         return None
-
-#     def save_to_cache(self, query_params: dict, result: dict):
-#         if _CACHE_DIR is None:
-#             return
-#         cache_dir = self._cache_dir(query_params)
-#         filename = f"{uuid4()}.json"
-#         cache_file = cache_dir / filename
-#         with cache_file.open("w") as f:
-#             json.dump({
-#                 "timestamp": datetime.now().isoformat(),
-#                 "query_params": query_params,
-#                 "result": result
-#             }, f)
-
-
 class SQLiteCacheManager:
     '''
     A cache manager that uses SQLite to store cache.
