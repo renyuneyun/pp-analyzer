@@ -13,7 +13,7 @@ from uuid import uuid4
 from . import db, prompt
 from .types import QueryCategory, PARAM_OVERRIDE_CACHE
 from .utils import dict_hash, dict_equal
-from ppa_commons import json_parse
+from ppa_commons import DataType, json_parse, heuristic_extract_entities
 
 load_dotenv()
 
@@ -22,8 +22,21 @@ _CACHE_DIR = Path(os.getenv("LLM_QUERY_CACHE_DIR")) if os.getenv("LLM_QUERY_CACH
 client = OpenAI()
 
 
-def parse(model_output_text: str):
+QUERY_CATEGORY_TO_DATA_TYPE = {
+    QueryCategory.DATA_ENTITY: DataType.ENTITY,
+    QueryCategory.DATA_CLASSIFICATION: DataType.ENTITY,
+    QueryCategory.PURPOSE_ENTITY: DataType.ENTITY,
+    QueryCategory.PURPOSE_CLASSIFICATION: DataType.ENTITY,
+    QueryCategory.PARTY_RECOGNITION: DataType.PARTY,
+    QueryCategory.DATA_PRACTICE: DataType.ACTION,
+    QueryCategory.RELATION_RECOGNITION: DataType.RELATION,
+}
+
+
+def parse(model_output_text: str, data_type: DataType = None) -> dict:
     text, obj = json_parse.try_parse_json_object(model_output_text)
+    if data_type is not None:
+        obj = heuristic_extract_entities(obj, data_type)
     return obj
 
 
@@ -132,7 +145,7 @@ class QueryHelper(BaseModel):
         else:
             model_output_text = self._execute_query(query_params)
             self._cache_manager.save_to_cache(query_params, model_output_text)
-        parsed_result = parse(model_output_text)
+        parsed_result = parse(model_output_text, QUERY_CATEGORY_TO_DATA_TYPE[self.cache_category])
         if self._parse_ambiguous_data:
             parsed_result = retrieve_entity_from_ambiguious_data(parsed_result)
         return parsed_result
@@ -142,10 +155,9 @@ Q_DATA_ENTITY = QueryHelper(
     cache_category=QueryCategory.DATA_ENTITY,
     system_message=prompt.SYSTEM_MESSAGE_DATA_ENTITY,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_DATA_ENTITY,
-    llm_model="ft:gpt-4o-mini-2024-07-18:rui:data-entity-sent-data-ver2:A8ycyw3W",
+    llm_model="ft:gpt-4o-2024-08-06:rui:data-entity-sent-data-v3-d3:ACaCHoYc",
     user_message_fn=lambda data: {
         "sentence": data["segment"],
-        "segment": data["segment"],
     },
     _parse_ambiguous_data=True,
 )
