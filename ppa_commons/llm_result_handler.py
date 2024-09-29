@@ -6,7 +6,7 @@ T_PARTY = 'party'
 T_RELATION = 'relation'
 
 
-def heuristic_extract_data_entities(parsed_model_output, data_type=T_ENTITY):
+def heuristic_extract_entities(parsed_model_output, data_type=T_ENTITY):
     if data_type != T_ENTITY:  # Not all data types should/can be heuristic-extracted
         return parsed_model_output
     extracted_output = []
