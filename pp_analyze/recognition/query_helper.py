@@ -13,7 +13,7 @@ from uuid import uuid4
 from . import db, prompt
 from .types import QueryCategory, PARAM_OVERRIDE_CACHE
 from .utils import dict_hash, dict_equal
-from pp_analyze.external import json_parse
+from ppa_commons import json_parse
 
 load_dotenv()
 
