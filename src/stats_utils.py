@@ -4,7 +4,17 @@ from pprint import pprint
 from pydantic import BaseModel, Field
 import pylcs
 from typing import Optional
-from .external.json_parse import try_parse_json_object
+from ppa_commons import (
+    T_ENTITY,
+    T_ENTITY_WITH_ACTION,
+    T_ACTION,
+    T_PROTECTION_METHOD,
+    T_PARTY,
+    T_RELATION,
+
+    heuristic_extract_data_entities,
+)
+from ppa_commons import try_parse_json_object
 
 
 def lcs_rate(a, b):
@@ -15,14 +25,6 @@ def lcs_rate(a, b):
     if rate > 1:
         rate = 1
     return rate
-
-
-T_ENTITY = 'entity'
-T_ENTITY_WITH_ACTION = 'entity_with_action'
-T_ACTION = 'action'
-T_PROTECTION_METHOD = 'protection_method'
-T_PARTY = 'party'
-T_RELATION = 'relation'
 
 
 class DataPoint(BaseModel):
@@ -166,40 +168,6 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
         f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0
         return precision, recall, f1
 
-
-def heuristic_extract_data_entities(parsed_model_output, data_type=T_ENTITY):
-    if data_type != T_ENTITY:  # Not all data types should/can be heuristic-extracted
-        return parsed_model_output
-    extracted_output = []
-    for obj in parsed_model_output:
-        if isinstance(obj, str):
-            extracted_output.append(obj)
-        else:
-            if 'context_type' in obj and 'data_entity' in obj:  # gpt-4o-mini-2024-07-18
-                extracted_output.append(obj['data_entity'])
-            elif 'context' in obj and 'data_entity' in obj:  # gpt-4o-mini-2024-07-18
-                extracted_output.append(obj['data_entity'])
-            elif 'context' in obj and 'purpose' in obj:  # gpt-4o
-                extracted_output.append(obj['purpose'])
-            elif 'type' in obj and 'text' in obj:  # gpt-4o
-                extracted_output.append(obj['text'])
-            elif 'text' in obj:
-                extracted_output.append(obj['text'])
-            elif 'type' in obj and 'dataEntity' in obj:  # Spark 4.0 Ultra
-                extracted_output.append(obj['dataEntity'])
-            elif 'context' in obj and 'dataEntity' in obj:  # Spark 4.0 Ultra
-                extracted_output.append(obj['dataEntity'])
-            elif 'contextType' in obj and 'dataEntity' in obj:  # Spark 4.0 Ultra
-                extracted_output.append(obj['dataEntity'])
-            elif 'type' in obj and 'data' in obj:  # Spark 4.0 Ultra
-                extracted_output.append(obj['data'])
-            elif 'type' in obj and 'entity' in obj:  # Spark 4.0 Ultra
-                extracted_output.append(obj['entity'])
-            elif 'context' in obj and 'entity' in obj:  # Spark 4.0 Ultra
-                extracted_output.append(obj['entity'])
-            else:
-                extracted_output.append(obj)
-    return extracted_output
 
 
 def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, **kwargs):
