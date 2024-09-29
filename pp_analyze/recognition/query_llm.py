@@ -1,4 +1,5 @@
 from copy import deepcopy
+from tqdm.auto import tqdm
 from . import query_helper as qh
 from .types import PARAM_OVERRIDE_CACHE
 from .data_model import (
@@ -13,6 +14,10 @@ from .data_model import (
     ClassifiedPurposeEntity,
     Relation,
 )
+
+
+S_DATA_CATEGORY_GENERAL = 'Data-general'
+S_PURPOSE_CATEGORY_GENERAL = 'Purpose-general'
 
 
 def identify_data_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWDataEntities]:
@@ -44,13 +49,13 @@ def identify_data_entities(pp_text: str, segments: list[str], override_cache: PA
         return res
 
     res = []
-    for segment in segments:
+    for segment in tqdm(segments, leave=False, desc="Identifying data entities"):
         entities = call_llm_for_segment(segment)
         res.append(SWDataEntities(**{"segment": segment, "entities": entities}))
     return res
 
 
-def classify_data_categories(pp_text: str, segments: list[str], data_entities: list[SWDataEntities], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWClassifiedDataEntities]:
+def classify_data_categories(pp_text: str, segments: list[str], data_entities: list[SWDataEntities], override_cache: PARAM_OVERRIDE_CACHE = None, handle_incorrect_llm = True) -> list[SWClassifiedDataEntities]:
     """
     Identify the formal categories of data entities, as in DPV
 
@@ -77,19 +82,26 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities: l
         }, override_cache=override_cache)
 
     classified_data_entities = []
-    for x in deepcopy(data_entities):
+    errs = []
+    for x in tqdm(deepcopy(data_entities), leave=False, desc="Classifying data entities"):
         x_dict = to_dict(x)
         categories = call_llm_for_data_point(x_dict)
         classified_entities = []
+        if len(categories) != len(x_dict["entities"]):
+            errs.append(x)
+            if handle_incorrect_llm:
+                categories = [S_DATA_CATEGORY_GENERAL] * len(x_dict["entities"])
+            else:
+                raise ValueError("The number of categories does not match the number of entities")
         for i, entity in enumerate(x_dict["entities"]):
-            classified_entity = ClassifiedDataEntity({
+            classified_entity = ClassifiedDataEntity(**{
                 "category": categories[i],
                 **entity
             })
             classified_entities.append(classified_entity)
         x_dict.update({"entities": classified_entities})
         classified_data_entities.append(SWClassifiedDataEntities(**x_dict))
-    return classified_data_entities
+    return classified_data_entities, errs
 
 
 def identity_purpose_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWPurposeEntities]:
@@ -122,13 +134,13 @@ def identity_purpose_entities(pp_text: str, segments: list[str], override_cache:
         return res
 
     res = []
-    for segment in segments:
+    for segment in tqdm(segments, leave=False, desc="Identifying purpose entities"):
         entities = call_llm_for_segment(segment)
         res.append(SWPurposeEntities(**{"segment": segment, "entities": entities}))
     return res
 
 
-def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entities: list[SWPurposeEntities], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWClassifiedPurposeEntities]:
+def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entities: list[SWPurposeEntities], override_cache: PARAM_OVERRIDE_CACHE = None, handle_incorrect_llm = True) -> list[SWClassifiedPurposeEntities]:
     """
     Identify the formal categories of purpose entities, as in DPV
 
@@ -157,11 +169,17 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
 
     purpose_entities = deepcopy(purpose_entities)
     classified_purpose_entities = []
-    for x in purpose_entities:
+    errs = []
+    for x in tqdm(purpose_entities, leave=False, desc="Classifying purpose entities"):
         x_dict = to_dict(x)
         categories = call_llm_for_data_point(x_dict)
         classified_entities = []
-        assert len(categories) == len(x_dict["entities"]), 'LLM did not return the correct number of categories'
+        if len(categories) != len(x_dict["entities"]):
+            errs.append(x)
+            if handle_incorrect_llm:
+                categories = [S_PURPOSE_CATEGORY_GENERAL] * len(x_dict["entities"])
+            else:
+                raise ValueError("The number of categories does not match the number of entities")
         for i, entity in enumerate(x_dict["entities"]):
             classified_entities.append(ClassifiedPurposeEntity(**{
                 "category": categories[i],
@@ -169,7 +187,7 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
             }))
         classified_purpose_entities.append(SWClassifiedPurposeEntities(**{"segment": x_dict["segment"], "entities": classified_entities}))
 
-    return classified_purpose_entities
+    return classified_purpose_entities, errs
 
 
 def identify_parties(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWPartyEntities]:
@@ -195,7 +213,7 @@ def identify_parties(pp_text: str, segments: list[str], override_cache: PARAM_OV
         return qh.Q_PARTY_RECOGNITION.run_query({"segment": segment_text}, override_cache=override_cache)
 
     res = []
-    for segment in segments:
+    for segment in tqdm(segments, leave=False, desc="Identifying parties"):
         entities = call_llm_for_segment(segment)
         res.append(SWPartyEntities(**{"segment": segment, "entities": entities}))
     return res
@@ -245,7 +263,7 @@ def identify_data_practices(pp_text: str, segments: list[str], override_cache: P
         return res
 
     res = []
-    for segment in segments:
+    for segment in tqdm(segments, leave=False, desc="Identifying data practices"):
         practices = call_llm_for_segment(segment)
         res.append(SWDataPractices(**{"segment": segment, "practices": practices}))
     return res

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 import re
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from . import policy_text_utils as ptu
 from .data_model import (
     DataEntity,
@@ -81,13 +81,16 @@ def assemble_data_practices(relations: list[Relation], grouped_practices_with_id
         indexed_relations[action_id][relation_type].append(indexed_entity_objs[entity_id])
 
     res = []
+    errors = []
     for action_id, my_relations in indexed_relations.items():
         raw_action = indexed_practices[action_id]
-        assert raw_action["type"] in DATA_PRACTICE_NAME_MAP, f"Unexpected data practice type: {raw_action['type']}"
+        if raw_action["type"] not in DATA_PRACTICE_NAME_MAP:
+            errors.append(f"Unexpected data practice type for {raw_action}")
+            continue
         cls = DATA_PRACTICE_CLASS_MAP[DATA_PRACTICE_NAME_MAP[raw_action["type"]]]
         obj = cls(text=raw_action["text"], **my_relations)
         res.append(obj)
-    return res
+    return res, errors
 
 
 def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> list[DataPractice]:
@@ -96,6 +99,7 @@ def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> lis
     Call the relevant LLM tools to analyze the privacy policy.
     This function returns a list of DataPractice objects.
     """
+    failed_tasks = []
     with tqdm(total=10, desc="Analyzing privacy policy") as pbar:
         def update_progress(new_desc):
             pbar.update(1)
@@ -104,15 +108,19 @@ def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> lis
         update_progress("Identifying data entities")
         raw_data_entities = identify_data_entities(pp_text, segments, override_cache)
         update_progress("Classifying data entities")
-        classified_data_entities = classify_data_categories(
+        classified_data_entities, errs = classify_data_categories(
             pp_text, segments, raw_data_entities, override_cache
         )
+        if errs:
+            failed_tasks.append(errs)
         update_progress("Identifying purpose entities")
         raw_purpose_entities = identity_purpose_entities(pp_text, segments, override_cache)
         update_progress("Classifying purpose entities")
-        classified_purpose_entities = classify_purpose_categories(
+        classified_purpose_entities, errs = classify_purpose_categories(
             pp_text, segments, raw_purpose_entities, override_cache
         )
+        if errs:
+            failed_tasks.append(errs)
         update_progress("Identifying parties")
         parties = identify_parties(pp_text, segments, override_cache)
         update_progress("Identifying data practices")
@@ -136,7 +144,7 @@ def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> lis
                 pbar2.update(1)
         update_progress("Done PP")
 
-    return assembled_data_practice_list
+    return assembled_data_practice_list, failed_tasks
 
 
 RE_DOMAIN_NAME = re.compile(r"(?:https?://)?([^/]+)")
@@ -161,8 +169,9 @@ def analyze_pp_from_names(website_names: list[str], override_cache: PARAM_OVERRI
         raise ValueError("PP_POLICY_DIR environment variable is not set.")
     policy_dir = Path(policy_dir)
     res = {}
+    failed_tasks = []
     errs = []
-    for website_name in tqdm(website_names, desc="Analyzing privacy policy for website #"):
+    for website_name in (pbar := tqdm(website_names, desc="Analyzing privacy policy")):
         possbile_names = []
         if match := RE_KEY_DOMAIN_NAME.match(website_name):
             domain_name = match.group(1)
@@ -175,14 +184,16 @@ def analyze_pp_from_names(website_names: list[str], override_cache: PARAM_OVERRI
             pp_file = get_relative_file_path_for_pp(domain_name)
             if not pp_file.exists():
                 continue
-            print(f"Analyzing privacy policy for {website_name} from {pp_file}")
+            pbar.set_postfix_str(f"For {website_name} from {pp_file}")
             with open(pp_file, "r") as f:
                 pp_text = f.read()
-                data_practices = analyze_pp(pp_text, override_cache=override_cache)
-                print(f"Data practices for {domain_name}: {data_practices}")
+                data_practices, ierrs = analyze_pp(pp_text, override_cache=override_cache)
+                # print(f"Data practices for {domain_name}: {data_practices}")
                 res[domain_name] = data_practices
                 match_found = True
+                if ierrs:
+                    errs.append((website_name, ierrs))
                 break
         if not match_found:
-            errs.append(website_name)
-    return res, errs
+            failed_tasks.append(website_name)
+    return res, failed_tasks, errs

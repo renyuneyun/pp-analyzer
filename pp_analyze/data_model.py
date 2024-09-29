@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, OnErrorOmit, validator
 from typing import Optional
 
 
@@ -69,39 +69,44 @@ DATA_PRACTICE_NAME_MAP = {
 }
 
 
+OmittablePartyEntity = OnErrorOmit[PartyEntity]
+OmittableDataEntity = OnErrorOmit[DataEntity]
+OmittablePurposeEntity = OnErrorOmit[PurposeEntity]
+
+
 class DataPractice(BaseModel):
     text: str
 
 
 class DataCollectionUse(DataPractice):
-    data_collector: list[PartyEntity] = Field(alias='Data-Collector', default=[])  # Only one; needs to validate when used
-    data_provider: list[PartyEntity] = Field(alias='Data-Provider', default=[])
-    data_collected: list[DataEntity] = Field(alias='Data-Collected', default=[])
-    purpose: list[PurposeEntity] = Field(alias='Purpose-Argument', default=[])
+    data_collector: list[OmittablePartyEntity] = Field(alias='Data-Collector', default=[])  # Only one; needs to validate when used
+    data_provider: list[OmittablePartyEntity] = Field(alias='Data-Provider', default=[])
+    data_collected: list[OmittableDataEntity] = Field(alias='Data-Collected', default=[])
+    purpose: list[OmittablePurposeEntity] = Field(alias='Purpose-Argument', default=[])
 
 
 class DataSharingDisclosure(DataPractice):
-    data_receiver: list[PartyEntity] = Field(alias='Data-Receiver', default=[])
-    data_sharer: list[PartyEntity] = Field(alias='Data-Sharer', default=[])  # Only one; needs to validate when used
-    data_provider: list[PartyEntity] = Field(alias='Data-Provider', default=[])
-    data_shared: list[DataEntity] = Field(alias='Data-Shared', default=[])
-    purpose: list[PurposeEntity] = Field(alias='Purpose-Argument', default=[])
+    data_receiver: list[OmittablePartyEntity] = Field(alias='Data-Receiver', default=[])
+    data_sharer: list[OmittablePartyEntity] = Field(alias='Data-Sharer', default=[])  # Only one; needs to validate when used
+    data_provider: list[OmittablePartyEntity] = Field(alias='Data-Provider', default=[])
+    data_shared: list[OmittableDataEntity] = Field(alias='Data-Shared', default=[])
+    purpose: list[OmittablePurposeEntity] = Field(alias='Purpose-Argument', default=[])
 
 
 class DataStorageRetention(DataPractice):
     # TODO: Not implemented yet!!!
-    data_holder: list[PartyEntity] = Field(alias='Data-Holder', default=[])
-    data_provider: list[PartyEntity] = Field(alias='Data-Provider', default=[])
-    data_retained: list[DataEntity] = Field(alias='Data-Retained', default=[])
+    data_holder: list[OmittablePartyEntity] = Field(alias='Data-Holder', default=[])
+    data_provider: list[OmittablePartyEntity] = Field(alias='Data-Provider', default=[])
+    data_retained: list[OmittableDataEntity] = Field(alias='Data-Retained', default=[])
     storage_place: list[Location] = Field(alias='Storage-Place', default=[])
     retention_period: list[Duration] = Field(alias='Retention-Period', default=[])  # Only one; needs to validate when used
-    purpose: list[PurposeEntity] = Field(alias='Purpose-Argument', default=[])
+    purpose: list[OmittablePurposeEntity] = Field(alias='Purpose-Argument', default=[])
 
 
 class DataSecurityProtection(DataPractice):
-    data_protector: list[PartyEntity] = Field(alias='Data-Protector', default=[])
-    data_provider: list[PartyEntity] = Field(alias='Data-Provider', default=[])
-    data_protected: list[DataEntity] = Field(alias='Data-Protected', default=[])
+    data_protector: list[OmittablePartyEntity] = Field(alias='Data-Protector', default=[])
+    data_provider: list[OmittablePartyEntity] = Field(alias='Data-Provider', default=[])
+    data_protected: list[OmittableDataEntity] = Field(alias='Data-Protected', default=[])
     protect_against: list[SecurityThreat] = Field(alias='protect-against', default=[])
     protection_method: list[ProtectionMethod] = Field(alias='method', default=[])
 
