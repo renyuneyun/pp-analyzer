@@ -44,6 +44,8 @@ def enable_zstd_extension(dbapi_conn, *args):
 
 
 def enable_compression(dbapi_conn, *args):
+    dbapi_conn.execute('pragma journal_mode=WAL;')
+    dbapi_conn.execute('pragma auto_vacuum=full;')
     dbapi_conn.execute('''SELECT
         zstd_enable_transparent('{"table": "queryrecord", "column": "query_params", "compression_level": 19, "dict_chooser": "''a''"}'),
         zstd_enable_transparent('{"table": "queryrecord", "column": "lm_response", "compression_level": 19, "dict_chooser": "''a''"}')
@@ -56,6 +58,7 @@ if _CACHE_DIR is not None:
     db_exists = db_file.exists()
     db_url = f'sqlite:///{db_file.absolute()}'
     engine = create_engine(db_url)
+    engine.dialect.supports_sane_rowcount = False
     event.listen(engine, 'connect', enable_zstd_extension)
     if not db_exists:
         SQLModel.metadata.create_all(engine)

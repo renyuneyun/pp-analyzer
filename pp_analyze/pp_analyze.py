@@ -33,6 +33,9 @@ from .recognition import (
     to_dict,
     SWGroupedDataPracticeWithId,
     Relation,
+
+    QueryCategory,
+    PARAM_OVERRIDE_CACHE,
 )
 
 
@@ -87,7 +90,7 @@ def assemble_data_practices(relations: list[Relation], grouped_practices_with_id
     return res
 
 
-def analyze_pp(pp_text: str) -> list[DataPractice]:
+def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> list[DataPractice]:
     """
     Main entry point for pp_analyze.
     Call the relevant LLM tools to analyze the privacy policy.
@@ -95,16 +98,16 @@ def analyze_pp(pp_text: str) -> list[DataPractice]:
     """
     segments = ptu.convert_into_segments(pp_text)
 
-    raw_data_entities = identify_data_entities(pp_text, segments)
+    raw_data_entities = identify_data_entities(pp_text, segments, override_cache)
     classified_data_entities = classify_data_categories(
-        pp_text, segments, raw_data_entities
+        pp_text, segments, raw_data_entities, override_cache
     )
-    raw_purpose_entities = identity_purpose_entities(pp_text, segments)
+    raw_purpose_entities = identity_purpose_entities(pp_text, segments, override_cache)
     classified_purpose_entities = classify_purpose_categories(
-        pp_text, segments, raw_purpose_entities
+        pp_text, segments, raw_purpose_entities, override_cache
     )
-    parties = identify_parties(pp_text, segments)
-    practices = identify_data_practices(pp_text, segments)
+    parties = identify_parties(pp_text, segments, override_cache)
+    practices = identify_data_practices(pp_text, segments, override_cache)
 
     grouped_practices = group_data_practices_and_entities(
         practices, classified_data_entities, classified_purpose_entities, parties
@@ -115,7 +118,7 @@ def analyze_pp(pp_text: str) -> list[DataPractice]:
 
     for segment in grouped_practices_with_id:
         query_data = convert_grouped_practices_to_query_data(segment)
-        relations = identify_relations(query_data)
+        relations = identify_relations(query_data, override_cache)
         assembled_data_practices = assemble_data_practices(relations, segment)
         assembled_data_practice_list.extend(assembled_data_practices)
 
@@ -134,7 +137,7 @@ def get_relative_file_path_for_pp(website_name: str) -> Path:
     return policy_dir / website_name[:1] / website_name[:2] / website_name[:3] / f"{website_name}.md"
 
 
-def analyze_pp_from_names(website_names: list[str]):
+def analyze_pp_from_names(website_names: list[str], override_cache: PARAM_OVERRIDE_CACHE = None):
     """
     Analyze privacy policies from website names.
     You need `PP_POLICY_DIR` environment variable to be set to the directory containing the privacy policies.
@@ -161,7 +164,7 @@ def analyze_pp_from_names(website_names: list[str]):
             print(f"Analyzing privacy policy for {website_name} from {pp_file}")
             with open(pp_file, "r") as f:
                 pp_text = f.read()
-                data_practices = analyze_pp(pp_text)
+                data_practices = analyze_pp(pp_text, override_cache=override_cache)
                 print(f"Data practices for {domain_name}: {data_practices}")
                 res[domain_name] = data_practices
                 match_found = True

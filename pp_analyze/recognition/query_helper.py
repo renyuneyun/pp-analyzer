@@ -1,4 +1,5 @@
 
+from datetime import datetime
 from dotenv import load_dotenv
 import json
 from openai import OpenAI
@@ -6,11 +7,12 @@ import os
 from pathlib import Path
 from pydantic import BaseModel
 from sqlmodel import Field, Session, SQLModel, create_engine, select, DateTime
+from sqlalchemy import update
 from typing import Optional, Callable
 from uuid import uuid4
-from . import prompt
+from . import db, prompt
+from .types import QueryCategory, PARAM_OVERRIDE_CACHE
 from .utils import dict_hash, dict_equal
-from . import db
 from pp_analyze.external import json_parse
 
 load_dotenv()
@@ -79,7 +81,7 @@ class SQLiteCacheManager:
     '''
     A cache manager that uses SQLite to store cache.
     '''
-    def __init__(self, cache_category: str, llm_model: str):
+    def __init__(self, cache_category: QueryCategory, llm_model: str):
         self.cache_category = cache_category
         self.llm_model = llm_model
 
@@ -89,7 +91,7 @@ class SQLiteCacheManager:
             statement = select(db.QueryRecord).where(db.QueryRecord.hash_key == hash_key)
             for record in session.exec(statement):
                 if dict_equal(record.query_params_dict(), query_params):
-                    return record.lm_response
+                    return record.lm_response, record
         return None
 
     def save_to_cache(self, query_params: dict, result: dict):
@@ -98,6 +100,13 @@ class SQLiteCacheManager:
                 'query_params': query_params,
                 'lm_response': result
             })
+            session.add(record)
+            session.commit()
+
+    def update_cache(self, record: db.QueryRecord, result: dict):
+        with Session(db.engine) as session:
+            record.lm_response = result
+            record.timestamp = datetime.now().isoformat()
             session.add(record)
             session.commit()
 
@@ -113,7 +122,7 @@ class QueryHelper(BaseModel):
                 - query_hash (generated from query parameters, which should be unique for each query)
                     - cache files (JSON files containing the query parameters and the result; multiple files may exist if hash collision occurs)
     '''
-    cache_category: str
+    cache_category: QueryCategory
     system_message: str
     user_message_template: str
     llm_model: str
@@ -125,7 +134,13 @@ class QueryHelper(BaseModel):
         super().__init__(**data)
         self._cache_manager = SQLiteCacheManager(cache_category=self.cache_category, llm_model=self.llm_model)
 
-    def run_query(self, data: dict):
+    def _execute_query(self, query_params: dict):
+        completion = client.chat.completions.create(**query_params)
+        model_output = completion.choices[0].message
+        model_output_text = model_output.content
+        return model_output_text
+
+    def run_query(self, data: dict, override_cache: PARAM_OVERRIDE_CACHE = None):
         '''
         Run query, and return the parsed result (usually either a list or a dict).
         If anything wrong happens (e.g., API error, parsing error), throw an exception.
@@ -146,11 +161,15 @@ class QueryHelper(BaseModel):
                 {"role": "user", "content": user_message}
             ]
         }
-        model_output_text = self._cache_manager.get_from_cache(query_params)
-        if model_output_text is None:
-            completion = client.chat.completions.create(**query_params)
-            model_output = completion.choices[0].message
-            model_output_text = model_output.content
+        cache_out = self._cache_manager.get_from_cache(query_params)
+        if cache_out is not None:
+            model_output_text, record = cache_out
+            if override_cache:
+                if override_cache is True or self.cache_category in override_cache:
+                    model_output_text = self._execute_query(query_params)
+                    self._cache_manager.update_cache(record, model_output_text)
+        else:
+            model_output_text = self._execute_query(query_params)
             self._cache_manager.save_to_cache(query_params, model_output_text)
         parsed_result = parse(model_output_text)
         if self._parse_ambiguous_data:
@@ -159,7 +178,7 @@ class QueryHelper(BaseModel):
 
 
 Q_DATA_ENTITY = QueryHelper(
-    cache_category="data_entity",
+    cache_category=QueryCategory.DATA_ENTITY,
     system_message=prompt.SYSTEM_MESSAGE_DATA_ENTITY,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_DATA_ENTITY,
     llm_model="ft:gpt-4o-mini-2024-07-18:rui:data-entity-sent-data-ver2:A8ycyw3W",
@@ -171,14 +190,14 @@ Q_DATA_ENTITY = QueryHelper(
 )
 
 Q_DATA_CLASSIFICATION = QueryHelper(
-    cache_category="data_classification",
+    cache_category=QueryCategory.DATA_CLASSIFICATION,
     system_message=prompt.SYSTEM_MESSAGE_DATA_ENTITY_CLASSIFICATION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION,
     llm_model="ft:gpt-4o-2024-08-06:rui:data-class-sent-data-v2:A9HochjC",
 )
 
 Q_PURPOSE_ENTITY = QueryHelper(
-    cache_category="purpose_entity",
+    cache_category=QueryCategory.PURPOSE_ENTITY,
     system_message=prompt.SYSTEM_MESSAGE_PURPOSE_ENTITY,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY,
     llm_model="ft:gpt-4o-mini-2024-07-18:rui:purpose-span-sent-entity-v2:A97HPDpd",
@@ -189,7 +208,7 @@ Q_PURPOSE_ENTITY = QueryHelper(
 )
 
 Q_PURPOSE_CLASSIFICATION = QueryHelper(
-    cache_category="purpose_classification",
+    cache_category=QueryCategory.PURPOSE_CLASSIFICATION,
     system_message=prompt.SYSTEM_MESSAGE_PURPOSE_CATEGORY_CLASSIFICATION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_PURPOSE_CATEGORY,
     llm_model="ft:gpt-4o-2024-08-06:rui:purpose-class-sent-purpose-v2:A9KGkDmD",
@@ -199,7 +218,7 @@ Q_PURPOSE_CLASSIFICATION = QueryHelper(
 )
 
 Q_ACTION_RECOGNITION = QueryHelper(
-    cache_category="action_recognition",
+    cache_category=QueryCategory.DATA_PRACTICE,
     system_message=prompt.SYSTEM_MESSAGE_ACTION_RECOGNITION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_ACTION_RECOGNITION,
     llm_model="ft:gpt-4o-mini-2024-07-18:rui:action-sent-v2:A9KKKeHG",
@@ -210,7 +229,7 @@ Q_ACTION_RECOGNITION = QueryHelper(
 )
 
 Q_PARTY_RECOGNITION = QueryHelper(
-    cache_category="party_recognition",
+    cache_category=QueryCategory.PARTY_RECOGNITION,
     system_message=prompt.SYSTEM_MESSAGE_PARTY_RECOGNITION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_PARTY_RECOGNITION,
     llm_model="ft:gpt-4o-mini-2024-07-18:rui:party-sent-v3-d3:AAOzdio9",
@@ -220,7 +239,7 @@ Q_PARTY_RECOGNITION = QueryHelper(
 )
 
 Q_RELATION_RECOGNITION = QueryHelper(
-    cache_category="relation_recognition",
+    cache_category=QueryCategory.RELATION_RECOGNITION,
     system_message=prompt.SYSTEM_MESSAGE_RELATION_RECOGNITION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_RELATION_RECOGNITION,
     llm_model="ft:gpt-4o-2024-08-06:rui:relation-seg-v2:AAmgfsI1",

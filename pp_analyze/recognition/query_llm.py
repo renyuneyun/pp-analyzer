@@ -1,5 +1,6 @@
 from copy import deepcopy
 from . import query_helper as qh
+from .types import PARAM_OVERRIDE_CACHE
 from .data_model import (
     to_dict,
     SWDataEntities,
@@ -14,7 +15,7 @@ from .data_model import (
 )
 
 
-def identify_data_entities(pp_text: str, segments: list[str]) -> list[SWDataEntities]:
+def identify_data_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWDataEntities]:
     """
     Split pp_text into segments, and call LLM to obtain data entities
     Takes privacy policy (segment or any other form) as input
@@ -32,7 +33,7 @@ def identify_data_entities(pp_text: str, segments: list[str]) -> list[SWDataEnti
     ]
     """
     def call_llm_for_segment(segment_text):
-        parsed_model_output = qh.Q_DATA_ENTITY.run_query({"segment": segment_text})
+        parsed_model_output = qh.Q_DATA_ENTITY.run_query({"segment": segment_text}, override_cache=override_cache)
         res = []
         for entity in parsed_model_output:
             entity_text = entity
@@ -49,7 +50,7 @@ def identify_data_entities(pp_text: str, segments: list[str]) -> list[SWDataEnti
     return res
 
 
-def classify_data_categories(pp_text: str, segments: list[str], data_entities: list[SWDataEntities]) -> list[SWClassifiedDataEntities]:
+def classify_data_categories(pp_text: str, segments: list[str], data_entities: list[SWDataEntities], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWClassifiedDataEntities]:
     """
     Identify the formal categories of data entities, as in DPV
 
@@ -73,7 +74,7 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities: l
         return qh.Q_DATA_CLASSIFICATION.run_query({
             'segment': data_point['segment'],
             'phrases': [entity['text'] for entity in data_point['entities']]
-        })
+        }, override_cache=override_cache)
 
     classified_data_entities = []
     for x in deepcopy(data_entities):
@@ -91,7 +92,7 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities: l
     return classified_data_entities
 
 
-def identity_purpose_entities(pp_text: str, segments: list[str]) -> list[SWPurposeEntities]:
+def identity_purpose_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWPurposeEntities]:
     """
     Split pp_text into segments, and call LLM to obtain purpose entities
     Takes privacy policy (segment or any other form) as input
@@ -110,7 +111,7 @@ def identity_purpose_entities(pp_text: str, segments: list[str]) -> list[SWPurpo
     """
 
     def call_llm_for_segment(segment_text):
-        parsed_model_output = qh.Q_PURPOSE_ENTITY.run_query({"segment": segment_text})
+        parsed_model_output = qh.Q_PURPOSE_ENTITY.run_query({"segment": segment_text}, override_cache=override_cache)
         res = []
         for entity in parsed_model_output:
             entity_text = entity
@@ -127,7 +128,7 @@ def identity_purpose_entities(pp_text: str, segments: list[str]) -> list[SWPurpo
     return res
 
 
-def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entities: list[SWPurposeEntities]) -> list[SWClassifiedPurposeEntities]:
+def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entities: list[SWPurposeEntities], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWClassifiedPurposeEntities]:
     """
     Identify the formal categories of purpose entities, as in DPV
 
@@ -152,7 +153,7 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
         return qh.Q_PURPOSE_CLASSIFICATION.run_query({
             'segment': data_point['segment'],
             'phrases': [entity['text'] for entity in data_point['entities']]
-        })
+        }, override_cache=override_cache)
 
     purpose_entities = deepcopy(purpose_entities)
     classified_purpose_entities = []
@@ -171,7 +172,7 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
     return classified_purpose_entities
 
 
-def identify_parties(pp_text: str, segments: list[str]) -> list[SWPartyEntities]:
+def identify_parties(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWPartyEntities]:
     """
     Identify the parties involved in the privacy policy
 
@@ -191,7 +192,7 @@ def identify_parties(pp_text: str, segments: list[str]) -> list[SWPartyEntities]
     ]
     """
     def call_llm_for_segment(segment_text):
-        return qh.Q_PARTY_RECOGNITION.run_query({"segment": segment_text})
+        return qh.Q_PARTY_RECOGNITION.run_query({"segment": segment_text}, override_cache=override_cache)
 
     res = []
     for segment in segments:
@@ -200,17 +201,17 @@ def identify_parties(pp_text: str, segments: list[str]) -> list[SWPartyEntities]
     return res
 
 
-def identify_data_storage_locations(pp_text: str, segments: list[str]):
+def identify_data_storage_locations(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None):
     # TODO: Not implemented yet!!!
     pass
 
 
-def identify_data_storage_durations(pp_text: str, segments: list[str]):
+def identify_data_storage_durations(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None):
     # TODO: Not implemented yet!!!
     pass
 
 
-def identify_data_practices(pp_text: str, segments: list[str]) -> list[SWDataPractices]:
+def identify_data_practices(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWDataPractices]:
     """
     Identify data practices in the privacy policy
 
@@ -230,7 +231,7 @@ def identify_data_practices(pp_text: str, segments: list[str]) -> list[SWDataPra
     ]
     """
     def call_llm_for_segment(segment_text):
-        parsed_model_output = qh.Q_ACTION_RECOGNITION.run_query({"segment": segment_text})
+        parsed_model_output = qh.Q_ACTION_RECOGNITION.run_query({"segment": segment_text}, override_cache=override_cache)
         res = []
         for segment_action in parsed_model_output:
             practice = {
@@ -250,7 +251,7 @@ def identify_data_practices(pp_text: str, segments: list[str]) -> list[SWDataPra
     return res
 
 
-def identify_relations(relation_query) -> list[Relation]:
+def identify_relations(relation_query, override_cache: PARAM_OVERRIDE_CACHE = None) -> list[Relation]:
     """
     Identify relations between data practice actions and entities in the privacy policy, through LLM
 
@@ -265,4 +266,4 @@ def identify_relations(relation_query) -> list[Relation]:
     ]
     """
 
-    return [Relation(**relation) for relation in qh.Q_RELATION_RECOGNITION.run_query(relation_query)]
+    return [Relation(**relation) for relation in qh.Q_RELATION_RECOGNITION.run_query(relation_query, override_cache=override_cache)]
