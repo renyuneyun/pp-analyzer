@@ -7,6 +7,7 @@ By default, we assume all segments share the same segmentation method, which is 
 from dotenv import load_dotenv
 import os
 from pathlib import Path
+from pydantic import BaseModel
 import re
 from tqdm.auto import tqdm
 from . import policy_text_utils as ptu
@@ -42,13 +43,21 @@ from .recognition import (
 load_dotenv()
 
 
-def assemble_data_practices(relations: list[Relation], grouped_practices_with_id: SWGroupedDataPracticeWithId) -> list[DataPractice]:
+class SegmentedDataPractice(BaseModel):
+    class Config:
+        frozenset = True
+
+    segment: str
+    practices: list[DataPractice]
+
+
+def assemble_data_practices(relations: list[Relation], grouped_practices_with_id: SWGroupedDataPracticeWithId) -> tuple[SegmentedDataPractice, list[str]]:
     """
-    Assemble the data practices with the identified relations, into DataPractice objects.
+    Assemble the data practices with the identified relations, into DataPractice objects. The results denote each segment of the privacy policy with the relevant data practices.
 
     @param relations: identified relations, obtained from identify_relations
     @param grouped_practices_with_id: list of grouped data practices with IDs, obtained from add_ids_into_grouped_practices, but only the segment relevant to the relations
-    @return: list of DataPractice objects
+    @return: SegmentedDataPractice object, which contains the segment text and the assembled data practices
     """
     grouped_practices_with_id = to_dict(grouped_practices_with_id)
     segment_text = grouped_practices_with_id["segment"]
@@ -90,16 +99,18 @@ def assemble_data_practices(relations: list[Relation], grouped_practices_with_id
         cls = DATA_PRACTICE_CLASS_MAP[DATA_PRACTICE_NAME_MAP[raw_action["type"]]]
         obj = cls(text=raw_action["text"], **my_relations)
         res.append(obj)
-    return res, errors
+    segmented_data_practice = SegmentedDataPractice(segment=segment_text, practices=res)
+    return segmented_data_practice, errors
 
 
-def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> list[DataPractice]:
+def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> tuple[list[SegmentedDataPractice], list[BaseModel|str]]:
     """
     Main entry point for pp_analyze.
     Call the relevant LLM tools to analyze the privacy policy.
     This function returns a list of DataPractice objects.
     """
-    failed_tasks = []
+    assembled_data_practice_list: list[SegmentedDataPractice] = []
+    failed_tasks: list[BaseModel|str] = []
     with tqdm(total=10, desc="Analyzing privacy policy") as pbar:
         def update_progress(new_desc):
             pbar.update(1)
@@ -132,15 +143,16 @@ def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> lis
         update_progress("Adding IDs into grouped practices")
         grouped_practices_with_id = add_ids_into_grouped_practices(grouped_practices)
         update_progress("Identifying relations and assembling data practices")
-        assembled_data_practice_list = []
         with tqdm(total=len(grouped_practices_with_id), leave=False, desc="Assembling data practices") as pbar2:
             for segment in grouped_practices_with_id:
                 query_data = convert_grouped_practices_to_query_data(segment)
                 pbar2.set_postfix_str("Identifying relations")
                 relations = identify_relations(query_data, override_cache)
                 pbar2.set_postfix_str("Assembling data practices")
-                assembled_data_practices = assemble_data_practices(relations, segment)
-                assembled_data_practice_list.extend(assembled_data_practices)
+                assembled_data_practices, errs = assemble_data_practices(relations, segment)
+                if errs:
+                    failed_tasks.extend(errs)
+                assembled_data_practice_list.append(assembled_data_practices)
                 pbar2.update(1)
         update_progress("Done PP")
 
@@ -159,7 +171,7 @@ def get_relative_file_path_for_pp(website_name: str) -> Path:
     return policy_dir / website_name[:1] / website_name[:2] / website_name[:3] / f"{website_name}.md"
 
 
-def analyze_pp_from_names(website_names: list[str], override_cache: PARAM_OVERRIDE_CACHE = None):
+def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True):
     """
     Analyze privacy policies from website names.
     You need `PP_POLICY_DIR` environment variable to be set to the directory containing the privacy policies.
@@ -168,7 +180,7 @@ def analyze_pp_from_names(website_names: list[str], override_cache: PARAM_OVERRI
     if policy_dir is None:
         raise ValueError("PP_POLICY_DIR environment variable is not set.")
     policy_dir = Path(policy_dir)
-    res = {}
+    res: dict[str, list[SegmentedDataPractice]] = {}
     failed_tasks = []
     errs = []
     for website_name in (pbar := tqdm(website_names, desc="Analyzing privacy policy")):
@@ -188,7 +200,8 @@ def analyze_pp_from_names(website_names: list[str], override_cache: PARAM_OVERRI
             with open(pp_file, "r") as f:
                 pp_text = f.read()
                 data_practices, ierrs = analyze_pp(pp_text, override_cache=override_cache)
-                # print(f"Data practices for {domain_name}: {data_practices}")
+                if only_non_empty:
+                    data_practices = filter_empty_data_practices(data_practices)
                 res[domain_name] = data_practices
                 match_found = True
                 if ierrs:
@@ -197,3 +210,7 @@ def analyze_pp_from_names(website_names: list[str], override_cache: PARAM_OVERRI
         if not match_found:
             failed_tasks.append(website_name)
     return res, failed_tasks, errs
+
+
+def filter_empty_data_practices(data_practices: list[SegmentedDataPractice]) -> list[SegmentedDataPractice]:
+    return [segmented_data_practice for segmented_data_practice in data_practices if segmented_data_practice.practices]
