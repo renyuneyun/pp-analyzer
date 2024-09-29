@@ -5,16 +5,10 @@ from pydantic import BaseModel, Field
 import pylcs
 from typing import Optional
 from ppa_commons import (
-    T_ENTITY,
-    T_ENTITY_WITH_ACTION,
-    T_ACTION,
-    T_PROTECTION_METHOD,
-    T_PARTY,
-    T_RELATION,
-
+    DataType,
     heuristic_extract_entities,
+    try_parse_json_object,
 )
-from ppa_commons import try_parse_json_object
 
 
 def lcs_rate(a, b):
@@ -90,22 +84,22 @@ class RelationDataPoint(DataPoint):
 
 
 _data_type_to_class = {
-    T_ENTITY_WITH_ACTION: EntityWithActionDataPoint,
-    T_ACTION: ActionDataPoint,
-    T_PROTECTION_METHOD: ProtectionMethodDataPoint,
-    T_PARTY: PartyDataPoint,
-    T_RELATION: RelationDataPoint,
+    DataType.ENTITY_WITH_ACTION: EntityWithActionDataPoint,
+    DataType.ACTION: ActionDataPoint,
+    DataType.PROTECTION_METHOD: ProtectionMethodDataPoint,
+    DataType.PARTY: PartyDataPoint,
+    DataType.RELATION: RelationDataPoint,
 }
 
 
-def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True, **kwargs):
-    if data_type == T_PARTY and tolerate_additionally_predicted is None:
+def precision_accuracy_f1(expected, predicted, data_type=DataType.ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True, **kwargs):
+    if data_type == DataType.PARTY and tolerate_additionally_predicted is None:
         tolerate_additionally_predicted = True
     if ignore_order:
-        if data_type == T_ENTITY:
+        if data_type == DataType.ENTITY:
             expected = set(expected)
             predicted = set(predicted)
-        elif data_type == T_ACTION:
+        elif data_type == DataType.ACTION:
             if isinstance(expected, dict):
                 expected = [expected]
             try:
@@ -137,7 +131,7 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
                         maximum_lcs_rate = ilcs_rate
                         maximum_lcs_index = i
                 if maximum_lcs_rate >= lcs_threshold:
-                    if lcs_threshold == -1 and data_type == T_ENTITY:
+                    if lcs_threshold == -1 and data_type == DataType.ENTITY:
                         if maximum_lcs_rate > 0:
                             words1 = e1.split()
                             words2 = only_in_predicted[maximum_lcs_index].split()
@@ -170,7 +164,7 @@ def precision_accuracy_f1(expected, predicted, data_type=T_ENTITY, lcs_threshold
 
 
 
-def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, **kwargs):
+def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, **kwargs):
     K_EXPECT_EMPTY = '(Expected) Empty'
     K_EXPECT_NON_EMPTY = '(Expected) Non-empty'
     K_PREDICT_EMPTY = '(Predicted) Empty'
@@ -221,7 +215,7 @@ def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True,
     return result_score_list, addition_scoring, failed
 
 
-def calc_and_print_statistics(desc, saved_queries, data_type=T_ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True):
+def calc_and_print_statistics(desc, saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True):
     result_score_list, addition_scoring, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted, ignore_order=ignore_order)
 
     print(f"Stat for eval with desc: {desc}")
