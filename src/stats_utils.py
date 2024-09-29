@@ -12,7 +12,7 @@ from ppa_commons import (
     T_PARTY,
     T_RELATION,
 
-    heuristic_extract_data_entities,
+    heuristic_extract_entities,
 )
 from ppa_commons import try_parse_json_object
 
@@ -201,7 +201,7 @@ def calc_statistics(saved_queries, data_type=T_ENTITY, try_heuristic_parse=True,
                 failed[i] = (model_output, correct_output)
                 continue
         if try_heuristic_parse:
-            model_output_parsed = heuristic_extract_data_entities(model_output_parsed, data_type=data_type)
+            model_output_parsed = heuristic_extract_entities(model_output_parsed, data_type=data_type)
         correct_output_parsed = json.loads(correct_output)
         try:
             result_score = precision_accuracy_f1(correct_output_parsed, model_output_parsed, data_type=data_type, **kwargs)
