@@ -1,13 +1,16 @@
-T_ENTITY = 'entity'
-T_ENTITY_WITH_ACTION = 'entity_with_action'
-T_ACTION = 'action'
-T_PROTECTION_METHOD = 'protection_method'
-T_PARTY = 'party'
-T_RELATION = 'relation'
+from enum import Enum
+
+class DataType(Enum):
+    ENTITY = 'entity'
+    ENTITY_WITH_ACTION = 'entity_with_action'
+    ACTION = 'action'
+    PROTECTION_METHOD = 'protection_method'
+    PARTY = 'party'
+    RELATION = 'relation'
 
 
-def heuristic_extract_entities(parsed_model_output, data_type=T_ENTITY):
-    if data_type != T_ENTITY:  # Not all data types should/can be heuristic-extracted
+def heuristic_extract_entities(parsed_model_output, data_type: DataType = DataType.ENTITY):
+    if data_type != DataType.ENTITY:  # Not all data types should/can be heuristic-extracted
         return parsed_model_output
     extracted_output = []
     for obj in parsed_model_output:
