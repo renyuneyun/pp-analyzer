@@ -96,31 +96,45 @@ def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> lis
     Call the relevant LLM tools to analyze the privacy policy.
     This function returns a list of DataPractice objects.
     """
-    segments = ptu.convert_into_segments(pp_text)
-
-    raw_data_entities = identify_data_entities(pp_text, segments, override_cache)
-    classified_data_entities = classify_data_categories(
-        pp_text, segments, raw_data_entities, override_cache
-    )
-    raw_purpose_entities = identity_purpose_entities(pp_text, segments, override_cache)
-    classified_purpose_entities = classify_purpose_categories(
-        pp_text, segments, raw_purpose_entities, override_cache
-    )
-    parties = identify_parties(pp_text, segments, override_cache)
-    practices = identify_data_practices(pp_text, segments, override_cache)
-
-    grouped_practices = group_data_practices_and_entities(
-        practices, classified_data_entities, classified_purpose_entities, parties
-    )
-    grouped_practices_with_id = add_ids_into_grouped_practices(grouped_practices)
-
-    assembled_data_practice_list = []
-
-    for segment in grouped_practices_with_id:
-        query_data = convert_grouped_practices_to_query_data(segment)
-        relations = identify_relations(query_data, override_cache)
-        assembled_data_practices = assemble_data_practices(relations, segment)
-        assembled_data_practice_list.extend(assembled_data_practices)
+    with tqdm(total=10, desc="Analyzing privacy policy") as pbar:
+        def update_progress(new_desc):
+            pbar.update(1)
+            pbar.set_postfix_str(new_desc)
+        segments = ptu.convert_into_segments(pp_text)
+        update_progress("Identifying data entities")
+        raw_data_entities = identify_data_entities(pp_text, segments, override_cache)
+        update_progress("Classifying data entities")
+        classified_data_entities = classify_data_categories(
+            pp_text, segments, raw_data_entities, override_cache
+        )
+        update_progress("Identifying purpose entities")
+        raw_purpose_entities = identity_purpose_entities(pp_text, segments, override_cache)
+        update_progress("Classifying purpose entities")
+        classified_purpose_entities = classify_purpose_categories(
+            pp_text, segments, raw_purpose_entities, override_cache
+        )
+        update_progress("Identifying parties")
+        parties = identify_parties(pp_text, segments, override_cache)
+        update_progress("Identifying data practices")
+        practices = identify_data_practices(pp_text, segments, override_cache)
+        update_progress("Grouping data practices and entities")
+        grouped_practices = group_data_practices_and_entities(
+            practices, classified_data_entities, classified_purpose_entities, parties
+        )
+        update_progress("Adding IDs into grouped practices")
+        grouped_practices_with_id = add_ids_into_grouped_practices(grouped_practices)
+        update_progress("Identifying relations and assembling data practices")
+        assembled_data_practice_list = []
+        with tqdm(total=len(grouped_practices_with_id), leave=False, desc="Assembling data practices") as pbar2:
+            for segment in grouped_practices_with_id:
+                query_data = convert_grouped_practices_to_query_data(segment)
+                pbar2.set_postfix_str("Identifying relations")
+                relations = identify_relations(query_data, override_cache)
+                pbar2.set_postfix_str("Assembling data practices")
+                assembled_data_practices = assemble_data_practices(relations, segment)
+                assembled_data_practice_list.extend(assembled_data_practices)
+                pbar2.update(1)
+        update_progress("Done PP")
 
     return assembled_data_practice_list
 
