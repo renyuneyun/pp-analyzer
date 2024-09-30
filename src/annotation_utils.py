@@ -514,3 +514,53 @@ def get_relations_of_segment_sentences_no_subsume_v3(annotations):
                     z['entity_type'] = party_entity_override[z['entity_type']]
 
     return res
+
+
+def get_retention_details_of_sentences(annotations):
+    '''
+    Get details of the `data-storage-retention-deletion` actions in sentences.
+    Output has the structure:
+    [
+        {
+            "segment": SEGMENT,
+            "sentence": SENTENCE,
+            "items": [
+                {
+                    "storage-place": STORAGE_PLACE,
+                    "retention-period": RETENTION_PERIOD
+                }
+            ]
+        }
+    ]
+    where the same segment and sentence is always grouped together.
+    '''
+    res = {}
+    for x in annotations:
+        segment_text = x.text
+        sentences = get_sentences_with_spans(x)
+
+        for span, sentence in sentences.items():
+            res[(segment_text, sentence)] = []
+
+        for e in x.events:
+            if e.type == ActionType.STORAGE_RETENTION_DELETION.value:
+                dic = {
+                    'text': e.trigger.mention,
+                }
+                for arg in e.arguments:
+                    obj = arg.object
+                    if obj.type == 'storage-place':
+                        dic["storage-place"] = obj.mention
+                    elif obj.type == 'retention-period':
+                        dic["retention-period"] = obj.mention
+                span = e.trigger.spans[0]
+                for span2 in sentences.keys():
+                    if is_within_sentence(span, span2):
+                        sentence = sentences[span2]
+                        break
+                assert sentence
+                parts = res[(segment_text, sentence)]
+                parts.append(dic)
+
+    return [{"segment": seg, "sentence": sent, "items": v} for (seg, sent), v in res.items()]
+

@@ -403,3 +403,21 @@ def as_training_data_for_relation_of_sentence(relation_entities_of_segments):
             data["messages"][2]["content"] = reply
             data_list.append(data)
     return data_list
+
+def as_training_data_for_retention_details_of_sentence(retention_details_of_sentence):
+    def get_assistant_message(segment):
+        ret = []
+        for item in segment['items']:
+            dic = {}
+            if 'storage-place' in item:
+                dic['storage-place'] = item['storage-place']
+            if 'retention-period' in item:
+                dic['retention-period'] = item['retention-period']
+            ret.append(dic)
+        return json.dumps(ret)
+    return _as_training_data_entity_general(retention_details_of_sentence, SYSTEM_MESSAGE_RETENTION_DETAILS,
+                                            lambda segment: USER_MESSAGE_TEMPLATE_RETENTION_DETAILS.format(**{
+                                                'segment': segment['sentence'],
+                                                'targets': json.dumps([a['text'] for a in segment['items']]),
+                                            }),
+                                            get_assistant_message)

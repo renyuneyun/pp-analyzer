@@ -272,6 +272,12 @@ _job_presets = [
         as_training_data=m_utils.as_training_data_for_relation_of_sentence,
         training_data_splitter=std.better_split_equal,
     ),
+    JobPreset(
+        desc="store_det-sent-d2",
+        load_data=partial(a_utils.load_and_get, a_utils.get_retention_details_of_sentences),
+        as_training_data=m_utils.as_training_data_for_retention_details_of_sentence,
+        training_data_splitter=std.better_split,
+    ),
 ]
 
 
