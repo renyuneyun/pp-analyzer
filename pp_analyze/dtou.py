@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pydantic import BaseModel
-from rdflib import IdentifiedNode
+from rdflib import IdentifiedNode, Graph, URIRef, BNode, Namespace, Literal
 from .data_model import (
     SegmentedDataPractice,
     DataCollectionUse,
@@ -9,7 +9,10 @@ from .data_model import (
     DataSecurityProtection,
     Party,
 )
-from .kg import convert_to_kg, one, A, NS
+from .kg import convert_to_kg, one, A, NS, NS_DPV, NS_DPV_PD
+
+
+NS_DTOU = Namespace("urn:dtou:core#")
 
 
 class Downstream(BaseModel):
@@ -41,6 +44,38 @@ class AppPolicy(BaseModel):
     '''
     app_name: str
     input_spec: list[InputSpec] = []
+
+    def to_rdf(self):
+        '''
+        Convert the AppPolicy to RDF app policy document.
+        '''
+        g = Graph()
+        g.bind('dtou', NS_DTOU)
+        g.bind('dpv', NS_DPV)
+        g.bind('dpv-pd', NS_DPV_PD)
+        n_policy = BNode()
+        g.add((n_policy, A, NS_DTOU['AppPolicy']))
+        g.add((n_policy, NS_DTOU['app_name'], URIRef(self.app_name)))
+        for input_spec in self.input_spec:
+            n_input_spec = BNode()
+            g.add((n_policy, NS_DTOU['input_spec'], n_input_spec))
+            g.add((n_input_spec, NS_DTOU['data'], input_spec.data))
+            if input_spec.user:
+                g.add((n_input_spec, NS_DTOU['user'], Literal(input_spec.user)))
+            if input_spec.action:
+                g.add((n_input_spec, NS_DTOU['action'], Literal(input_spec.action)))
+            for purpose in input_spec.purpose:
+                g.add((n_input_spec, NS_DTOU['purpose'], purpose))
+            for downstream in input_spec.downstream:
+                n_downstream = BNode()
+                g.add((n_input_spec, NS_DTOU['downstream'], n_downstream))
+                if downstream.user:
+                    g.add((n_downstream, NS_DTOU['user'], Literal(downstream.user)))
+                if downstream.app_name:
+                    g.add((n_downstream, NS_DTOU['app_name'], Literal(downstream.app_name)))
+                for purpose in downstream.purpose:
+                    g.add((n_downstream, NS_DTOU['purpose'], purpose))
+        return g
 
 
 def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name: str, first_party: str) -> AppPolicy:
