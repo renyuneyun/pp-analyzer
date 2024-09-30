@@ -15,7 +15,7 @@ from .data_model import (
     DataEntity,
     PurposeEntity,
     PartyEntity,
-    DataPractice,
+    SegmentedDataPractice,
     DATA_PRACTICE_NAME_MAP,
     DATA_PRACTICE_CLASS_MAP,
 )
@@ -41,14 +41,6 @@ from .recognition import (
 
 
 load_dotenv()
-
-
-class SegmentedDataPractice(BaseModel):
-    class Config:
-        frozenset = True
-
-    segment: str
-    practices: list[DataPractice]
 
 
 def assemble_data_practices(relations: list[Relation], grouped_practices_with_id: SWGroupedDataPracticeWithId) -> tuple[SegmentedDataPractice, list[str]]:

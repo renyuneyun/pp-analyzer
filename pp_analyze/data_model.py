@@ -111,6 +111,17 @@ class DataSecurityProtection(DataPractice):
     protection_method: list[ProtectionMethod] = Field(alias='method', default=[])
 
 
+class SegmentedDataPractice(BaseModel):
+    '''
+    A segment of the privacy policy with the relevant data practices (which are subclasses of `DataPractice`).
+    '''
+    class Config:
+        frozenset = True
+
+    segment: str
+    practices: list[DataPractice]
+
+
 DATA_PRACTICE_CLASS_MAP = {
     K_DATA_PRACTICE_DATA_COLLECTION_USE: DataCollectionUse,
     K_DATA_PRACTICE_DATA_SHARING_DISCLOSURE: DataSharingDisclosure,
