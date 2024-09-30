@@ -22,6 +22,9 @@ class JobPreset:
     training_data_splitter: Callable[[DATA_ENTITIES], tuple[list[int], list[int]]]
 
 
+f_d4 = partial(std.better_split, num_split=[40, 80, 10, 20])
+
+
 _job_presets = [
     JobPreset(
         desc="data_entity-sent_data-ver2",
@@ -46,6 +49,12 @@ _job_presets = [
         load_data=a_utils.load_data_entities_of_sentences,
         as_training_data=m_utils.as_training_data_for_data_span_of_sentence_only,
         training_data_splitter=std.better_split_equal,
+    ),
+    JobPreset(
+        desc="data_entity-sent_data-v3-d4",
+        load_data=a_utils.load_data_entities_of_sentences,
+        as_training_data=m_utils.as_training_data_for_data_span_of_sentence_only,
+        training_data_splitter=f_d4,
     ),
     JobPreset(
         desc="data_entity-sent_data-v4-d3",
