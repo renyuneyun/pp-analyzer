@@ -7,12 +7,21 @@ class DataType(Enum):
     PROTECTION_METHOD = 'protection_method'
     PARTY = 'party'
     RELATION = 'relation'
+    RETENTION_DETAILS = 'retention_details'
 
 
 def heuristic_extract_entities(parsed_model_output, data_type: DataType = DataType.ENTITY):
-    if data_type != DataType.ENTITY:  # Not all data types should/can be heuristic-extracted
+    if data_type not in {DataType.ENTITY, DataType.RETENTION_DETAILS}:  # Not all data types should/can be heuristic-extracted
         return parsed_model_output
     extracted_output = []
+    if data_type == DataType.RETENTION_DETAILS:
+        for obj in parsed_model_output:
+            if 'retention-period' in obj and not obj['retention-period']:
+                del obj['retention-period']
+            if 'storage-place' in obj and not obj['storage-place']:
+                del obj['storage-place']
+            extracted_output.append(obj)
+        return extracted_output
     for obj in parsed_model_output:
         if isinstance(obj, str):
             extracted_output.append(obj)
