@@ -83,12 +83,27 @@ class RelationDataPoint(DataPoint):
         return pylcs.lcs_sequence_length(self.relation, o.relation) / len(self.relation) if self.relation else 0
 
 
+class RetentionDetailsDataPoint(DataPoint):
+    storage_place: str | None = Field(alias='storage-place', default=None)
+    retention_period: str | None = Field(alias='retention-period', default=None)
+
+    def lcs_rate(self, o):
+        rate1 = pylcs.lcs_sequence_length(self.storage_place, o.storage_place) / len(self.storage_place) if self.storage_place else 0
+        if self.storage_place == o.storage_place:
+            rate1 = 1
+        rate2 = pylcs.lcs_sequence_length(self.retention_period, o.retention_period) / len(self.retention_period) if self.retention_period else 0
+        if self.retention_period == o.retention_period:
+            rate2 = 1
+        return min(rate1, rate2)
+
+
 _data_type_to_class = {
     DataType.ENTITY_WITH_ACTION: EntityWithActionDataPoint,
     DataType.ACTION: ActionDataPoint,
     DataType.PROTECTION_METHOD: ProtectionMethodDataPoint,
     DataType.PARTY: PartyDataPoint,
     DataType.RELATION: RelationDataPoint,
+    DataType.RETENTION_DETAILS: RetentionDetailsDataPoint,
 }
 
 
