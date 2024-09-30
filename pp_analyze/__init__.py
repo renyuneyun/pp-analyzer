@@ -3,4 +3,4 @@ from .pp_analyze import analyze_pp, bulk_analyze_pp, QueryCategory, PARAM_OVERRI
 from . import kg
 from .kg import convert_to_kg
 from . import dtou
-from .dtou import convert_to_dtou
+from .dtou import convert_to_app_policy
