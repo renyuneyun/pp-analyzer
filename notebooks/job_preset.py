@@ -129,6 +129,12 @@ _job_presets = [
         training_data_splitter=std.better_split_equal,
     ),
     JobPreset(
+        desc="purpose_span-sent_entity-v2-d4",
+        load_data=a_utils.load_purpose_entities_of_sentences,
+        as_training_data=m_utils.as_training_data_for_purpose_span_of_sentence_only_improved,
+        training_data_splitter=f_d4,
+    ),
+    JobPreset(
         desc="purpose_class-seg_purpose-v2",
         load_data=a_utils.load_purpose_entities_of_segments,
         as_training_data=m_utils.as_training_data_for_purpose_classification_of_segment,
