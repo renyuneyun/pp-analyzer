@@ -6,7 +6,34 @@ from .data_model import (
     DataSharingDisclosure,
     DataStorageRetention,
     DataSecurityProtection,
+    DataEntity,
+    PurposeEntity,
+    PartyEntity,
+    Location,
+    Duration,
+    SecurityThreat,
+    ProtectionMethod,
 )
+
+
+fields = [
+    'data_collector',
+    'data_provider',
+    'data_collected',
+    'purpose',
+    'data_receiver',
+    'data_sharer',
+    'data_shared',
+    'data_holder',
+    'data_retained',
+    'storage_place',
+    'retention_period',
+    'data_protector',
+    'data_protected',
+    'protect_against',
+    'protection_method',
+]
+
 
 def calc_practice_field_count(segmented_practices: list[SegmentedDataPractice]):
     field_count: dict[DataPractice, dict[str, list[int]]] = {
@@ -15,24 +42,6 @@ def calc_practice_field_count(segmented_practices: list[SegmentedDataPractice]):
         DataStorageRetention: defaultdict(list),
         DataSecurityProtection: defaultdict(list),
     }
-
-    fields = [
-        'data_collector',
-        'data_provider',
-        'data_collected',
-        'purpose',
-        'data_receiver',
-        'data_sharer',
-        'data_shared',
-        'data_holder',
-        'data_retained',
-        'storage_place',
-        'retention_period',
-        'data_protector',
-        'data_protected',
-        'protect_against',
-        'protection_method',
-    ]
 
     for segmented_practice in segmented_practices:
         for practice in segmented_practice.practices:
@@ -70,3 +79,23 @@ def calc_count_stats(field_count, quiet=False):
             for field in v.keys():
                 print(f"""  {field:20}: {" :: ".join(f"{k}: {(f'{v:.3f}' if isinstance(v, float) else f'{v}')}" for k, v in stat_results[field].items())}""")
     return res
+
+
+def calc_practice_entity_count(segmented_practices: list[SegmentedDataPractice]):
+    '''
+    Count the number of occurances of each different type of entity across all practices
+    '''
+    entity_count = defaultdict(lambda: defaultdict(int))
+    for segmented_practice in segmented_practices:
+        for practice in segmented_practice.practices:
+            for field in fields:
+                if hasattr(practice, field):
+                    field_v = getattr(practice, field)
+                    if isinstance(field_v, list):
+                        for entity in getattr(practice, field):
+                            internal_count = entity_count[entity.__class__]
+                            if isinstance(entity, (DataEntity, PurposeEntity, PartyEntity)):
+                                internal_count[entity.category] += 1
+                            else:
+                                internal_count[entity.text] += 1
+    return dict({k: dict(v) for k,v in entity_count.items()})
