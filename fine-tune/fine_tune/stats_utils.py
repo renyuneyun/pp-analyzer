@@ -180,18 +180,19 @@ def precision_accuracy_f1(expected, predicted, data_type=DataType.ENTITY, lcs_th
         i = 0
         j = 0
         tp1 = 0
-        while i < len(expected) and i < len(predicted):
-            while i+j < len(expected) and i+j < len(predicted):
-                if expected[i] == predicted[i+j]:
-                    tp1 += 1
-                    break
-                if lcs_threshold:
-                    ilcs_rate = lcs_rate(expected[i], predicted[i+j])
-                    if ilcs_rate >= lcs_threshold:
-                        tp1 += ilcs_rate
+        if tolerate_additionally_predicted:
+            while i < len(expected) and i < len(predicted):
+                while i+j < len(expected) and i+j < len(predicted):
+                    if expected[i] == predicted[i+j]:
+                        tp1 += 1
                         break
-                j += 1
-            i += 1
+                    if lcs_threshold:
+                        ilcs_rate = lcs_rate(expected[i], predicted[i+j])
+                        if ilcs_rate >= lcs_threshold:
+                            tp1 += ilcs_rate
+                            break
+                    j += 1
+                i += 1
         tp = max(tp0, tp1)
         precision = tp / len(predicted) if predicted else 0
         recall = tp / len(expected) if expected else 0
