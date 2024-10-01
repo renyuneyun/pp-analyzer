@@ -168,10 +168,21 @@ def precision_accuracy_f1(expected, predicted, data_type=DataType.ENTITY, lcs_th
     else:
         if not expected and not predicted:
             return 1, 1, 1
-        tp = 0
+        tp0 = 0
         for i in range(min(len(expected), len(predicted))):
             if expected[i] == predicted[i]:
-                tp += 1
+                tp0 += 1
+        i = 0
+        j = 0
+        tp1 = 0
+        while i < len(expected) and i < len(predicted):
+            while i+j < len(expected) and i+j < len(predicted):
+                if expected[i] == predicted[i+j]:
+                    tp1 += 1
+                    break
+                j += 1
+            i += 1
+        tp = max(tp0, tp1)
         precision = tp / len(predicted) if predicted else 0
         recall = tp / len(expected) if expected else 0
         f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0
