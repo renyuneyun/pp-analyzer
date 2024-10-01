@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from functools import partial
 from typing import Callable
-import src.annotation_utils as a_utils
-import src.llm_utils as llm_utils
-import src.message_utils as m_utils
-from src.env import (
+import fine_tune.annotation_utils as a_utils
+import fine_tune.llm_utils as llm_utils
+import fine_tune.message_utils as m_utils
+from fine_tune.env import (
     BRAT_DATA_PATH,
 )
 import split_training_data as std

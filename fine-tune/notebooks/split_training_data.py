@@ -1,5 +1,5 @@
 import numpy as np
-from src import utils
+from fine_tune import utils
 
 
 def has_no_entities(segment):
