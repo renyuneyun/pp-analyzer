@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "pp-analyze"
+version = "0.1.0"
+description = ""
+authors = ["renyuneyun (Rui Zhao) <renyuneyun@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic = "^2.9.2"
+openai = "^1.47.1"
+json-repair = "^0.29.5"
+deepdiff = "^8.0.1"
+sqlite-zstd = { git = "https://github.com/phiresky/sqlite-zstd.git", subdirectory = "python" }
+sqlalchemy = "^2.0.35"
+sqlmodel = "^0.0.22"
+sqlalchemy-utils = "^0.41.2"
+ppa-commons = {path = "third_party/ppa-commons", develop = true}
+rdflib = "^7.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+notebook = "^7.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
