@@ -172,6 +172,11 @@ def precision_accuracy_f1(expected, predicted, data_type=DataType.ENTITY, lcs_th
         for i in range(min(len(expected), len(predicted))):
             if expected[i] == predicted[i]:
                 tp0 += 1
+            else:
+                if lcs_threshold:
+                    ilcs_rate = lcs_rate(expected[i], predicted[i])
+                    if ilcs_rate >= lcs_threshold:
+                        tp0 += ilcs_rate
         i = 0
         j = 0
         tp1 = 0
@@ -180,6 +185,11 @@ def precision_accuracy_f1(expected, predicted, data_type=DataType.ENTITY, lcs_th
                 if expected[i] == predicted[i+j]:
                     tp1 += 1
                     break
+                if lcs_threshold:
+                    ilcs_rate = lcs_rate(expected[i], predicted[i+j])
+                    if ilcs_rate >= lcs_threshold:
+                        tp1 += ilcs_rate
+                        break
                 j += 1
             i += 1
         tp = max(tp0, tp1)
