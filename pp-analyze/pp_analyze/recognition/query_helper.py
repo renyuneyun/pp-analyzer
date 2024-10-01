@@ -155,7 +155,7 @@ Q_DATA_ENTITY = QueryHelper(
     cache_category=QueryCategory.DATA_ENTITY,
     system_message=prompt.SYSTEM_MESSAGE_DATA_ENTITY,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_DATA_ENTITY,
-    llm_model="ft:gpt-4o-2024-08-06:rui:data-entity-sent-data-v3-d3:ACaCHoYc",
+    llm_model="ft:gpt-4o-mini-2024-07-18:rui:data-entity-sent-data-v3-d4:ADJvRrJP",
     user_message_fn=lambda data: {
         "sentence": data["segment"],
     },
@@ -173,7 +173,7 @@ Q_PURPOSE_ENTITY = QueryHelper(
     cache_category=QueryCategory.PURPOSE_ENTITY,
     system_message=prompt.SYSTEM_MESSAGE_PURPOSE_ENTITY,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_PURPOSE_ENTITY,
-    llm_model="ft:gpt-4o-mini-2024-07-18:rui:purpose-span-sent-entity-v2:A97HPDpd",
+    llm_model="ft:gpt-4o-mini-2024-07-18:rui:purpose-span-sent-entity-v2-d4:ADXz8d6q",
     user_message_fn=lambda data: {
         "sentence": data["segment"],
     },
