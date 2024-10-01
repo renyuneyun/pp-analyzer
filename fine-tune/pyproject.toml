@@ -17,7 +17,7 @@ pydantic = "^2.9.1"
 scikit-learn = "^1.5.2"
 json-repair = "^0.29.2"
 pylcs = "^0.1.1"
-ppa-commons = {path = "third_party/ppa-commons", develop = true}
+ppa-commons = {path = "../ppa-commons", develop = true}
 
 
 [build-system]

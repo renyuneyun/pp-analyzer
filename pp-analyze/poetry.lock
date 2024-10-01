@@ -1550,7 +1550,7 @@ json-repair = "^0.29.7"
 
 [package.source]
 type = "directory"
-url = "third_party/ppa-commons"
+url = "../ppa-commons"
 
 [[package]]
 name = "prometheus-client"
@@ -2674,4 +2674,4 @@ test = ["websockets"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "889af2588fc100e5cd1724e368b6d45099655d816ac2d51e2b702e1a36fd71f5"
+content-hash = "87a4fa8d44f940b45eefa279d15f4da697a4e52e13d1ee6e0cd99fb8c27cdf9a"
