@@ -14,10 +14,15 @@ from .data_model import (
     ClassifiedPurposeEntity,
     Relation,
 )
+from ..hierarchy_helper import map_purpose_to_level, map_data_category_to_level
 
 
 S_DATA_CATEGORY_GENERAL = 'Data-general'
 S_PURPOSE_CATEGORY_GENERAL = 'Purpose-general'
+
+
+PURPOSE_MAPPING_LEVEL = 1
+DATA_CATEGORY_MAPPING_LEVEL = 1
 
 
 def identify_data_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWDataEntities]:
@@ -95,7 +100,7 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities: l
                 raise ValueError("The number of categories does not match the number of entities")
         for i, entity in enumerate(x_dict["entities"]):
             classified_entity = ClassifiedDataEntity(**{
-                "category": categories[i],
+                "category": map_data_category_to_level(categories[i], level=DATA_CATEGORY_MAPPING_LEVEL),
                 **entity
             })
             classified_entities.append(classified_entity)
@@ -182,7 +187,7 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
                 raise ValueError("The number of categories does not match the number of entities")
         for i, entity in enumerate(x_dict["entities"]):
             classified_entities.append(ClassifiedPurposeEntity(**{
-                "category": categories[i],
+                "category": map_purpose_to_level(categories[i], level=PURPOSE_MAPPING_LEVEL),
                 **entity
             }))
         classified_purpose_entities.append(SWClassifiedPurposeEntities(**{"segment": x_dict["segment"], "entities": classified_entities}))
