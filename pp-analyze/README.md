@@ -24,3 +24,11 @@ It identifies the following types of information:
         - What data protection measurements are taken for what threat
 
 The data category and purpose category are based on the relevant categories in [DPV](https://w3c.github.io/dpv/2.0/dpv/), to maximize interoperability.
+
+
+## Settings
+
+- Entity classification level
+    - Change `PURPOSE_MAPPING_LEVEL` and `DATA_CATEGORY_MAPPING_LEVEL` in `pp_analyze/recognition/query_llm.py`
+- Name for general categories (for data and purpose)
+    - Change `S_DATA_CATEGORY_GENERAL` and `S_PURPOSE_CATEGORY_GENERAL` in `pp_analyze/recognition/query_llm.py`
