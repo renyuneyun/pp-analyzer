@@ -103,7 +103,7 @@ def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> tup
     """
     assembled_data_practice_list: list[SegmentedDataPractice] = []
     failed_tasks: list[BaseModel|str] = []
-    with tqdm(total=10, desc="Analyzing privacy policy") as pbar:
+    with tqdm(total=10, leave=False, desc="Analyzing privacy policy") as pbar:
         def update_progress(new_desc):
             pbar.update(1)
             pbar.set_postfix_str(new_desc)
@@ -163,44 +163,49 @@ def get_relative_file_path_for_pp(website_name: str) -> Path:
     return policy_dir / website_name[:1] / website_name[:2] / website_name[:3] / f"{website_name}.md"
 
 
+def analyze_pp_from_website_name(website_name: str, override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True):
+    data_practices = None
+    errs = []
+
+    possbile_names = []
+    if match := RE_KEY_DOMAIN_NAME.match(website_name):
+        domain_name = match.group(1)
+        possbile_names.append(domain_name)
+    if match := RE_DOMAIN_NAME.match(website_name):
+        domain_name = match.group(1)
+        possbile_names.append(domain_name)
+    for domain_name in (pbar := tqdm(possbile_names, leave=False, desc="Using domain name")):
+        pbar.set_postfix_str(f"Trying {domain_name}")
+        pp_file = get_relative_file_path_for_pp(domain_name)
+        if not pp_file.exists():
+            continue
+        with open(pp_file, "r") as f:
+            pp_text = f.read()
+            data_practices, errs = analyze_pp(pp_text, override_cache=override_cache)
+            if only_non_empty:
+                data_practices = filter_empty_data_practices(data_practices)
+            pbar.close()
+            break
+    return data_practices, errs
+
+
 def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True):
     """
     Analyze privacy policies from website names.
     You need `PP_POLICY_DIR` environment variable to be set to the directory containing the privacy policies.
     """
-    policy_dir = os.getenv("PP_POLICY_DIR")
-    if policy_dir is None:
-        raise ValueError("PP_POLICY_DIR environment variable is not set.")
-    policy_dir = Path(policy_dir)
     res: dict[str, list[SegmentedDataPractice]] = {}
     failed_tasks = []
     errs = []
-    for website_name in (pbar := tqdm(website_names, desc="Analyzing privacy policy")):
-        possbile_names = []
-        if match := RE_KEY_DOMAIN_NAME.match(website_name):
-            domain_name = match.group(1)
-            possbile_names.append(domain_name)
-        if match := RE_DOMAIN_NAME.match(website_name):
-            domain_name = match.group(1)
-            possbile_names.append(domain_name)
-        match_found = False
-        for domain_name in possbile_names:
-            pp_file = get_relative_file_path_for_pp(domain_name)
-            if not pp_file.exists():
-                continue
-            pbar.set_postfix_str(f"For {website_name} from {pp_file}")
-            with open(pp_file, "r") as f:
-                pp_text = f.read()
-                data_practices, ierrs = analyze_pp(pp_text, override_cache=override_cache)
-                if only_non_empty:
-                    data_practices = filter_empty_data_practices(data_practices)
-                res[domain_name] = data_practices
-                match_found = True
-                if ierrs:
-                    errs.append((website_name, ierrs))
-                break
-        if not match_found:
+    for website_name in (pbar := tqdm(website_names, leave=False, desc="Running bulk privacy policy analysis")):
+        pbar.set_postfix_str(f"For {website_name}")
+        data_practices, ierrs = analyze_pp_from_website_name(website_name, override_cache=override_cache, only_non_empty=only_non_empty)
+        if ierrs:
+            errs.append((website_name, ierrs))
+        if data_practices is None:
             failed_tasks.append(website_name)
+        else:
+            res[website_name] = data_practices
     return res, failed_tasks, errs
 
 
