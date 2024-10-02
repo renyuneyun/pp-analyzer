@@ -13,6 +13,7 @@ from .kg import convert_to_kg, one, A, NS, NS_DPV
 
 
 NS_DTOU = Namespace("urn:dtou:core#")
+NS_EX = Namespace("http://example.org/ns#")
 
 
 class Downstream(BaseModel):
@@ -52,12 +53,21 @@ class AppPolicy(BaseModel):
         g = Graph()
         g.bind('dtou', NS_DTOU)
         g.bind('dpv', NS_DPV)
-        n_policy = BNode()
+        g.bind('ex', NS_EX)
+        n_policy = NS_EX['policy1']
         g.add((n_policy, A, NS_DTOU['AppPolicy']))
         g.add((n_policy, NS_DTOU['app_name'], URIRef(self.app_name)))
-        for input_spec in self.input_spec:
+        for i, input_spec in enumerate(self.input_spec):
             n_input_spec = BNode()
             g.add((n_policy, NS_DTOU['input_spec'], n_input_spec))
+            g.add((n_input_spec, A, NS_DTOU['InputSpec']))
+
+            port_name = f"inputPort{i}"
+            n_port = BNode()
+            g.add((n_input_spec, NS_DTOU['port'], n_port))
+            g.add((n_port, A, NS_DTOU['Port']))
+            g.add((n_port, NS_DTOU['name'], Literal(port_name)))
+
             g.add((n_input_spec, NS_DTOU['data'], input_spec.data))
             if input_spec.user:
                 g.add((n_input_spec, NS_DTOU['user'], Literal(input_spec.user)))

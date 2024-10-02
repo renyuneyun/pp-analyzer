@@ -1,0 +1,3 @@
+[submodule "pp-analyze/third_party/dtou-lang"]
+	path = pp-analyze/third_party/dtou-lang
+	url = https://github.com/renyuneyun/dtou-lang.git
