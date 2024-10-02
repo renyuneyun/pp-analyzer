@@ -9,7 +9,7 @@ from .data_model import (
     DataSecurityProtection,
     Party,
 )
-from .kg import convert_to_kg, one, A, NS, NS_DPV, NS_DPV_PD
+from .kg import convert_to_kg, one, A, NS, NS_DPV, NS_DPV
 
 
 NS_DTOU = Namespace("urn:dtou:core#")
@@ -52,7 +52,7 @@ class AppPolicy(BaseModel):
         g = Graph()
         g.bind('dtou', NS_DTOU)
         g.bind('dpv', NS_DPV)
-        g.bind('dpv-pd', NS_DPV_PD)
+        g.bind('dpv-pd', NS_DPV)
         n_policy = BNode()
         g.add((n_policy, A, NS_DTOU['AppPolicy']))
         g.add((n_policy, NS_DTOU['app_name'], URIRef(self.app_name)))

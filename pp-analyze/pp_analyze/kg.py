@@ -16,11 +16,10 @@ from .data_model import (
 
 
 NS = Namespace("urn:pp-analyze:core#")
-NS_DPV_PD = Namespace("https://w3id.org/dpv/pd#")
 NS_DPV = Namespace("https://w3id.org/dpv#")
 A = RDF.type
 
-N_DATA_GENERAL = NS_DPV_PD["Data-general"]
+N_DATA_GENERAL = NS_DPV["Data-general"]
 ENTITY_MAP = {
     'Data': 'Data-general',
     'Purpose-general': 'Purpose',
@@ -34,7 +33,7 @@ def one(iter):
 def to_data_category_uri(data_category: str) -> URIRef:
     if data_category in ENTITY_MAP:
         data_category = ENTITY_MAP[data_category]
-    return NS_DPV_PD[data_category]
+    return NS_DPV[data_category]
 
 
 def to_purpose_category_uri(purpose_category: str) -> URIRef:
@@ -67,7 +66,7 @@ def convert_to_kg(data_practices: list[SegmentedDataPractice], app_name: str, fi
         global N_DATA_GENERAL
         if n_data_general is None:
             n_data_general = N_DATA_GENERAL
-            g.add((n_data_general, A, NS_DPV_PD["Data"]))
+            g.add((n_data_general, A, NS_DPV["Data"]))
         return n_data_general
     def to_party_uri(party: PartyEntity) -> URIRef:
         nonlocal n_first_party, n_user
