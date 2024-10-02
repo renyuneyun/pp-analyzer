@@ -215,7 +215,10 @@ def identify_parties(pp_text: str, segments: list[str], override_cache: PARAM_OV
     ]
     """
     def call_llm_for_segment(segment_text):
-        return qh.Q_PARTY_RECOGNITION.run_query({"segment": segment_text}, override_cache=override_cache)
+        ret = qh.Q_PARTY_RECOGNITION.run_query({"segment": segment_text}, override_cache=override_cache)
+        if not ret:
+            ret = []
+        return ret
 
     res = []
     for segment in tqdm(segments, leave=False, desc="Identifying parties"):
