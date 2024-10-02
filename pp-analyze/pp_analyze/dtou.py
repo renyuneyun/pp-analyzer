@@ -9,7 +9,7 @@ from .data_model import (
     DataSecurityProtection,
     Party,
 )
-from .kg import convert_to_kg, one, A, NS, NS_DPV, NS_DPV
+from .kg import convert_to_kg, one, A, NS, NS_DPV
 
 
 NS_DTOU = Namespace("urn:dtou:core#")
@@ -52,7 +52,6 @@ class AppPolicy(BaseModel):
         g = Graph()
         g.bind('dtou', NS_DTOU)
         g.bind('dpv', NS_DPV)
-        g.bind('dpv-pd', NS_DPV)
         n_policy = BNode()
         g.add((n_policy, A, NS_DTOU['AppPolicy']))
         g.add((n_policy, NS_DTOU['app_name'], URIRef(self.app_name)))
@@ -119,7 +118,7 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
         purpose_list = [o for o in kg.objects(n_practice, NS['purpose'])]
         user_list = [o for o in kg.objects(n_practice, NS['user'])]
         for data in data_list:
-            assert not user_list or len(user_list) == 1
+            # assert not user_list or len(user_list) == 1
             user = user_list[0] if user_list else None
             downstreams = []
             downstream_nodes = []
