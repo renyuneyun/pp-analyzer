@@ -1,12 +1,18 @@
 import csv
 
 
+_entity_category_hierarchy = {}
+
+
 def get_entity_category_hierarchy(entity_category_hierarchy_file):
     '''
     The entity category hierarchy contains multiple lines, each representing one category; the number of indents (`\t`) at the beginning of a line indicates the level of the category.
     There will be no cycles. One category may belong to multiple parental-categories.
     This function returns the category hierarchy as a nested dictionary, where the key is the category name, and the value is a list of subcategories.
     '''
+    global _entity_category_hierarchy
+    if entity_category_hierarchy_file in _entity_category_hierarchy:
+        return _entity_category_hierarchy[entity_category_hierarchy_file]
     with open(entity_category_hierarchy_file) as f:
         lines = f.readlines()
     lines = [line.rstrip() for line in lines]
@@ -22,8 +28,8 @@ def get_entity_category_hierarchy(entity_category_hierarchy_file):
             l = l[stack[i]]
         l[name] = {}
         stack = stack[:level] + [name]
-
-    return res
+    _entity_category_hierarchy[entity_category_hierarchy_file] = res
+    return _entity_category_hierarchy[entity_category_hierarchy_file]
 
 
 def get_entity_category_definitions(entity_category_definition_file):
