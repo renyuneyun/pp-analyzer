@@ -40,17 +40,6 @@ def parse(model_output_text: str, data_type: DataType = None) -> dict:
     return obj
 
 
-def retrieve_entity_from_ambiguious_data(data: str|dict) -> str:
-    entity_text = None
-    if isinstance(data, str):
-        entity_text = data
-    elif isinstance(data, dict):
-        entity_text = data['text']
-    else:
-        raise ValueError(f"Unexpected entity type: {type(data)}")
-    return entity_text
-
-
 class SQLiteCacheManager:
     '''
     A cache manager that uses SQLite to store cache.
@@ -102,7 +91,7 @@ class QueryHelper(BaseModel):
     llm_model: str
     user_message_fn: Optional[Callable] = None
 
-    _parse_ambiguous_data: bool = False
+    parse_ambiguous_data: bool = False
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -145,9 +134,7 @@ class QueryHelper(BaseModel):
         else:
             model_output_text = self._execute_query(query_params)
             self._cache_manager.save_to_cache(query_params, model_output_text)
-        parsed_result = parse(model_output_text, QUERY_CATEGORY_TO_DATA_TYPE[self.cache_category])
-        if self._parse_ambiguous_data:
-            parsed_result = retrieve_entity_from_ambiguious_data(parsed_result)
+        parsed_result = parse(model_output_text, QUERY_CATEGORY_TO_DATA_TYPE[self.cache_category] if self.parse_ambiguous_data else None)
         return parsed_result
 
 
@@ -159,7 +146,7 @@ Q_DATA_ENTITY = QueryHelper(
     user_message_fn=lambda data: {
         "sentence": data["segment"],
     },
-    _parse_ambiguous_data=True,
+    parse_ambiguous_data=True,
 )
 
 Q_DATA_CLASSIFICATION = QueryHelper(
@@ -177,7 +164,7 @@ Q_PURPOSE_ENTITY = QueryHelper(
     user_message_fn=lambda data: {
         "sentence": data["segment"],
     },
-    _parse_ambiguous_data=True,
+    parse_ambiguous_data=True,
 )
 
 Q_PURPOSE_CLASSIFICATION = QueryHelper(
