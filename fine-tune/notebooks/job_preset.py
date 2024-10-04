@@ -147,6 +147,12 @@ _job_presets = [
         training_data_splitter=std.better_split,
     ),
     JobPreset(
+        desc="purpose_class-sent_purpose-v2-d4",
+        load_data=a_utils.load_purpose_entities_of_sentences,
+        as_training_data=m_utils.as_training_data_for_purpose_classification_of_sentence,
+        training_data_splitter=f_d4,
+    ),
+    JobPreset(
         desc="action-seg-v2",
         load_data=partial(a_utils.load_and_get, a_utils.get_actions_of_segments),
         as_training_data=m_utils.as_training_data_for_action_span_for_segment,
@@ -187,6 +193,12 @@ _job_presets = [
         load_data=partial(a_utils.load_and_get, a_utils.get_actions_of_sentences),
         as_training_data=m_utils.as_training_data_for_action_span_of_sentence_only_improved,
         training_data_splitter=f_d4,
+    ),
+    JobPreset(
+        desc="action-sent-v3-d5",
+        load_data=partial(a_utils.load_and_get, a_utils.get_actions_of_sentences),
+        as_training_data=m_utils.as_training_data_for_action_span_of_sentence_only_improved,
+        training_data_splitter=partial(std.better_split, num_split=[102, 644, 21, 138]),  # Use 70% 15% for each type
     ),
     JobPreset(
         desc="pm-seg-v2",
