@@ -184,7 +184,7 @@ def analyze_pp_from_website_name(website_name: str, override_cache: PARAM_OVERRI
             data_practices, errs = analyze_pp(pp_text, override_cache=override_cache)
             if only_non_empty:
                 data_practices = filter_empty_data_practices(data_practices)
-            pbar.close()
+            pbar.container.close()
             break
     return data_practices, errs
 
