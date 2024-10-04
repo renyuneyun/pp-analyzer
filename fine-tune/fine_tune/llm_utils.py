@@ -267,7 +267,7 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
 
     if batch:
         batch_input_list = []
-        for i, messages in enumerate(tqdm(messages_list, 'Constructing batch data')):
+        for i, messages in enumerate(tqdm(messages_list, desc='Constructing batch data', leave=False)):
             data_item = {
                 'custom_id': f"request-{i}",
                 'method': 'POST',
