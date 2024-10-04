@@ -63,6 +63,12 @@ _job_presets = [
         training_data_splitter=std.better_split_equal,
     ),
     JobPreset(
+        desc="data_entity-sent_data-v4-d4",
+        load_data=a_utils.load_data_entities_of_sentences,
+        as_training_data=m_utils.as_training_data_for_data_span_of_sentence_only_weak_filter,
+        training_data_splitter=f_d4,
+    ),
+    JobPreset(
         desc="data_entity_action-seg_data-d3",
         load_data=partial(a_utils.load_and_get, a_utils.get_data_entities_with_actions_of_segments),
         as_training_data=m_utils.as_training_data_for_data_span_with_action_of_segment,
@@ -75,6 +81,12 @@ _job_presets = [
         training_data_splitter=std.better_split_equal,
     ),
     JobPreset(
+        desc="data_entity_action-sent_data-d4",
+        load_data=partial(a_utils.load_and_get, a_utils.get_data_entities_with_actions_of_sentences),
+        as_training_data=m_utils.as_training_data_for_data_span_with_action_of_sentence,
+        training_data_splitter=f_d4,
+    ),
+    JobPreset(
         desc="data_entity_action-sent_data-v2-d3",
         load_data=partial(a_utils.load_and_get, a_utils.get_data_entities_with_actions_of_sentences),
         as_training_data=m_utils.as_training_data_for_data_span_with_action_of_sentence_weak_filter,
@@ -85,6 +97,12 @@ _job_presets = [
         load_data=a_utils.load_data_entities_of_sentences,
         as_training_data=m_utils.as_training_data_for_data_classification_of_segment,
         training_data_splitter=std.better_split,
+    ),
+    JobPreset(
+        desc="data_class-sent_data-v2-d4",
+        load_data=a_utils.load_data_entities_of_sentences,
+        as_training_data=m_utils.as_training_data_for_data_classification_of_segment,
+        training_data_splitter=f_d4,
     ),
     JobPreset(
         desc="data_class-sent_data_l0-v2",
