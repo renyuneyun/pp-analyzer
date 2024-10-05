@@ -207,6 +207,8 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
     K_EXPECT_NON_EMPTY = '(Expected) Non-empty'
     K_PREDICT_EMPTY = '(Predicted) Empty'
     K_PREDICT_NON_EMPTY = '(Predicted) Non-empty'
+    K_EITHER_EMPTY = '(Either) Empty'
+    K_EITHER_NON_EMPTY = '(Either) Non-empty'
 
     result_score_list = []
     addition_scoring = {
@@ -214,6 +216,8 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
         K_EXPECT_EMPTY: [],
         K_PREDICT_NON_EMPTY: [],
         K_PREDICT_EMPTY: [],
+        K_EITHER_NON_EMPTY: [],
+        K_EITHER_EMPTY: [],
     }
 
     failed = {}
@@ -243,12 +247,16 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
         result_score_list.append(result_score)
         if correct_output_parsed:
             addition_scoring[K_EXPECT_NON_EMPTY].append(result_score)
+            addition_scoring[K_EITHER_NON_EMPTY].append(result_score)
         else:
             addition_scoring[K_EXPECT_EMPTY].append(result_score)
+            addition_scoring[K_EITHER_EMPTY].append(result_score)
         if model_output_parsed:
             addition_scoring[K_PREDICT_NON_EMPTY].append(result_score)
+            addition_scoring[K_EITHER_NON_EMPTY].append(result_score)
         else:
             addition_scoring[K_PREDICT_EMPTY].append(result_score)
+            addition_scoring[K_EITHER_EMPTY].append(result_score)
 
     return result_score_list, addition_scoring, failed
 
