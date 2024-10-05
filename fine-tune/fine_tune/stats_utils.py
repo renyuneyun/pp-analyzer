@@ -110,25 +110,26 @@ _data_type_to_class = {
 def precision_accuracy_f1(expected, predicted, data_type=DataType.ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True, **kwargs):
     if data_type == DataType.PARTY and tolerate_additionally_predicted is None:
         tolerate_additionally_predicted = True
+
+    if data_type == DataType.ACTION:
+        if isinstance(expected, dict):
+            expected = [expected]
+        try:
+            expected = [ActionDataPoint(**obj) for obj in expected]
+            predicted = [ActionDataPoint(**obj) for obj in predicted]
+        except Exception as e:
+            # print(f"Error in parsing action data point: {e};\n  expected: {expected};\n  predicted: {predicted}")
+            raise e
+    elif data_type in _data_type_to_class:
+        cls = _data_type_to_class[data_type]
+        expected = [cls(**obj) for obj in expected]
+        predicted = [cls(**obj) for obj in predicted]
+    else:
+        raise ValueError(f"Unrecognised data_type: {data_type}")
+
     if ignore_order:
-        if data_type == DataType.ENTITY:
-            expected = set(expected)
-            predicted = set(predicted)
-        elif data_type == DataType.ACTION:
-            if isinstance(expected, dict):
-                expected = [expected]
-            try:
-                expected = set([ActionDataPoint(**obj) for obj in expected])
-                predicted = set([ActionDataPoint(**obj) for obj in predicted])
-            except Exception as e:
-                # print(f"Error in parsing action data point: {e};\n  expected: {expected};\n  predicted: {predicted}")
-                raise e
-        elif data_type in _data_type_to_class:
-            cls = _data_type_to_class[data_type]
-            expected = set([cls(**obj) for obj in expected])
-            predicted = set([cls(**obj) for obj in predicted])
-        else:
-            raise ValueError(f"Unrecognised data_type: {data_type}")
+        expected = set(expected)
+        predicted = set(predicted)
 
         intersection = expected.intersection(predicted)
         intersection_with_lcs = len(intersection)
