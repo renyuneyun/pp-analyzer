@@ -93,4 +93,6 @@ def analyze_pp_with_user_persona(website_url: str, website_name: str, data_pract
         raise ValueError(f"No data practices found for {website_url}")
     app_policy, app_policy_node = convert_practices_to_app_policy(data_practices, website_url, website_name)
     reasoning_result, err = run_reasoning(user_persona, app_policy, app_policy_node)
-    return reasoning_result, err
+    g = Graph()
+    g.parse(data=reasoning_result, format='turtle')
+    return g, err
