@@ -20,12 +20,14 @@ _DTOU_LANG_DIR = Path(os.getenv("DTOU_LANG_DIR")) if os.getenv("DTOU_LANG_DIR") 
 A = RDF.type
 
 
-def get_user_persona():
-    if os.getenv("USER_PERSONA_DIR") is None:
-        raise ValueError("USER_PERSONA_DIR not set in .env")
+def get_user_persona(persona_dir: str|None = None):
+    if not persona_dir:
+        if os.getenv("USER_PERSONA_DIR") is None:
+            raise ValueError("USER_PERSONA_DIR not set in .env")
+        persona_dir = Path(os.getenv("USER_PERSONA_DIR"))
+    path_persona = Path(persona_dir)
     res = []
-    persona_dir = Path(os.getenv("USER_PERSONA_DIR"))
-    for persona_file in persona_dir.glob("*.ttl"):
+    for persona_file in path_persona.glob("*.ttl"):
         with open(persona_file, "r") as f:
             res.append(f.read())
     return res
@@ -82,8 +84,8 @@ def run_reasoning(user_persona, app_policy, app_policy_node):
         return out.decode('utf-8'), err.decode('utf-8')
 
 
-def analyze_pp_with_user_persona(website_url: str, website_name: str, data_practices: list|None = None):
-    user_persona_list = get_user_persona()
+def analyze_pp_with_user_persona(website_url: str, website_name: str, data_practices: list|None = None, user_persona_dir: str|None = None):
+    user_persona_list = get_user_persona(persona_dir=user_persona_dir)
     user_persona = '\n'.join(user_persona_list)
     if not data_practices:
         data_practices, errs = analyze_pp_from_website_name(website_url)
