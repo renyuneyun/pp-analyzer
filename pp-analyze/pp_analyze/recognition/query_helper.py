@@ -312,7 +312,7 @@ Q_DATA_CLASSIFICATION = QueryHelper(
     cache_category=QueryCategory.DATA_CLASSIFICATION,
     system_message=prompt.SYSTEM_MESSAGE_DATA_ENTITY_CLASSIFICATION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_DATA_ENTITY_CLASSIFICATION,
-    llm_model="ft:gpt-4o-2024-08-06:rui:data-class-sent-data-v2:A9HochjC",
+    llm_model="ft:gpt-4o-2024-08-06:rui:data-class-sent-data-v2-d4:AEkSuIYg",
 )
 
 Q_PURPOSE_ENTITY = QueryHelper(
@@ -330,7 +330,7 @@ Q_PURPOSE_CLASSIFICATION = QueryHelper(
     cache_category=QueryCategory.PURPOSE_CLASSIFICATION,
     system_message=prompt.SYSTEM_MESSAGE_PURPOSE_CATEGORY_CLASSIFICATION,
     user_message_template=prompt.USER_MESSAGE_TEMPLATE_PURPOSE_CATEGORY,
-    llm_model="ft:gpt-4o-2024-08-06:rui:purpose-class-sent-purpose-v2:A9KGkDmD",
+    llm_model="ft:gpt-4o-2024-08-06:rui:purpose-class-sent-purpose-v2-d4:AEP9aVII",
     user_message_fn=lambda data: {
         "sentence": data["segment"],
     },
