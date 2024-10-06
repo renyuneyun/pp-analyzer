@@ -113,7 +113,7 @@ def calc_data_and_purpose_entity_count_with_hierarchy(segmented_practices: list[
                 if hasattr(practice, field):
                     field_v = getattr(practice, field)
                     if isinstance(field_v, list):
-                        for entity in getattr(practice, field):
+                        for entity in field_v:
                             if isinstance(entity, (DataEntity)):
                                 path = hh.get_path_to_data_category(entity.category)
                                 entity_path_list[DataEntity].append(path)
