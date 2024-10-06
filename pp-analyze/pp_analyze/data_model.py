@@ -1,6 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, Field, OnErrorOmit, validator
 from typing import Optional
+from .hierarchy_helper import lift_data_category_to_target, lift_purpose_to_target
 
 
 type uri = str
@@ -16,10 +17,26 @@ class DataEntity(BaseModel):
     text: str
     category: uri
 
+    def lift(self, targets: list[str]):
+        changed = False
+        res = lift_data_category_to_target(self.category, targets)
+        if res != self.category:
+            changed = (self.category, res)
+        self.category = res
+        return changed
+
 
 class PurposeEntity(BaseModel):
     text: str
     category: uri
+
+    def lift(self, targets: list[str]):
+        changed = None
+        res = lift_purpose_to_target(self.category, targets)
+        if res != self.category:
+            changed = (self.category, res)
+        self.category = res
+        return changed
 
 
 class PartyEntity(BaseModel):
@@ -77,6 +94,23 @@ OmittablePurposeEntity = OnErrorOmit[PurposeEntity]
 class DataPractice(BaseModel):
     text: str
 
+    def lift(self, targets: list[str]):
+        '''
+        Lift the data practices to the target categories.
+        Assumes no overlap exists in the targets of different types of data practices, and thus they are passed in as a single `targets` parameter.
+        '''
+        changed = False
+        for field in self.model_fields:
+            if hasattr(self, field):
+                my_field = getattr(self, field)
+                if not isinstance(my_field, list):
+                    my_field = [my_field]
+                for field_item in my_field:
+                    if hasattr(field_item, 'lift') and issubclass(field_item.__class__, BaseModel): # Only lift those that have the `lift` method
+                        ichanged = field_item.lift(targets)
+                        changed = changed or ichanged
+        return changed
+
 
 class DataCollectionUse(DataPractice):
     data_collector: list[OmittablePartyEntity] = Field(alias='Data-Collector', default=[])  # Only one; needs to validate when used
@@ -120,6 +154,17 @@ class SegmentedDataPractice(BaseModel):
 
     segment: str
     practices: list[DataPractice]
+
+    def lift(self, targets: list[str]):
+        '''
+        Lift the data practices to the target categories.
+        Assumes no overlap exists in the targets of different types of data practices, and thus they are passed in as a single `targets` parameter.
+        '''
+        changed = False
+        for practice in self.practices:
+            ichanged = practice.lift(targets)
+            changed = changed or ichanged
+        return changed
 
 
 DATA_PRACTICE_CLASS_MAP = {

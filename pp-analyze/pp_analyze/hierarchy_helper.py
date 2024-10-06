@@ -95,3 +95,32 @@ def get_path_to_purpose(purpose: URIRef):
 
 def get_path_to_data_category(data_category: str):
     return get_path_to_node(data_category, get_data_category_hierarchy())
+
+
+def lift_category_to_target(category: str, targets: list[str], hierarchy: dict) -> str:
+    """
+    Lift a category to match the target categories -- if it is a subclass of any of them, change it to that target. If multiple matches are found, the deepest match is chosen.
+    If the category is not a subclass of any of the target categories, return the category itself. Thus it's safe to apply this function without checking the subclass relationship.
+    Assumes that the category is in the hierarchy.
+    """
+    paths = get_path_to_node(category, hierarchy)
+    if not paths:
+        return category
+    longest_path = []
+    for path in paths:
+        if len(path) > len(longest_path):
+            longest_path = path
+    for elem in reversed(longest_path):
+        if elem in targets:
+            return elem
+    return category
+
+
+def lift_purpose_to_target(purpose: str, targets: list[str]):
+    hierarchy = get_purpose_hierarchy()
+    return lift_category_to_target(purpose, targets, hierarchy)
+
+
+def lift_data_category_to_target(data_category: str, targets: list[str]):
+    hierarchy = get_data_category_hierarchy()
+    return lift_category_to_target(data_category, targets, hierarchy)
