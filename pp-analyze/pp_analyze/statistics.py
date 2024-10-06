@@ -14,6 +14,7 @@ from .data_model import (
     SecurityThreat,
     ProtectionMethod,
 )
+from . import hierarchy_helper as hh
 
 
 fields = [
@@ -99,3 +100,35 @@ def calc_practice_entity_count(segmented_practices: list[SegmentedDataPractice])
                             else:
                                 internal_count[entity.text] += 1
     return dict({k: dict(v) for k,v in entity_count.items()})
+
+
+def calc_data_and_purpose_entity_count_with_hierarchy(segmented_practices: list[SegmentedDataPractice]):
+    entity_path_list = {
+        DataEntity: [],
+        PurposeEntity: [],
+    }
+    for segmented_practice in segmented_practices:
+        for practice in segmented_practice.practices:
+            for field in fields:
+                if hasattr(practice, field):
+                    field_v = getattr(practice, field)
+                    if isinstance(field_v, list):
+                        for entity in getattr(practice, field):
+                            if isinstance(entity, (DataEntity)):
+                                path = hh.get_path_to_data_category(entity.category)
+                                entity_path_list[DataEntity].append(path)
+                            elif isinstance(entity, (PurposeEntity)):
+                                path = hh.get_path_to_purpose(entity.category)
+                                entity_path_list[PurposeEntity].append(path)
+    node_with_count = {}
+    for entity_type, path_list in entity_path_list.items():
+        node_with_count[entity_type] = {}
+        for paths_of_entity in path_list:
+            all_nodes = set()
+            for path in paths_of_entity:
+                all_nodes.update(path)
+            for node in all_nodes:
+                if node not in node_with_count[entity_type]:
+                    node_with_count[entity_type][node] = 0
+                node_with_count[entity_type][node] += 1
+    return node_with_count

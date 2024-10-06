@@ -88,3 +88,10 @@ def map_data_category_to_level(data_category: str, level: int = 1):
     """
     hierarchy = get_data_category_hierarchy()
     return map_entity_category_to_level(data_category, hierarchy, level)
+
+
+def get_path_to_purpose(purpose: URIRef):
+    return get_path_to_node(purpose, get_purpose_hierarchy())
+
+def get_path_to_data_category(data_category: str):
+    return get_path_to_node(data_category, get_data_category_hierarchy())

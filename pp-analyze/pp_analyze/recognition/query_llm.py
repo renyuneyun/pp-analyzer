@@ -21,8 +21,8 @@ S_DATA_CATEGORY_GENERAL = 'Data-general'
 S_PURPOSE_CATEGORY_GENERAL = 'Purpose-general'
 
 
-PURPOSE_MAPPING_LEVEL = 3
-DATA_CATEGORY_MAPPING_LEVEL = 3
+PURPOSE_MAPPING_LEVEL = -1
+DATA_CATEGORY_MAPPING_LEVEL = -1
 
 
 def identify_data_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWDataEntities]:
