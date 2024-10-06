@@ -187,7 +187,9 @@ def calc_stats_item(expected, predicted, data_type=DataType.ENTITY, lcs_threshol
     if data_type == DataType.PARTY and tolerate_additionally_predicted is None:
         tolerate_additionally_predicted = True
 
-    if data_type == DataType.ACTION:
+    if data_type == DataType.ENTITY:
+        pass
+    elif data_type == DataType.ACTION:
         if isinstance(expected, dict):
             expected = [expected]
         try:
