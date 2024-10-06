@@ -441,7 +441,8 @@ def load_saved_llm_queries(dir_name=None):
     return desc, queries
 
 
-def clear_fine_tune_data():
-    previous_files = client.files.list(purpose="fine-tune")
-    for file in previous_files:
-        client.files.delete(file.id)
+def clear_server_data(types = ["fine-tune", 'batch']):
+    for t in tqdm(types, 'Clearing server data', leave=False):
+        previous_files = client.files.list(purpose=t)
+        for file in tqdm(previous_files, desc=f'Clearing {t} data', leave=False):
+            client.files.delete(file.id)
