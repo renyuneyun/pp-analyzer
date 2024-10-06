@@ -74,7 +74,11 @@ class AppPolicy(BaseModel):
             if input_spec.action:
                 g.add((n_input_spec, NS_DTOU['action'], Literal(input_spec.action)))
             for purpose in input_spec.purpose:
-                g.add((n_input_spec, NS_DTOU['purpose'], purpose))
+                n_pe = BNode()
+                g.add((n_input_spec, NS_DTOU['purpose'], n_pe))
+                g.add((n_pe, A, NS_DTOU['Expectation']))
+                g.add((n_pe, NS_DTOU['category'], NS_DTOU['PurposeCategory']))
+                g.add((n_pe, NS_DTOU['descriptor'], purpose))
             for downstream in input_spec.downstream:
                 n_downstream = BNode()
                 g.add((n_input_spec, NS_DTOU['downstream'], n_downstream))
@@ -83,7 +87,11 @@ class AppPolicy(BaseModel):
                 if downstream.app_name:
                     g.add((n_downstream, NS_DTOU['app_name'], Literal(downstream.app_name)))
                 for purpose in downstream.purpose:
-                    g.add((n_downstream, NS_DTOU['purpose'], purpose))
+                    n_pe = BNode()
+                    g.add((n_input_spec, NS_DTOU['purpose'], n_pe))
+                    g.add((n_pe, A, NS_DPV['Expectation']))
+                    g.add((n_pe, NS_DTOU['category'], NS_DTOU['PurposeCategory']))
+                    g.add((n_pe, NS_DTOU['descriptor'], purpose))
         return g
 
 
