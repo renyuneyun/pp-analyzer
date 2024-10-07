@@ -4,6 +4,7 @@ Main module for the privacy policy analysis.
 By default, we assume all segments share the same segmentation method, which is by line breaks.
 """
 
+import asyncio
 from dotenv import load_dotenv
 from enum import Enum
 import os
@@ -175,10 +176,9 @@ async def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, 
 
         t_practices = get_practices()
 
-        classified_data_entities = await t_classified_data_entities
-        classified_purpose_entities = await t_classified_purpose_entities
-        parties = await t_parties
-        practices = await t_practices
+        classified_data_entities, classified_purpose_entities, parties, practices = await asyncio.gather(
+            t_classified_data_entities, t_classified_purpose_entities, t_parties, t_practices
+        )
 
         add_step(PPAnalyzeStep.GROUP_DATA_PRACTICES)
         grouped_practices = group_data_practices_and_entities(
