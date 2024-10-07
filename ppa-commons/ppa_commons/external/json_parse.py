@@ -133,7 +133,7 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
             # log.exception("error loading json, json=%s", input)
             return json_info, None
         else:
-            if not isinstance(result, dict):
+            if not isinstance(result, (dict, list)):
                 # log.exception("not expected dict type. type=%s:", type(result))
                 return json_info, {}
             return json_info, result
