@@ -109,7 +109,7 @@ async def classify_data_categories(pp_text: str, segments: list[str], data_entit
         categories = call_llm_for_data_point(x_dict)
         classified_entities = []
         if len(categories) != len(x_dict["entities"]):
-            errs.append(x)
+            errs.append((x, categories))
             if handle_incorrect_llm:
                 categories = [S_DATA_CATEGORY_GENERAL] * len(x_dict["entities"])
             else:
@@ -208,11 +208,11 @@ async def classify_purpose_categories(pp_text: str, segments: list[str], purpose
     classified_purpose_entities = []
     errs = []
     for x in tqdm(purpose_entities, leave=False, desc="Classifying purpose entities"):
-        x_dict = to_dict(x)
+        x_dict = to_dict(obj_or_list=x)
         categories = call_llm_for_data_point(x_dict)
         classified_entities = []
         if len(categories) != len(x_dict["entities"]):
-            errs.append(x)
+            errs.append((x, categories))
             if handle_incorrect_llm:
                 categories = [S_PURPOSE_CATEGORY_GENERAL] * len(x_dict["entities"])
             else:
