@@ -63,11 +63,11 @@ def enable_zstd_extension(dbapi_conn, *args):
     dbapi_conn.enable_load_extension(True)
     sqlite_zstd.load(dbapi_conn)
     dbapi_conn.enable_load_extension(False)
+    dbapi_conn.execute('pragma journal_mode=WAL;')
+    dbapi_conn.execute('pragma auto_vacuum=full;')
 
 
 def enable_compression(dbapi_conn, *args):
-    dbapi_conn.execute('pragma journal_mode=WAL;')
-    dbapi_conn.execute('pragma auto_vacuum=full;')
     dbapi_conn.execute('''SELECT
         zstd_enable_transparent('{"table": "queryrecord", "column": "query_params", "compression_level": 19, "dict_chooser": "''a''"}'),
         zstd_enable_transparent('{"table": "queryrecord", "column": "lm_response", "compression_level": 19, "dict_chooser": "''a''"}')
