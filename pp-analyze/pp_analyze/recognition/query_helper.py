@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 import json
+import logging
 from openai import OpenAI
 import os
 from pathlib import Path
@@ -22,6 +23,9 @@ load_dotenv()
 _CACHE_DIR = Path(os.getenv("LLM_QUERY_CACHE_DIR")) if os.getenv("LLM_QUERY_CACHE_DIR") else None
 
 client = OpenAI()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 WAIT_INTERVAL = 30
@@ -210,6 +214,7 @@ class QueryHelper(BaseModel):
             cache_out = self._cache_manager.get_batch_record_from_cache(query_params)
             if cache_out and cache_out.batch_id not in self._batch_jobs:
                 self._batch_jobs.append(cache_out.batch_id)
+                logger.info(f"Picked-up unprocessed previous batch job: {cache_out.batch_id}")
         if cache_out and (not override_cache or self.cache_category not in override_cache):
             return
         self._batch_query_queue.append(query_params)
@@ -253,8 +258,9 @@ class QueryHelper(BaseModel):
         batch_job_id = batch_job.id
         for i, query_params in tqdm(enumerate(self._batch_query_queue), desc="Saving batch job to cache", leave=False):
             self._cache_manager.save_batch_job_to_cache(query_params, batch_job_id, f"request-{i}")
+        num_queries = len(self._batch_query_queue)
         self._batch_query_queue = []
-        return self._batch_jobs
+        return batch_job.id, num_queries, self._batch_jobs
 
     async def wait_and_handle_batch_queries(self, batch_job_id=None):
         if batch_job_id is None:
