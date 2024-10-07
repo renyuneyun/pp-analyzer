@@ -131,10 +131,10 @@ async def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, 
 
         async def get_classified_data_entities():
             add_step(PPAnalyzeStep.IDENTIFY_DATA_ENTITIES)
-            raw_data_entities = identify_data_entities(pp_text, segments, override_cache, batch=batch)
+            raw_data_entities = await identify_data_entities(pp_text, segments, override_cache, batch=batch)
             resolve_step(PPAnalyzeStep.IDENTIFY_DATA_ENTITIES)
             add_step(PPAnalyzeStep.CLASSIFY_DATA_ENTITIES)
-            classified_data_entities, errs = classify_data_categories(
+            classified_data_entities, errs = await classify_data_categories(
                 pp_text, segments, raw_data_entities, override_cache, batch=batch
             )
             if errs:
@@ -146,10 +146,10 @@ async def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, 
 
         async def get_classified_purpose_entities():
             add_step(PPAnalyzeStep.IDENTIFY_PURPOSE_ENTITIES)
-            raw_purpose_entities = identity_purpose_entities(pp_text, segments, override_cache, batch=batch)
+            raw_purpose_entities = await identity_purpose_entities(pp_text, segments, override_cache, batch=batch)
             resolve_step(PPAnalyzeStep.IDENTIFY_PURPOSE_ENTITIES)
             add_step(PPAnalyzeStep.CLASSIFY_PURPOSE_ENTITIES)
-            classified_purpose_entities, errs = classify_purpose_categories(
+            classified_purpose_entities, errs = await classify_purpose_categories(
                 pp_text, segments, raw_purpose_entities, override_cache, batch=batch
             )
             if errs:
@@ -161,7 +161,7 @@ async def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, 
 
         async def get_parties():
             add_step(PPAnalyzeStep.IDENTIFY_PARTIES)
-            parties = identify_parties(pp_text, segments, override_cache, batch=batch)
+            parties = await identify_parties(pp_text, segments, override_cache, batch=batch)
             resolve_step(PPAnalyzeStep.IDENTIFY_PARTIES)
             return parties
 
@@ -169,7 +169,7 @@ async def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, 
 
         async def get_practices():
             add_step(PPAnalyzeStep.IDENTIFY_DATA_PRACTICES)
-            practices = identify_data_practices(pp_text, segments, override_cache, batch=batch)
+            practices = await identify_data_practices(pp_text, segments, override_cache, batch=batch)
             resolve_step(PPAnalyzeStep.IDENTIFY_DATA_PRACTICES)
             return practices
 
@@ -196,7 +196,7 @@ async def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, 
                 query_data = convert_grouped_practices_to_query_data(segment)
                 relation_queries.append(query_data)
 
-            relations = identify_relations(relation_queries, override_cache, batch=batch)
+            relations = await identify_relations(relation_queries, override_cache, batch=batch)
             assert len(relations) == len(grouped_practices_with_id), "Mismatch in relation count"
             resolve_step(PPAnalyzeStep.IDENTIFY_RELATIONS)
             return relations

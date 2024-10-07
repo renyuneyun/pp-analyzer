@@ -1,4 +1,4 @@
-
+import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 import json
@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from sqlmodel import Field, Session, SQLModel, create_engine, select, DateTime
 from sqlalchemy import update
 import tempfile
-import time
 from tqdm.auto import tqdm
 from typing import Optional, Callable
 from uuid import uuid4
@@ -135,20 +134,20 @@ def from_jsonl(jsonl_str):
     return [json.loads(line) for line in jsonl_str.split('\n') if line]
 
 
-def wait_for_batch_job_finish(batch_job_id):
+async def wait_for_batch_job_finish(batch_job_id):
     while True:
         job = client.batches.retrieve(batch_job_id)
         if job.status not in {'validating', 'in_progress', 'finalizing', 'cancelling'}:
             break
-        time.sleep(WAIT_INTERVAL)
+        await asyncio.sleep(WAIT_INTERVAL)
     return job
 
 
-def retrieve_batch_job_results(batch_job):
+async def retrieve_batch_job_results(batch_job):
     if isinstance(batch_job, str):
-        batch_job = wait_for_batch_job_finish(batch_job)
+        batch_job = await wait_for_batch_job_finish(batch_job)
     else:
-        batch_job = wait_for_batch_job_finish(batch_job.id)
+        batch_job = await wait_for_batch_job_finish(batch_job.id)
     output_file_id = batch_job.output_file_id
     file_response = client.files.content(output_file_id)
     return file_response.text
@@ -250,22 +249,22 @@ class QueryHelper(BaseModel):
                 "description": f"Batch analyze for {self.cache_category}",
             }
         )
-        self._batch_jobs.append(batch_job)
+        self._batch_jobs.append(batch_job.id)
         batch_job_id = batch_job.id
         for i, query_params in tqdm(enumerate(self._batch_query_queue), desc="Saving batch job to cache", leave=False):
             self._cache_manager.save_batch_job_to_cache(query_params, batch_job_id, f"request-{i}")
         self._batch_query_queue = []
         return self._batch_jobs
 
-    def wait_and_handle_batch_queries(self, batch_job_id=None):
+    async def wait_and_handle_batch_queries(self, batch_job_id=None):
         if batch_job_id is None:
-            batch_jobs = [job.id for job in self._batch_jobs]
+            batch_jobs = [job for job in self._batch_jobs]
         else:
             batch_jobs = [batch_job_id]
         finished_jobs = []
         for i_batch_job_id in (pbar := tqdm(batch_jobs, desc="Waiting for batch jobs", leave=False)):
             pbar.set_postfix_str(f"Waiting for batch job {i_batch_job_id} finish")
-            res = retrieve_batch_job_results(i_batch_job_id)
+            res = await retrieve_batch_job_results(i_batch_job_id)
             pbar.set_postfix_str('')
             records = self._cache_manager.find_batch_records_from_cache(batch_id=i_batch_job_id)
             assert isinstance(records, list)
@@ -277,7 +276,7 @@ class QueryHelper(BaseModel):
                 record = record_dict[data_item['custom_id']]
                 self._cache_manager.fill_batch_job_cache(record, result=data_item['response']['body']['choices'][0]['message']['content'])
             finished_jobs.append(i_batch_job_id)
-        self._batch_jobs = [job for job in self._batch_jobs if job.id not in finished_jobs]
+        self._batch_jobs = [job for job in self._batch_jobs if job not in finished_jobs]
 
     def run_query(self, data: dict, override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False):
         '''
