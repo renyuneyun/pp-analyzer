@@ -121,21 +121,23 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
         # Fixup potentially malformed json string using json_repair.
         json_info = str(repair_json(json_str=input, return_objects=False))
 
-        # Generate JSON-string output using best-attempt prompting & parsing techniques.
         try:
-
-            if len(json_info) < len(input):
-                json_info, result = try_parse_ast_to_json(input)
-            else:
-                result = json.loads(json_info)
-
-        except json.JSONDecodeError:
-            # log.exception("error loading json, json=%s", input)
-            return json_info, None
-        else:
-            if not isinstance(result, (dict, list)):
-                # log.exception("not expected dict type. type=%s:", type(result))
-                return json_info, {}
+            result = json.loads(json_info)
             return json_info, result
+        except json.JSONDecodeError:
+            # Generate JSON-string output using best-attempt prompting & parsing techniques.
+            try:
+                if len(json_info) < len(input):
+                    json_info, result = try_parse_ast_to_json(input)
+                else:
+                    result = json.loads(json_info)
+            except json.JSONDecodeError:
+                # log.exception("error loading json, json=%s", input)
+                return json_info, None
+            else:
+                if not isinstance(result, (dict, list)):
+                    # log.exception("not expected dict type. type=%s:", type(result))
+                    return json_info, {}
+                return json_info, result
     else:
         return input, result
