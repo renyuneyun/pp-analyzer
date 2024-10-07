@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from enum import Enum
 import os
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 import re
 from tqdm.auto import tqdm
 from . import policy_text_utils as ptu
@@ -91,7 +91,11 @@ def assemble_data_practices(relations: list[Relation], grouped_practices_with_id
             errors.append(f"Unexpected data practice type for {raw_action}")
             continue
         cls = DATA_PRACTICE_CLASS_MAP[DATA_PRACTICE_NAME_MAP[raw_action["type"]]]
-        obj = cls(text=raw_action["text"], **my_relations)
+        try:
+            obj = cls(text=raw_action["text"], **my_relations)
+        except ValidationError as e:
+            errors.append(f"Validation error for {raw_action}: {e}")
+            continue
         res.append(obj)
     segmented_data_practice = SegmentedDataPractice(segment=segment_text, practices=res)
     return segmented_data_practice, errors
