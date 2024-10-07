@@ -335,10 +335,24 @@ def identify_relations(relation_query, override_cache: PARAM_OVERRIDE_CACHE = No
         }
     ]
     """
+    def call_llm(relation_query):
+        return [Relation(**relation) for relation in qh.Q_RELATION_RECOGNITION.run_query(relation_query, override_cache=override_cache)]
+
+    is_list = isinstance(relation_query, list)
+    if not is_list:
+        relation_query = [relation_query]
 
     if batch:
-        qh.Q_RELATION_RECOGNITION.enqueue_batch_query(relation_query, override_cache=override_cache)
+        for i_relation_query in tqdm(relation_query, leave=False, desc="Composing batch jobs for identifying relations"):
+            qh.Q_RELATION_RECOGNITION.enqueue_batch_query(i_relation_query, override_cache=override_cache)
         qh.Q_RELATION_RECOGNITION.execute_batch_queries()
         qh.Q_RELATION_RECOGNITION.wait_and_handle_batch_queries()
 
-    return [Relation(**relation) for relation in qh.Q_RELATION_RECOGNITION.run_query(relation_query, override_cache=override_cache)]
+    res = []
+    for i_relation_query in tqdm(relation_query, leave=False, desc="Identifying relations"):
+        res.append(call_llm(i_relation_query))
+
+    if not is_list:
+        return res[0]
+    else:
+        return res
