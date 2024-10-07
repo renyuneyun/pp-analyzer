@@ -63,18 +63,23 @@ class SQLiteCacheManager:
                     return record.lm_response, record
         return None
 
-    def get_batch_record_from_cache(self, query_params: Optional[dict] = None, batch_id: Optional[str] = None):
+    def get_batch_record_from_cache(self, query_params: Optional[dict] = None):
         with Session(db.engine) as session:
             statement = select(db.BatchQueryRecord)
-            if query_params:
-                hash_key = dict_hash(query_params)
-                statement = statement.where(db.BatchQueryRecord.hash_key == hash_key)
+            hash_key = dict_hash(query_params)
+            statement = statement.where(db.BatchQueryRecord.hash_key == hash_key)
+            for record in session.exec(statement):
+                if query_params and dict_equal(record.query_params_dict(), query_params):
+                    return record
+        return None
+
+    def find_batch_records_from_cache(self, batch_id: str):
+        with Session(db.engine) as session:
+            statement = select(db.BatchQueryRecord)
             if batch_id:
                 statement = statement.where(db.BatchQueryRecord.batch_id == batch_id)
             res: list[db.BatchQueryRecord] = []
             for record in session.exec(statement):
-                if query_params and dict_equal(record.query_params_dict(), query_params):
-                    return record
                 res.append(record)
         return res
 
@@ -203,8 +208,8 @@ class QueryHelper(BaseModel):
         query_params = self._get_query_params(data)
         cache_out = self._cache_manager.get_record_from_cache(query_params)
         if not cache_out:
-            cache_out = self._cache_manager.get_batch_record_from_cache(query_params=query_params)
-            if cache_out.batch_id not in self._batch_jobs:
+            cache_out = self._cache_manager.get_batch_record_from_cache(query_params)
+            if cache_out and cache_out.batch_id not in self._batch_jobs:
                 self._batch_jobs.append(cache_out.batch_id)
         if cache_out and (not override_cache or self.cache_category not in override_cache):
             return
@@ -262,7 +267,7 @@ class QueryHelper(BaseModel):
             pbar.set_postfix_str(f"Waiting for batch job {i_batch_job_id} finish")
             res = retrieve_batch_job_results(i_batch_job_id)
             pbar.set_postfix_str('')
-            records = self._cache_manager.get_batch_record_from_cache(batch_id=i_batch_job_id)
+            records = self._cache_manager.find_batch_records_from_cache(batch_id=i_batch_job_id)
             assert isinstance(records, list)
             if not records:
                 finished_jobs.append(i_batch_job_id)
