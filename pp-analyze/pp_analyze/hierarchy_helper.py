@@ -20,7 +20,7 @@ def get_data_category_hierarchy():
     return data_category_hierarchy
 
 
-def get_path_to_node(node: str, hierarchy: dict) -> list[str]:
+def get_path_to_node(node: str, hierarchy: dict, level: int = 0, allow_non_exist: bool = True) -> list[str]:
     """
     Get the path(s) to a node in the hierarchy.
     """
@@ -29,8 +29,10 @@ def get_path_to_node(node: str, hierarchy: dict) -> list[str]:
         if parent == node:
             paths.append([parent])
         else:
-            for path in get_path_to_node(node, children):
+            for path in get_path_to_node(node, children, level+1, allow_non_exist):
                 paths.append([parent] + path)
+    if not paths and level == 0 and allow_non_exist:
+        paths = [[node]]
     return paths
 
 
@@ -91,10 +93,10 @@ def map_data_category_to_level(data_category: str, level: int = 1):
 
 
 def get_path_to_purpose(purpose: URIRef):
-    return get_path_to_node(purpose, get_purpose_hierarchy())
+    return get_path_to_node(purpose, get_purpose_hierarchy(), allow_non_exist=True)
 
 def get_path_to_data_category(data_category: str):
-    return get_path_to_node(data_category, get_data_category_hierarchy())
+    return get_path_to_node(data_category, get_data_category_hierarchy(), allow_non_exist=True)
 
 
 def lift_category_to_target(category: str, targets: list[str], hierarchy: dict) -> str:
