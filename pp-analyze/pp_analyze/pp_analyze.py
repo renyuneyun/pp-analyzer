@@ -256,7 +256,7 @@ async def analyze_pp_from_website_name(website_name: str, override_cache: PARAM_
     return data_practices, errs
 
 
-async def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True, batch: bool = False):
+async def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True, batch: bool = False, max_num: int|None = None):
     """
     Analyze privacy policies from website names.
     You need `PP_POLICY_DIR` environment variable to be set to the directory containing the privacy policies.
@@ -273,6 +273,8 @@ async def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRI
             failed_tasks.append(website_name)
         else:
             res[website_name] = data_practices
+        if max_num and len(res) >= max_num:
+            break
     return res, failed_tasks, errs
 
 
