@@ -66,7 +66,7 @@ class SQLiteCacheManager:
                     return record.lm_response, record
         return None
 
-    def get_batch_record_from_cache(self, query_params: Optional[dict] = None):
+    def get_batch_record_from_cache(self, query_params: dict):
         with Session(db.engine) as session:
             statement = select(db.BatchQueryRecord)
             hash_key = dict_hash(query_params)
