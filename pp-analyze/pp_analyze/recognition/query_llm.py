@@ -25,7 +25,7 @@ PURPOSE_MAPPING_LEVEL = -1
 DATA_CATEGORY_MAPPING_LEVEL = -1
 
 
-def identify_data_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWDataEntities]:
+def identify_data_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False) -> list[SWDataEntities]:
     """
     Split pp_text into segments, and call LLM to obtain data entities
     Takes privacy policy (segment or any other form) as input
@@ -43,7 +43,7 @@ def identify_data_entities(pp_text: str, segments: list[str], override_cache: PA
     ]
     """
     def call_llm_for_segment(segment_text):
-        parsed_model_output = qh.Q_DATA_ENTITY.run_query({"segment": segment_text}, override_cache=override_cache)
+        parsed_model_output = qh.Q_DATA_ENTITY.run_query({"segment": segment_text}, override_cache=override_cache, batch=batch)
         res = []
         for entity in parsed_model_output:
             entity_text = entity
@@ -53,6 +53,12 @@ def identify_data_entities(pp_text: str, segments: list[str], override_cache: PA
             res.append({"text": entity_text, "span": span})
         return res
 
+    if batch:
+        for segment in tqdm(segments, leave=False, desc="Composing batch jobs for identifying data entities"):
+            qh.Q_DATA_ENTITY.enqueue_batch_query({"segment": segment}, override_cache=override_cache)
+        qh.Q_DATA_ENTITY.execute_batch_queries()
+        qh.Q_DATA_ENTITY.wait_and_handle_batch_queries()
+
     res = []
     for segment in tqdm(segments, leave=False, desc="Identifying data entities"):
         entities = call_llm_for_segment(segment)
@@ -60,7 +66,7 @@ def identify_data_entities(pp_text: str, segments: list[str], override_cache: PA
     return res
 
 
-def classify_data_categories(pp_text: str, segments: list[str], data_entities: list[SWDataEntities], override_cache: PARAM_OVERRIDE_CACHE = None, handle_incorrect_llm = True) -> list[SWClassifiedDataEntities]:
+def classify_data_categories(pp_text: str, segments: list[str], data_entities: list[SWDataEntities], override_cache: PARAM_OVERRIDE_CACHE = None, handle_incorrect_llm = True, batch: bool = False) -> list[SWClassifiedDataEntities]:
     """
     Identify the formal categories of data entities, as in DPV
 
@@ -86,6 +92,16 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities: l
             'phrases': [entity['text'] for entity in data_point['entities']]
         }, override_cache=override_cache)
 
+    if batch:
+        for x in tqdm(deepcopy(data_entities), leave=False, desc="Composing batch jobs for classifying data entities"):
+            x_dict = to_dict(x)
+            qh.Q_DATA_CLASSIFICATION.enqueue_batch_query({
+                'segment': x_dict['segment'],
+                'phrases': [entity['text'] for entity in x_dict['entities']]
+            }, override_cache=override_cache)
+        qh.Q_DATA_CLASSIFICATION.execute_batch_queries()
+        qh.Q_DATA_CLASSIFICATION.wait_and_handle_batch_queries()
+
     classified_data_entities = []
     errs = []
     for x in tqdm(deepcopy(data_entities), leave=False, desc="Classifying data entities"):
@@ -109,7 +125,7 @@ def classify_data_categories(pp_text: str, segments: list[str], data_entities: l
     return classified_data_entities, errs
 
 
-def identity_purpose_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWPurposeEntities]:
+def identity_purpose_entities(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False) -> list[SWPurposeEntities]:
     """
     Split pp_text into segments, and call LLM to obtain purpose entities
     Takes privacy policy (segment or any other form) as input
@@ -138,6 +154,12 @@ def identity_purpose_entities(pp_text: str, segments: list[str], override_cache:
             res.append({"text": entity_text, "span": span})
         return res
 
+    if batch:
+        for segment in tqdm(segments, leave=False, desc="Composing batch jobs for identifying purpose entities"):
+            qh.Q_PURPOSE_ENTITY.enqueue_batch_query({"segment": segment}, override_cache=override_cache)
+        qh.Q_PURPOSE_ENTITY.execute_batch_queries()
+        qh.Q_PURPOSE_ENTITY.wait_and_handle_batch_queries()
+
     res = []
     for segment in tqdm(segments, leave=False, desc="Identifying purpose entities"):
         entities = call_llm_for_segment(segment)
@@ -145,7 +167,7 @@ def identity_purpose_entities(pp_text: str, segments: list[str], override_cache:
     return res
 
 
-def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entities: list[SWPurposeEntities], override_cache: PARAM_OVERRIDE_CACHE = None, handle_incorrect_llm = True) -> list[SWClassifiedPurposeEntities]:
+def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entities: list[SWPurposeEntities], override_cache: PARAM_OVERRIDE_CACHE = None, handle_incorrect_llm = True, batch: bool = False) -> list[SWClassifiedPurposeEntities]:
     """
     Identify the formal categories of purpose entities, as in DPV
 
@@ -172,6 +194,16 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
             'phrases': [entity['text'] for entity in data_point['entities']]
         }, override_cache=override_cache)
 
+    if batch:
+        for x in tqdm(deepcopy(purpose_entities), leave=False, desc="Composing batch jobs for classifying purpose entities"):
+            x_dict = to_dict(x)
+            qh.Q_PURPOSE_CLASSIFICATION.enqueue_batch_query({
+                'segment': x_dict['segment'],
+                'phrases': [entity['text'] for entity in x_dict['entities']]
+            }, override_cache=override_cache)
+        qh.Q_PURPOSE_CLASSIFICATION.execute_batch_queries()
+        qh.Q_PURPOSE_CLASSIFICATION.wait_and_handle_batch_queries()
+
     purpose_entities = deepcopy(purpose_entities)
     classified_purpose_entities = []
     errs = []
@@ -195,7 +227,7 @@ def classify_purpose_categories(pp_text: str, segments: list[str], purpose_entit
     return classified_purpose_entities, errs
 
 
-def identify_parties(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWPartyEntities]:
+def identify_parties(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False) -> list[SWPartyEntities]:
     """
     Identify the parties involved in the privacy policy
 
@@ -220,6 +252,12 @@ def identify_parties(pp_text: str, segments: list[str], override_cache: PARAM_OV
             ret = []
         return ret
 
+    if batch:
+        for segment in tqdm(segments, leave=False, desc="Composing batch jobs for identifying parties"):
+            qh.Q_PARTY_RECOGNITION.enqueue_batch_query({"segment": segment}, override_cache=override_cache)
+        qh.Q_PARTY_RECOGNITION.execute_batch_queries()
+        qh.Q_PARTY_RECOGNITION.wait_and_handle_batch_queries()
+
     res = []
     for segment in tqdm(segments, leave=False, desc="Identifying parties"):
         entities = call_llm_for_segment(segment)
@@ -237,7 +275,7 @@ def identify_data_storage_durations(pp_text: str, segments: list[str], override_
     pass
 
 
-def identify_data_practices(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None) -> list[SWDataPractices]:
+def identify_data_practices(pp_text: str, segments: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False) -> list[SWDataPractices]:
     """
     Identify data practices in the privacy policy
 
@@ -270,6 +308,12 @@ def identify_data_practices(pp_text: str, segments: list[str], override_cache: P
             res.append(practice)
         return res
 
+    if batch:
+        for segment in tqdm(segments, leave=False, desc="Composing batch jobs for identifying data practices"):
+            qh.Q_ACTION_RECOGNITION.enqueue_batch_query({"segment": segment}, override_cache=override_cache)
+        qh.Q_ACTION_RECOGNITION.execute_batch_queries()
+        qh.Q_ACTION_RECOGNITION.wait_and_handle_batch_queries()
+
     res = []
     for segment in tqdm(segments, leave=False, desc="Identifying data practices"):
         practices = call_llm_for_segment(segment)
@@ -277,7 +321,7 @@ def identify_data_practices(pp_text: str, segments: list[str], override_cache: P
     return res
 
 
-def identify_relations(relation_query, override_cache: PARAM_OVERRIDE_CACHE = None) -> list[Relation]:
+def identify_relations(relation_query, override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False) -> list[Relation]:
     """
     Identify relations between data practice actions and entities in the privacy policy, through LLM
 
@@ -291,5 +335,10 @@ def identify_relations(relation_query, override_cache: PARAM_OVERRIDE_CACHE = No
         }
     ]
     """
+
+    if batch:
+        qh.Q_RELATION_RECOGNITION.enqueue_batch_query(relation_query, override_cache=override_cache)
+        qh.Q_RELATION_RECOGNITION.execute_batch_queries()
+        qh.Q_RELATION_RECOGNITION.wait_and_handle_batch_queries()
 
     return [Relation(**relation) for relation in qh.Q_RELATION_RECOGNITION.run_query(relation_query, override_cache=override_cache)]

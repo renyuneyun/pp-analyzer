@@ -37,6 +37,28 @@ class QueryRecord(SQLModel, table=True):
         return json.loads(self.query_params)
 
 
+class BatchQueryRecord(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    hash_key: str
+    query_params: str
+    batch_id: str
+    batch_custom_id: str
+    timestamp: str = Field(default_factory=datetime.now().isoformat)
+
+    def __init__(self, **data):
+        query_params = data['query_params']
+        if isinstance(query_params, dict):
+            data['query_params'] = json.dumps(query_params)
+        else:
+            query_params = json.loads(query_params)
+        if 'hash_key' not in data:
+            data['hash_key'] = dict_hash(query_params)
+        super().__init__(**data)
+
+    def query_params_dict(self):
+        return json.loads(self.query_params)
+
+
 def enable_zstd_extension(dbapi_conn, *args):
     dbapi_conn.enable_load_extension(True)
     sqlite_zstd.load(dbapi_conn)

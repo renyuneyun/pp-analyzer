@@ -95,7 +95,7 @@ def assemble_data_practices(relations: list[Relation], grouped_practices_with_id
     return segmented_data_practice, errors
 
 
-def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> tuple[list[SegmentedDataPractice], list[BaseModel|str]]:
+def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False) -> tuple[list[SegmentedDataPractice], list[BaseModel|str]]:
     """
     Main entry point for pp_analyze.
     Call the relevant LLM tools to analyze the privacy policy.
@@ -109,25 +109,25 @@ def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> tup
             pbar.set_postfix_str(new_desc)
         segments = ptu.convert_into_segments(pp_text)
         update_progress("Identifying data entities")
-        raw_data_entities = identify_data_entities(pp_text, segments, override_cache)
+        raw_data_entities = identify_data_entities(pp_text, segments, override_cache, batch=batch)
         update_progress("Classifying data entities")
         classified_data_entities, errs = classify_data_categories(
-            pp_text, segments, raw_data_entities, override_cache
+            pp_text, segments, raw_data_entities, override_cache, batch=batch
         )
         if errs:
             failed_tasks.append(errs)
         update_progress("Identifying purpose entities")
-        raw_purpose_entities = identity_purpose_entities(pp_text, segments, override_cache)
+        raw_purpose_entities = identity_purpose_entities(pp_text, segments, override_cache, batch=batch)
         update_progress("Classifying purpose entities")
         classified_purpose_entities, errs = classify_purpose_categories(
-            pp_text, segments, raw_purpose_entities, override_cache
+            pp_text, segments, raw_purpose_entities, override_cache, batch=batch
         )
         if errs:
             failed_tasks.append(errs)
         update_progress("Identifying parties")
-        parties = identify_parties(pp_text, segments, override_cache)
+        parties = identify_parties(pp_text, segments, override_cache, batch=batch)
         update_progress("Identifying data practices")
-        practices = identify_data_practices(pp_text, segments, override_cache)
+        practices = identify_data_practices(pp_text, segments, override_cache, batch=batch)
         update_progress("Grouping data practices and entities")
         grouped_practices = group_data_practices_and_entities(
             practices, classified_data_entities, classified_purpose_entities, parties
@@ -139,7 +139,7 @@ def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None) -> tup
             for segment in grouped_practices_with_id:
                 query_data = convert_grouped_practices_to_query_data(segment)
                 pbar2.set_postfix_str("Identifying relations")
-                relations = identify_relations(query_data, override_cache)
+                relations = identify_relations(query_data, override_cache, batch=batch)
                 pbar2.set_postfix_str("Assembling data practices")
                 assembled_data_practices, errs = assemble_data_practices(relations, segment)
                 if errs:
