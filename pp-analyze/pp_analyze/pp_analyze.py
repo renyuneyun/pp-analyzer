@@ -264,7 +264,11 @@ async def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRI
     res: dict[str, list[SegmentedDataPractice]] = {}
     failed_tasks = []
     errs = []
-    for website_name in (pbar := tqdm(website_names, leave=False, desc="Running bulk privacy policy analysis")):
+    if max_num
+        desc_str = f"Running bulk privacy policy analysis (max: {max_num})"
+    else:
+        desc_str = "Running bulk privacy policy analysis"
+    for website_name in (pbar := tqdm(website_names, leave=False, desc=desc_str)):
         pbar.set_postfix_str(f"For {website_name}")
         data_practices, ierrs = await analyze_pp_from_website_name(website_name, override_cache=override_cache, only_non_empty=only_non_empty, batch=batch)
         if ierrs:
@@ -273,6 +277,8 @@ async def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRI
             failed_tasks.append(website_name)
         else:
             res[website_name] = data_practices
+            if max_num:
+                pbar.set_description_str(f"Running bulk privacy policy analysis (max: {max_num}, {len(res)} found)")
         if max_num and len(res) >= max_num:
             break
     return res, failed_tasks, errs
