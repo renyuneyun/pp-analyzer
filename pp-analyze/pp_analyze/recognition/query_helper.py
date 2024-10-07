@@ -180,6 +180,7 @@ class QueryHelper(BaseModel):
         self._cache_manager = SQLiteCacheManager(cache_category=self.cache_category, llm_model=self.llm_model)
         self._batch_query_queue = []
         self._batch_jobs = []
+        self._temp_batch_files = {}
 
     def _get_query_params(self, data: dict):
         if self.user_message_fn:
@@ -255,6 +256,7 @@ class QueryHelper(BaseModel):
             }
         )
         self._batch_jobs.append(batch_job.id)
+        self._temp_batch_files[batch_job.id] = batch_input_file
         batch_job_id = batch_job.id
         for i, query_params in tqdm(enumerate(self._batch_query_queue), desc="Saving batch job to cache", leave=False):
             self._cache_manager.save_batch_job_to_cache(query_params, batch_job_id, f"request-{i}")
@@ -282,6 +284,8 @@ class QueryHelper(BaseModel):
                 record = record_dict[data_item['custom_id']]
                 self._cache_manager.fill_batch_job_cache(record, result=data_item['response']['body']['choices'][0]['message']['content'])
             finished_jobs.append(i_batch_job_id)
+            if i_batch_job_id in self._temp_batch_files:
+                os.remove(self._temp_batch_files.pop(i_batch_job_id))
         self._batch_jobs = [job for job in self._batch_jobs if job not in finished_jobs]
 
     def run_query(self, data: dict, override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False):
