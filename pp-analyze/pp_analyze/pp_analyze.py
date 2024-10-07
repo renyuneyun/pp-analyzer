@@ -163,7 +163,7 @@ def get_relative_file_path_for_pp(website_name: str) -> Path:
     return policy_dir / website_name[:1] / website_name[:2] / website_name[:3] / f"{website_name}.md"
 
 
-def analyze_pp_from_website_name(website_name: str, override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True):
+def analyze_pp_from_website_name(website_name: str, override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True, batch: bool = False):
     data_practices = None
     errs = []
 
@@ -181,7 +181,7 @@ def analyze_pp_from_website_name(website_name: str, override_cache: PARAM_OVERRI
             continue
         with open(pp_file, "r") as f:
             pp_text = f.read()
-            data_practices, errs = analyze_pp(pp_text, override_cache=override_cache)
+            data_practices, errs = analyze_pp(pp_text, override_cache=override_cache, batch=batch)
             if only_non_empty:
                 data_practices = filter_empty_data_practices(data_practices)
             pbar.container.close()
@@ -189,7 +189,7 @@ def analyze_pp_from_website_name(website_name: str, override_cache: PARAM_OVERRI
     return data_practices, errs
 
 
-def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True):
+def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRIDE_CACHE = None, only_non_empty: bool = True, batch: bool = False):
     """
     Analyze privacy policies from website names.
     You need `PP_POLICY_DIR` environment variable to be set to the directory containing the privacy policies.
@@ -199,7 +199,7 @@ def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRIDE_CAC
     errs = []
     for website_name in (pbar := tqdm(website_names, leave=False, desc="Running bulk privacy policy analysis")):
         pbar.set_postfix_str(f"For {website_name}")
-        data_practices, ierrs = analyze_pp_from_website_name(website_name, override_cache=override_cache, only_non_empty=only_non_empty)
+        data_practices, ierrs = analyze_pp_from_website_name(website_name, override_cache=override_cache, only_non_empty=only_non_empty, batch=batch)
         if ierrs:
             errs.append((website_name, ierrs))
         if data_practices is None:

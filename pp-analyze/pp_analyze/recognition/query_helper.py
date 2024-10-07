@@ -25,7 +25,7 @@ _CACHE_DIR = Path(os.getenv("LLM_QUERY_CACHE_DIR")) if os.getenv("LLM_QUERY_CACH
 client = OpenAI()
 
 
-WAIT_INTERVAL = 10
+WAIT_INTERVAL = 30
 
 
 QUERY_CATEGORY_TO_DATA_TYPE = {
@@ -204,6 +204,8 @@ class QueryHelper(BaseModel):
         cache_out = self._cache_manager.get_record_from_cache(query_params)
         if not cache_out:
             cache_out = self._cache_manager.get_batch_record_from_cache(query_params=query_params)
+            if cache_out.batch_id not in self._batch_jobs:
+                self._batch_jobs.append(cache_out.batch_id)
         if cache_out and (not override_cache or self.cache_category not in override_cache):
             return
         self._batch_query_queue.append(query_params)
@@ -219,7 +221,7 @@ class QueryHelper(BaseModel):
         if not self._batch_query_queue:
             return []
         batch_input_list = []
-        for i, query_params in enumerate(self._batch_query_queue):
+        for i, query_params in tqdm(enumerate(self._batch_query_queue), desc="Composing batch query file", leave=False):
             data_item = {
                 'custom_id': f"request-{i}",
                 'method': 'POST',
@@ -245,7 +247,7 @@ class QueryHelper(BaseModel):
         )
         self._batch_jobs.append(batch_job)
         batch_job_id = batch_job.id
-        for i, query_params in enumerate(self._batch_query_queue):
+        for i, query_params in tqdm(enumerate(self._batch_query_queue), desc="Saving batch job to cache", leave=False):
             self._cache_manager.save_batch_job_to_cache(query_params, batch_job_id, f"request-{i}")
         self._batch_query_queue = []
         return self._batch_jobs
@@ -262,10 +264,13 @@ class QueryHelper(BaseModel):
             pbar.set_postfix_str('')
             records = self._cache_manager.get_batch_record_from_cache(batch_id=i_batch_job_id)
             assert isinstance(records, list)
+            if not records:
+                finished_jobs.append(i_batch_job_id)
+                continue
             record_dict = {record.batch_custom_id: record for record in records}
             for data_item in tqdm(from_jsonl(res), desc="Handling results", leave=False):
                 record = record_dict[data_item['custom_id']]
-                self._cache_manager.fill_batch_job_cache(record, data_item['response']['body']['choices'][0]['message']['content'])
+                self._cache_manager.fill_batch_job_cache(record, result=data_item['response']['body']['choices'][0]['message']['content'])
             finished_jobs.append(i_batch_job_id)
         self._batch_jobs = [job for job in self._batch_jobs if job.id not in finished_jobs]
 

@@ -82,7 +82,7 @@ if _CACHE_DIR is not None:
     engine = create_engine(db_url)
     engine.dialect.supports_sane_rowcount = False
     event.listen(engine, 'connect', enable_zstd_extension)
+    SQLModel.metadata.create_all(engine)
     if not db_exists:
-        SQLModel.metadata.create_all(engine)
         dbapi_conn = engine.raw_connection()
         enable_compression(dbapi_conn)
