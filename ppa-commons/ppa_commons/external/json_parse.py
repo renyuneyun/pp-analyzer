@@ -115,6 +115,18 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
     except json.JSONDecodeError:
         pass
 
+    # If the input is a list but not in JSON schema
+    no_markup = True
+    for symbol in ["[", "]", "{", "}"]:
+        if symbol in input:
+            no_markup = False
+    if no_markup:
+        for sep in [',', ';']:
+            if sep in input:
+                return input, [elem.strip() for elem in input.split(sep)]
+        return input, input
+
+
     try:
         result = json.loads(input)
     except json.JSONDecodeError:
