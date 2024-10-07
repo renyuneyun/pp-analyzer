@@ -19,7 +19,8 @@ NS = Namespace("urn:pp-analyze:core#")
 NS_DPV = Namespace("https://w3id.org/dpv#")
 A = RDF.type
 
-N_DATA_GENERAL = NS_DPV["Data-general"]
+N_DATA_GENERAL = NS_DPV["Data"]
+N_PURPOSE_GENERAL = NS_DPV["Purpose"]
 ENTITY_MAP = {
     'Data': 'Data-general',
     'Purpose-general': 'Purpose',
@@ -33,12 +34,18 @@ def one(iter):
 def to_data_category_uri(data_category: str) -> URIRef:
     if data_category in ENTITY_MAP:
         data_category = ENTITY_MAP[data_category]
+    # Handle malformed data category
+    if ' ' in data_category:
+        return N_DATA_GENERAL
     return NS_DPV[data_category]
 
 
 def to_purpose_category_uri(purpose_category: str) -> URIRef:
     if purpose_category in ENTITY_MAP:
         purpose_category = ENTITY_MAP[purpose_category]
+    # Handle malformed purpose category
+    if ' ' in purpose_category:
+        return N_PURPOSE_GENERAL
     return NS_DPV[purpose_category]
 
 
