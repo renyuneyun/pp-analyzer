@@ -18,7 +18,7 @@ _CACHE_DIR = Path(os.getenv("LLM_QUERY_CACHE_DIR")) if os.getenv("LLM_QUERY_CACH
 
 class QueryRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    hash_key: str
+    hash_key: str = Field(index=True)
     query_params: str
     lm_response: str
     timestamp: str = Field(default_factory=datetime.now().isoformat)
@@ -39,9 +39,9 @@ class QueryRecord(SQLModel, table=True):
 
 class BatchQueryRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    hash_key: str
+    hash_key: str = Field(index=True)
     query_params: str
-    batch_id: str
+    batch_id: str = Field(index=True)
     batch_custom_id: str
     timestamp: str = Field(default_factory=datetime.now().isoformat)
 
