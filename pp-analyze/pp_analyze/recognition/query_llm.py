@@ -335,8 +335,21 @@ async def identify_relations(relation_query, override_cache: PARAM_OVERRIDE_CACH
         }
     ]
     """
-    def call_llm(relation_query):
-        return [Relation(**relation) for relation in qh.Q_RELATION_RECOGNITION.run_query(relation_query, override_cache=override_cache)]
+    errors = []
+
+    def call_llm_for_segment(relation_query):
+        parsed_relations = []
+        relations = qh.Q_RELATION_RECOGNITION.run_query(relation_query, override_cache=override_cache)
+        for relation in relations:
+            try:
+                parsed_relations.append(Relation(**relation))
+            except Exception as e:
+                # The only currently identified cause of is when the relation_query is too long (but not exceeding context window limit), and the LLM returns something like "I can't analyze, due to too long..."
+                # Only happens a handful of times, so logging and skipping them for now
+                # This may need to be better handled in the future
+                errors.append((e, relations, relation_query))
+                return []
+        return parsed_relations
 
     is_list = isinstance(relation_query, list)
     if not is_list:
@@ -350,9 +363,10 @@ async def identify_relations(relation_query, override_cache: PARAM_OVERRIDE_CACH
 
     res = []
     for i_relation_query in tqdm(relation_query, leave=False, desc="Identifying relations"):
-        res.append(call_llm(i_relation_query))
+        ret = call_llm_for_segment(i_relation_query)
+        res.append(ret)
 
     if not is_list:
-        return res[0]
+        return res[0], errors
     else:
-        return res
+        return res, errors

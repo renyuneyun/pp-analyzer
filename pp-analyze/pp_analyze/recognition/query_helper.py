@@ -42,7 +42,7 @@ QUERY_CATEGORY_TO_DATA_TYPE = {
 }
 
 
-def parse(model_output_text: str, data_type: DataType = None) -> dict:
+def parse(model_output_text: str, data_type: DataType = None) -> dict | list | str:
     text, obj = json_parse.try_parse_json_object(model_output_text)
     if data_type is not None:
         obj = heuristic_extract_entities(obj, data_type)
@@ -290,7 +290,7 @@ class QueryHelper(BaseModel):
 
     def run_query(self, data: dict, override_cache: PARAM_OVERRIDE_CACHE = None, batch: bool = False):
         '''
-        Run query, and return the parsed result (usually either a list or a dict).
+        Run query, and return the parsed result (usually either a list or a dict). No special processing of result is performed -- they are expected to be done in the downstream caller.
         If anything wrong happens (e.g., API error, parsing error), throw an exception.
 
         For consistency, the passed `data` dictionary should always contain the following keys:

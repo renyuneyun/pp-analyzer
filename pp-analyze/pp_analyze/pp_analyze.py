@@ -121,7 +121,7 @@ async def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, 
     This function returns a list of DataPractice objects.
     """
     assembled_data_practice_list: list[SegmentedDataPractice] = []
-    failed_tasks: list[BaseModel|str] = []
+    failed_tasks = []
     pending_steps = []
     with tqdm(total=len(PPAnalyzeStep.__members__), leave=False, desc="Analyzing privacy policy") as pbar:
         def add_step(step):
@@ -200,8 +200,10 @@ async def analyze_pp(pp_text: str, override_cache: PARAM_OVERRIDE_CACHE = None, 
                 query_data = convert_grouped_practices_to_query_data(segment)
                 relation_queries.append(query_data)
 
-            relations = await identify_relations(relation_queries, override_cache, batch=batch)
-            assert len(relations) == len(grouped_practices_with_id), "Mismatch in relation count"
+            ret = await identify_relations(relation_queries, override_cache, batch=batch)
+            relations, ierrors = ret
+            if ierrors:
+                failed_tasks.append((ierrors))
             resolve_step(PPAnalyzeStep.IDENTIFY_RELATIONS)
             return relations
 
@@ -260,6 +262,8 @@ async def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRI
     """
     Analyze privacy policies from website names.
     You need `PP_POLICY_DIR` environment variable to be set to the directory containing the privacy policies.
+
+    @return: a dictionary of website names to the list of data practices, a list of failed tasks (websites without PPs, or websites with exception), and a list of errors
     """
     res: dict[str, list[SegmentedDataPractice]] = {}
     failed_tasks = []
@@ -275,7 +279,8 @@ async def bulk_analyze_pp(website_names: list[str], override_cache: PARAM_OVERRI
             if ierrs:
                 errs.append((website_name, ierrs))
             if data_practices is None:
-                failed_tasks.append(website_name)
+                if not ierrs:
+                    failed_tasks.append(website_name)
             else:
                 if discard_return:
                     data_practices = None
