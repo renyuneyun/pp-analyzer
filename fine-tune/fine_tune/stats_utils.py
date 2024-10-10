@@ -83,6 +83,15 @@ class RelationDataPoint(DataPoint):
         return pylcs.lcs_sequence_length(self.relation, o.relation) / len(self.relation) if self.relation else 0
 
 
+class SubsumeRelationDataPoint(DataPoint):
+    subsuming: str
+    subsumed: str
+
+    def lcs_rate(self, o):
+        return self.subsumed == o.subsumed and self.subsuming == o.subsuming
+        # return self.subsumed == o.subsuming and self.subsuming == o.subsumed  # For testing only: what if the prediction is reversed?
+
+
 class RetentionDetailsDataPoint(DataPoint):
     storage_place: str | None = Field(alias='storage-place', default=None)
     retention_period: str | None = Field(alias='retention-period', default=None)
@@ -103,6 +112,7 @@ _data_type_to_class = {
     DataType.PROTECTION_METHOD: ProtectionMethodDataPoint,
     DataType.PARTY: PartyDataPoint,
     DataType.RELATION: RelationDataPoint,
+    DataType.SUBSUMPTION: SubsumeRelationDataPoint,
     DataType.RETENTION_DETAILS: RetentionDetailsDataPoint,
 }
 

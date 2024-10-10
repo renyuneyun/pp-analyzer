@@ -411,6 +411,114 @@ def as_training_data_for_relation_of_sentence(relation_entities_of_segments):
             data_list.append(data)
     return data_list
 
+
+def as_training_data_for_subsume_relation_of_segment_sentence(subsume_relation_entities_of_segments):
+    data_template = {
+        "messages": [
+            {"role": "system", "content": SYSTEM_MESSAGE_SUBSUME_RELATION_RECOGNITION_SENTENCE},
+            {"role": "user", "content": None},
+            {"role": "assistant", "content": None},
+        ]}
+
+    data_list = []
+
+    for segment in subsume_relation_entities_of_segments:
+        for e in segment['entities']:
+            sentence = e['sentence']
+            entity_ids = {}  # span -> id
+            entities = []  # [{"id": id, "text": text}]
+            relations = [] # [{"subsuming": id, "subsumed": id}]
+            for r in e['relations']:
+                subsumed_entity_text, subsumed_entity_span = r['subsumed']
+                subsuming_entity_text, subsuming_entity_span = r['subsuming']
+
+                if subsumed_entity_span not in entity_ids:
+                    entity_ids[subsumed_entity_span] = f"D{len(entity_ids)}"
+                    entities.append({"id": entity_ids[subsumed_entity_span], "text": subsumed_entity_text})
+                subsumed_entity_id = entity_ids[subsumed_entity_span]
+
+                if subsuming_entity_span not in entity_ids:
+                    entity_ids[subsuming_entity_span] = f"D{len(entity_ids)}"
+                    entities.append({"id": entity_ids[subsuming_entity_span], "text": subsuming_entity_text})
+                subsuming_entity_id = entity_ids[subsuming_entity_span]
+
+                relations.append({
+                    "subsuming": subsuming_entity_id,
+                    "subsumed": subsumed_entity_id,
+                })
+
+            user_message = USER_MESSAGE_TEMPLATE_SUBSUME_RELATION_RECOGNITION_SENTENCE.format(**{
+                'sentence': sentence,
+                'targets': {
+                    "entities": entities,
+                }
+            })
+            reply = json.dumps(relations)
+
+            data = deepcopy(data_template)
+            data["messages"][1]["content"] = user_message
+            data["messages"][2]["content"] = reply
+            data_list.append(data)
+    return data_list
+
+
+def _as_training_data_for_subsume_relation_of_sentence(subsume_relation_entities_of_sentences, system_message):
+    data_template = {
+        "messages": [
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": None},
+            {"role": "assistant", "content": None},
+        ]}
+
+    data_list = []
+
+    for sentence_obj in subsume_relation_entities_of_sentences:
+        sentence = sentence_obj['sentence']
+        entity_ids = {}  # span -> id
+        entities = []  # [{"id": id, "text": text}]
+        relations = [] # [{"subsuming": id, "subsumed": id}]
+        for r in sentence_obj['entities']:
+            subsumed_entity_text, subsumed_entity_span = r['subsumed']
+            subsuming_entity_text, subsuming_entity_span = r['subsuming']
+
+            if subsumed_entity_span not in entity_ids:
+                entity_ids[subsumed_entity_span] = f"D{len(entity_ids)}"
+                entities.append({"id": entity_ids[subsumed_entity_span], "text": subsumed_entity_text})
+            subsumed_entity_id = entity_ids[subsumed_entity_span]
+
+            if subsuming_entity_span not in entity_ids:
+                entity_ids[subsuming_entity_span] = f"D{len(entity_ids)}"
+                entities.append({"id": entity_ids[subsuming_entity_span], "text": subsuming_entity_text})
+            subsuming_entity_id = entity_ids[subsuming_entity_span]
+
+            relations.append({
+                "subsuming": subsuming_entity_id,
+                "subsumed": subsumed_entity_id,
+            })
+
+        user_message = USER_MESSAGE_TEMPLATE_SUBSUME_RELATION_RECOGNITION_SENTENCE.format(**{
+            'sentence': sentence,
+            'targets': {
+                "entities": entities,
+            }
+        })
+        reply = json.dumps(relations)
+
+        data = deepcopy(data_template)
+        data["messages"][1]["content"] = user_message
+        data["messages"][2]["content"] = reply
+        data_list.append(data)
+    return data_list
+
+
+def as_training_data_for_subsume_relation_of_sentence(subsume_relation_entities_of_sentences):
+    return _as_training_data_for_subsume_relation_of_sentence(subsume_relation_entities_of_sentences, SYSTEM_MESSAGE_SUBSUME_RELATION_RECOGNITION_SENTENCE)
+
+
+def as_training_data_for_subsume_relation_of_sentence_v2(subsume_relation_entities_of_sentences):
+    return _as_training_data_for_subsume_relation_of_sentence(subsume_relation_entities_of_sentences, SYSTEM_MESSAGE_SUBSUME_RELATION_RECOGNITION_SENTENCE_V2)
+
+
 def as_training_data_for_retention_details_of_sentence(retention_details_of_sentence):
     def get_assistant_message(segment):
         ret = []

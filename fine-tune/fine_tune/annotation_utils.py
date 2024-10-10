@@ -42,6 +42,7 @@ def is_within_sentence(span, sentence_span):
 def get_sentences_with_spans(annotation):
     segment = annotation.text
     sentences = segment.split('\n')
+    sentences = [s for s in [s.strip() for s in sentences] if s]
     #sentence_spans is a list of tuples, each tuple is the start and end index of a sentence
     sentence_spans = [(segment.index(s), segment.index(s) + len(s)) for s in sentences]
     sentences = [s.strip() for s in sentences]
@@ -513,6 +514,100 @@ def get_relations_of_segment_sentences_no_subsume_v3(annotations):
                 elif z['entity_type'] in party_entity_override:
                     z['entity_type'] = party_entity_override[z['entity_type']]
 
+    return res
+
+
+def get_subsume_relations_of_segment_sentences(annotations):
+    '''
+    Get all relations of type "SUBSUME" of each action in sentences in the same segment, paired together.
+    Output has this structure:
+    [
+        {
+            "segment": SEGMENT,
+            "entities": [
+                {
+                    "sentence": SENTENCE,
+                    "relations": [
+                        {
+                            "subsumed": (TEXT_OF_THE_SUBSUMED_ENTITY, span),
+                            "subsuming": (TEXT_OF_THE_SUBSUMING_ENTITY, span),
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    where the same action type of the same sentence is always grouped together.
+    '''
+    res = {}
+    for x in annotations:
+        segment_text = x.text
+        sentences = get_sentences_with_spans(x)
+
+        res[segment_text] = {}
+        sub_dict = res[segment_text]
+
+        for span, sentence in sentences.items():
+            res[segment_text][sentence] = []
+
+        for r in x.relations:
+            relation_type = r.type
+            if relation_type == 'SUBSUME':
+                arg1 = (r.arg1.mention, r.arg1.spans[0])
+                arg2 = (r.arg2.mention, r.arg2.spans[0])
+                span = r.arg1.spans[0]
+                for span2 in sentences.keys():
+                    if is_within_sentence(span, span2):
+                        sentence = sentences[span2]
+                        break
+                assert sentence
+                assert sentence in sub_dict
+                parts = sub_dict[sentence]
+                parts.append({
+                    "subsumed": arg1,
+                    "subsuming": arg2,
+                })
+
+    ret = []
+    for segement_text, v in res.items():
+        l2 = []
+        for sentence, relations in v.items():
+            l2.append({
+                "sentence": sentence,
+                "relations": relations,
+            })
+        l1 = {
+            'segment': segement_text,
+            'entities': l2,
+        }
+        ret.append(l1)
+    return ret
+
+
+def get_subsume_relations_of_sentences(annotations):
+    '''
+    Get all relations of type "SUBSUME" of each action in sentences.
+    Output has this structure:
+    [
+        {
+            "sentence": SENTENCE,
+            "entities": [
+                {
+                    "subsumed": (TEXT_OF_THE_SUBSUMED_ENTITY, span),
+                    "subsuming": (TEXT_OF_THE_SUBSUMING_ENTITY, span),
+                }
+            ]
+        }
+    ]
+    '''
+    subsume_relations_of_segment_sentences = get_subsume_relations_of_segment_sentences(annotations)
+    res = []
+    for segment in subsume_relations_of_segment_sentences:
+        for x in segment['entities']:
+            res.append({
+                "sentence": x['sentence'],
+                "entities": x['relations'],
+            })
     return res
 
 
