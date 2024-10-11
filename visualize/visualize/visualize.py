@@ -59,33 +59,36 @@ DATA = {
         T_GPT_4O_FT: {
             T_EXACT: [0.602, 0.968, 0.927],
             T_RELAXED: [0.635, 0.968, 0.930],
+            T_SUPER_RELAXED: [0.699, 0.968, 0.938],
         },
     },
     'data classification': {
-        T_GPT_4O_MINI: {
-            T_SUPER_RELAXED: [0.309, 0.809, 0.684],
-        },
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.732, 1, 0.787],
             T_RELAXED: [0.747, 1, 0.975],
+            T_SUPER_RELAXED: [0.865, 1, 0.987],
         },
         T_GPT_4O_FT: {
             T_EXACT: [0.792, 1, 0.980],
             T_RELAXED: [0.803, 1, 0.981],
+            T_SUPER_RELAXED: [0.892, 1, 0.990],
         },
     },
     'purpose recognition': {
         T_GPT_4O_MINI_FT: {
-            T_EXACT: [0.558, 0.938, 0.880],
-            T_RELAXED: [0.670, 0.938, 0.897],
+            T_EXACT: [0.598, 0.938, 0.886],
+            T_RELAXED: [0.729, 0.938, 0.906],
+            T_SUPER_RELAXED: [0.773, 0.938, 0.913],
         },
         T_GPT_4O: {
-            T_EXACT: [0.1, 0.995, 0.955],
-            T_SUPER_RELAXED: [0.606, 0.941, 0.883],
+            T_EXACT: [0.326, 0.934, 0.825],
+            T_RELAXED: [0.501, 0.934, 0.856],
+            T_SUPER_RELAXED: [0.610, 0.934, 0.876],
         },
         T_GPT_4O_FT: {
-            T_EXACT: [0.512, 0.970, 0.900],
-            T_RELAXED: [0.605, 0.970, 0.914],
+            T_EXACT: [0.558, 0.970, 0.907],
+            T_RELAXED: [0.655, 0.970, 0.922],
+            T_SUPER_RELAXED: [0.704, 0.970, 0.929],
         },
     },
     'purpose classification': {
@@ -103,11 +106,13 @@ DATA = {
     'action (event) recognition': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.642, 0.766, 0.750],
+            T_RELAXED: [0.651, 0.766, 0.751],
             T_SUPER_RELAXED: [0.664, 0.766, 0.753],
         },
         T_GPT_4O: {
-            T_EXACT: [0, 0.759, 0.578],
-            T_SUPER_RELAXED: [0.358, 0.882, 0.810],
+            T_EXACT: [0, 0.878, 0.758],
+            T_RELAXED: [0.372, 0.878, 0.809],
+            T_SUPER_RELAXED: [0.372, 0.878, 0.808],
         },
         T_GPT_4O_FT: {
             T_EXACT: [0.596, 0.847, 0.817],
@@ -125,14 +130,13 @@ DATA = {
     'first-party/Third-party entity recognition & classification': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.470, 0.858, 0.807],
+            T_RELAXED: [0.488, 0.858, 0.810],
             T_SUPER_RELAXED: [0.498, 0.858, 0.811],
-        },
-        T_GPT_4O: {
-            T_SUPER_RELAXED: [0.535, 0.202, 0.297],
         },
         T_GPT_4O_FT: {
             T_EXACT: [0.544, 0.705, 0.684],
-            T_SUPER_RELAXED: [0.596, 0.705, 0.69],
+            T_RELAXED: [0.581, 0.705, 0.689],
+            T_SUPER_RELAXED: [0.596, 0.705, 0.691],
         },
     },
     'relation recognition/classification': {
