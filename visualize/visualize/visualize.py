@@ -119,14 +119,14 @@ DATA = {
             T_RELAXED: [0.615, 0.847, 0.819],
         },
     },
-    'protection method recognition & classification': {
-        T_GPT_4O_MINI_FT: {
-            T_SUPER_RELAXED: [0, 0.983, 0.979],
-        },
-        T_GPT_4O: {
-            T_SUPER_RELAXED: [0.265, 0.977, 0.966],
-        },
-    },
+    # 'protection method recognition & classification': {
+    #     T_GPT_4O_MINI_FT: {
+    #         T_SUPER_RELAXED: [0, 0.983, 0.979],
+    #     },
+    #     T_GPT_4O: {
+    #         T_SUPER_RELAXED: [0.265, 0.977, 0.966],
+    #     },
+    # },
     'first-party/Third-party entity recognition & classification': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.470, 0.858, 0.807],
@@ -142,8 +142,8 @@ DATA = {
     'relation recognition/classification': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.573, 1, 0.871],
-            T_RELAXED: [0.868, 1, 0.960],
-            T_SUPER_RELAXED: [0.915, 1, 0.974],
+            # T_RELAXED: [0.868, 1, 0.960],
+            # T_SUPER_RELAXED: [0.915, 1, 0.974],
         },
         T_GPT_4O: {
             T_EXACT: [0.601, 1, 0.885],
