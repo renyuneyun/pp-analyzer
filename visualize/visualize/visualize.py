@@ -26,7 +26,7 @@ def from_data_quick(data):
         data_converted[model] = {}
         for metric_type, v2 in v1.items():
             data_converted[model][metric_type] = {}
-            for i, (score, metric) in enumerate(zip(v2, [T_F1, T_F1_NON_EMPTY, T_F1_EMPTY])):
+            for i, (score, metric) in enumerate(zip(v2, [T_F1_NON_EMPTY, T_F1_EMPTY, T_F1])):
                 data_converted[model][metric_type][metric] = score
 
     res = []  # List to be converted to DataFrame
