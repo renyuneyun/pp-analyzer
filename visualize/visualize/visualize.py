@@ -74,6 +74,80 @@ DATA = {
             T_RELAXED: [0.803, 1, 0.981],
         },
     },
+    'purpose recognition': {
+        T_GPT_4O_MINI_FT: {
+            T_EXACT: [0.558, 0.938, 0.880],
+            T_RELAXED: [0.670, 0.938, 0.897],
+        },
+        T_GPT_4O: {
+            T_EXACT: [0.1, 0.995, 0.955],
+            T_SUPER_RELAXED: [0.606, 0.941, 0.883],
+        },
+        T_GPT_4O_FT: {
+            T_EXACT: [0.512, 0.970, 0.900],
+            T_RELAXED: [0.605, 0.970, 0.914],
+        },
+    },
+    'purpose classification': {
+        T_GPT_4O_MINI_FT: {
+            T_EXACT: [0.526, 1, 0.927],
+            T_RELAXED: [0.571, 1, 0.934],
+            T_SUPER_RELAXED: [0.747, 1, 0.961],
+        },
+        T_GPT_4O_FT: {
+            T_EXACT: [0.555, 1, 0.932],
+            T_RELAXED: [0.612, 1, 0.940],
+            T_SUPER_RELAXED: [0.766, 1, 0.964],
+        },
+    },
+    'action (event) recognition': {
+        T_GPT_4O_MINI_FT: {
+            T_EXACT: [0.642, 0.766, 0.750],
+            T_SUPER_RELAXED: [0.664, 0.766, 0.753],
+        },
+        T_GPT_4O: {
+            T_EXACT: [0, 0.759, 0.578],
+            T_SUPER_RELAXED: [0.358, 0.882, 0.810],
+        },
+        T_GPT_4O_FT: {
+            T_EXACT: [0.596, 0.847, 0.817],
+            T_RELAXED: [0.615, 0.847, 0.819],
+        },
+    },
+    'protection method recognition & classification': {
+        T_GPT_4O_MINI_FT: {
+            T_SUPER_RELAXED: [0, 0.983, 0.979],
+        },
+        T_GPT_4O: {
+            T_SUPER_RELAXED: [0.265, 0.977, 0.966],
+        },
+    },
+    'first-party/Third-party entity recognition & classification': {
+        T_GPT_4O_MINI_FT: {
+            T_EXACT: [0.470, 0.858, 0.807],
+            T_SUPER_RELAXED: [0.498, 0.858, 0.811],
+        },
+        T_GPT_4O: {
+            T_SUPER_RELAXED: [0.535, 0.202, 0.297],
+        },
+        T_GPT_4O_FT: {
+            T_EXACT: [0.544, 0.705, 0.684],
+            T_SUPER_RELAXED: [0.596, 0.705, 0.69],
+        },
+    },
+    'relation recognition/classification': {
+        T_GPT_4O_MINI_FT: {
+            T_EXACT: [0.573, 1, 0.871],
+            T_RELAXED: [0.868, 1, 0.960],
+            T_SUPER_RELAXED: [0.915, 1, 0.974],
+        },
+        T_GPT_4O: {
+            T_EXACT: [0.601, 1, 0.885],
+        },
+        T_GPT_4O_FT: {
+            T_EXACT: [0.706, 1, 0.925],
+        },
+    },
 }
 
 
