@@ -68,7 +68,7 @@ def run_reasoning(user_persona, app_policy, app_policy_node):
     dtou_reasoner_files = list(map(str, [
         _DTOU_LANG_DIR / 'dtou-lang-reasoning.n3',
     ]))
-    query_file = _DTOU_LANG_DIR / 'tests' / 'query-conflict.n3'
+    query_file = _DTOU_LANG_DIR / 'query-pp-analyze.n3'
 
     dummy_context = get_dummy_context(app_policy_node)
 

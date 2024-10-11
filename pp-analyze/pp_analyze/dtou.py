@@ -20,6 +20,7 @@ class Downstream(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+    text: str
     user: str | None = None
     app_name: str | None = None
     purpose: list[IdentifiedNode] = []
@@ -30,6 +31,7 @@ class InputSpec(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+    text: str
     data: IdentifiedNode
     user: str | None = None
     action: str | None = None
@@ -61,6 +63,7 @@ class AppPolicy(BaseModel):
             n_input_spec = BNode()
             g.add((n_policy, NS_DTOU['input_spec'], n_input_spec))
             g.add((n_input_spec, A, NS_DTOU['InputSpec']))
+            g.add((n_input_spec, NS['text'], Literal(input_spec.text)))
 
             port_name = f"inputPort{i}"
             n_port = BNode()
@@ -82,6 +85,7 @@ class AppPolicy(BaseModel):
             for downstream in input_spec.downstream:
                 n_downstream = BNode()
                 g.add((n_input_spec, NS_DTOU['downstream'], n_downstream))
+                g.add((n_downstream, NS['text'], Literal(downstream.text)))
                 if downstream.user:
                     g.add((n_downstream, NS_DTOU['user'], Literal(downstream.user)))
                 if downstream.app_name:
@@ -115,15 +119,18 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
             raise ValueError("`User` should not appear in this context")
 
     def construct_downstream_from_data_sharing(n_practice):
+        ds_text = kg.value(kg.value(n_practice, NS['text']), NS['value']).toPython()
         receiver_list = [o for o in kg.objects(n_practice, NS['receiver'])]
         purpose_list = [o for o in kg.objects(n_practice, NS['purpose'])]
         if not receiver_list:
             return [Downstream(
+                text=ds_text,
                 user=None,
                 purpose=purpose_list
             )]
         else:
             return [Downstream(
+                        text=ds_text,
                         user=to_user_field(user),
                         purpose=purpose_list
                     ) for user in receiver_list]
@@ -132,6 +139,7 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
     for n_practice in kg.objects(n_pp, NS['hasDataPractice']):
         if (n_practice, A, NS['DataCollectionUse']) not in kg:
             continue
+        text = kg.value(kg.value(n_practice, NS['text']), NS['value']).toPython()
         data_list = [o for o in kg.objects(n_practice, NS['data'])]
         purpose_list = [o for o in kg.objects(n_practice, NS['purpose'])]
         user_list = [o for o in kg.objects(n_practice, NS['user'])]
@@ -150,6 +158,7 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
 
             input_spec = InputSpec(
                 data=data,
+                text=text,
                 user=to_user_field(user),
                 purpose=purpose_list,
                 downstream=downstreams
@@ -159,6 +168,7 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
     for n_practice in kg.objects(n_pp, NS['hasDataPractice']):
         if (n_practice, A, NS['DataSharingDisclosure']) not in kg:
             continue
+        text = kg.value(kg.value(n_practice, NS['text']), NS['value']).toPython()
         data_list = [o for o in kg.objects(n_practice, NS['data'])]
         for data in data_list:
             has_first_party_use = False
@@ -172,6 +182,7 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
                 continue
             downstreams = construct_downstream_from_data_sharing(n_practice)
             input_spec = InputSpec(
+                text=text,
                 data=data,
                 downstream=downstreams
             )

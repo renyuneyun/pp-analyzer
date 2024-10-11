@@ -109,9 +109,18 @@ def convert_to_kg(data_practices: list[SegmentedDataPractice], app_name: str, fi
     g.add((n_site, A, NS['PrivacyPolicy']))
     for data_practice in data_practices:
         for practice in data_practice.practices:
+            segment_text = data_practice.segment
+            node_text = None
+            for n_t in g.subjects(NS['value'], Literal(segment_text)):
+                assert node_text is None, "Multiple nodes with the same text"
+                node_text = n_t
+            if node_text is None:
+                node_text = BNode()
+                g.add((node_text, NS['value'], Literal(segment_text)))
             n_practice = BNode()
             g.add((n_site, NS['hasDataPractice'], n_practice))
             g.add((n_practice, A, NS[practice.__class__.__name__]))
+            g.add((n_practice, NS['text'], node_text))
             if isinstance(practice, DataCollectionUse):
                 for party in practice.data_collector:
                     g.add((n_practice, NS["user"], to_party_uri(party)))

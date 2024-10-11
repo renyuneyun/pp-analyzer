@@ -12,3 +12,8 @@ class QueryCategory(Enum):
 
 T_OVERRIDE_CACHE = set[QueryCategory]
 PARAM_OVERRIDE_CACHE = T_OVERRIDE_CACHE | bool | None
+
+
+class MalformedDataError(Exception):
+    '''Raised when the data is not in the expected format'''
+    pass

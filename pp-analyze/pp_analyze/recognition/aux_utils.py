@@ -14,6 +14,7 @@ def group_data_practices_and_entities(
 ) -> list[SWGroupedDataPractice]:
     """
     Group relevant information into the data practices.
+    All entities are grouped by segments.
 
     @param data_practices: list of data practices, obtained from identify_data_practices
     @param classified_data_entities: list of data entities with categories, obtained from classify_data_categories
