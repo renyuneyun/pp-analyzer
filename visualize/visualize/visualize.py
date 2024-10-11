@@ -160,12 +160,18 @@ def get_data(query_type):
     return from_data_quick(DATA[query_type])
 
 
-def main(query_type='data extraction', title='Data extraction'):
-    data_d = get_data(query_type=query_type)
-    # Plot all data points, grouped by model
-    # fig = px.bar(data_d, x='Model', y='Score', color='Metric type', barmode='group')
-    # fig.show()
-    plot_group_4(data_d, title=title)
+def main(query_type=None, title=None):
+    if not query_type:
+        query_type = DATA.keys()
+    else:
+        query_type = [query_type]
+    for qt in query_type:
+        data_d = get_data(query_type=qt)
+        # data_d = get_data(query_type=query_type)
+        # Plot all data points, grouped by model
+        # fig = px.bar(data_d, x='Model', y='Score', color='Metric type', barmode='group')
+        # fig.show()
+        plot_group_4(data_d, title=qt)
 
 
 if __name__ == '__main__':
