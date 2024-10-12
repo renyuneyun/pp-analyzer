@@ -102,7 +102,7 @@ def calc_practice_entity_count(segmented_practices: list[SegmentedDataPractice])
     return dict({k: dict(v) for k,v in entity_count.items()})
 
 
-def calc_data_and_purpose_entity_count_with_hierarchy(segmented_practices: list[SegmentedDataPractice]):
+def calc_data_and_purpose_entity_count_with_hierarchy(segmented_practices: list[SegmentedDataPractice], accumulate_to_parent: bool = True):
     entity_path_list = {
         DataEntity: [],
         PurposeEntity: [],
@@ -124,11 +124,15 @@ def calc_data_and_purpose_entity_count_with_hierarchy(segmented_practices: list[
     for entity_type, path_list in entity_path_list.items():
         node_with_count[entity_type] = {}
         for paths_of_entity in path_list:
+            current_node = paths_of_entity[0][-1]
             all_nodes = set()
             for path in paths_of_entity:
                 all_nodes.update(path)
             for node in all_nodes:
                 if node not in node_with_count[entity_type]:
                     node_with_count[entity_type][node] = 0
-                node_with_count[entity_type][node] += 1
+                if accumulate_to_parent:
+                    node_with_count[entity_type][node] += 1
+            if not accumulate_to_parent:
+                node_with_count[entity_type][current_node] += 1
     return node_with_count
