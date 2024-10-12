@@ -1,6 +1,7 @@
 import csv
 from dotenv import load_dotenv
 import os
+from .recognition.utils import dict_equal, dict_hash
 
 load_dotenv()
 

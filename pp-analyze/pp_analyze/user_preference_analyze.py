@@ -1,5 +1,6 @@
 from datetime import datetime
 from dotenv import load_dotenv
+import json
 import os
 from pathlib import Path
 from rdflib import Graph, Literal, RDF, URIRef, BNode
@@ -9,12 +10,19 @@ import tempfile
 from .pp_analyze import bulk_analyze_pp, analyze_pp_from_website_name
 from . import kg, dtou
 from .dtou import NS_DTOU, NS_EX
+from .utils import dict_equal, dict_hash
 
 
 load_dotenv()
 
 
 _DTOU_LANG_DIR = Path(os.getenv("DTOU_LANG_DIR")) if os.getenv("DTOU_LANG_DIR") else (Path(os.path.realpath(__file__)).parent.parent / 'third_party' / 'dtou-lang')
+
+_CACHE_DIR_NAME = 'eye-result-cache'
+cache_dir = os.getenv("QUERY_CACHE_DIR")
+cache_dir_path = Path(cache_dir) / _CACHE_DIR_NAME if cache_dir else None
+if cache_dir_path and not cache_dir_path.exists():
+    cache_dir_path.mkdir(parents=True)
 
 
 A = RDF.type
@@ -27,7 +35,7 @@ def get_user_persona(persona_dir: str|None = None):
         persona_dir = Path(os.getenv("USER_PERSONA_DIR"))
     path_persona = Path(persona_dir)
     res = []
-    for persona_file in path_persona.glob("*.ttl"):
+    for persona_file in sorted(path_persona.glob("*.ttl")):
         with open(persona_file, "r") as f:
             res.append(f.read())
     return res
@@ -56,7 +64,49 @@ def get_dummy_context(app_policy_node: URIRef):
     return g.serialize(format='turtle')
 
 
-def run_reasoning(user_persona, app_policy, app_policy_node):
+def guarantee_cache_dir(website_url: str):
+    if cache_dir_path:
+        website_cache_dir = cache_dir_path / website_url
+        if not website_cache_dir.exists():
+            website_cache_dir.mkdir(parents=True)
+
+
+def get_cache_file(cache_dir_path: Path, query_content: dict, website: str):
+    query_hash = dict_hash(query_content)
+    return cache_dir_path / website / f"{query_hash}.json"
+
+
+def get_cached_result(cache_dir_path: Path, query_content: dict, website: str):
+    file_path = get_cache_file(cache_dir_path, query_content, website)
+    if not file_path.exists():
+        raise FileNotFoundError(f"Cache file not found: {file_path}")
+    with open(file_path, 'r') as f:
+        content = json.load(f)
+        return content['reasoning_result'], content['reasoning_errors']
+
+
+def is_cached(cache_dir_path: Path, query_content: dict, website: str):
+    try:
+        content = get_cached_result(cache_dir_path, query_content, website)
+        # if dict_equal(content['query_content'], query_content):
+        #     return True
+        return True
+    except FileNotFoundError:
+        pass
+    return False
+
+
+def insert_to_cache(cache_dir_path: Path, query_content: dict, website: str, reasoning_result: str, reasoning_errors: str):
+    content = {
+        'query_content': query_content,
+        'reasoning_result': reasoning_result,
+        'reasoning_errors': reasoning_errors,
+    }
+    with open(get_cache_file(cache_dir_path, query_content, website), 'w') as f:
+        json.dump(content, f)
+
+
+def run_reasoning(user_persona, app_policy, app_policy_node, website_url):
     '''
     Call external eye reasoner to perform the reasoning, and return the result (stdout) of the reasoner.
     Internally, it uses subprocess to call the external reasoner.
@@ -70,7 +120,25 @@ def run_reasoning(user_persona, app_policy, app_policy_node):
     ]))
     query_file = _DTOU_LANG_DIR / 'query-pp-analyze.n3'
 
+    additional_rules_dir = os.getenv("ADDITIONAL_REASONING_RULES")
+    additional_rules = []
+    if additional_rules_dir:
+        for f in Path(additional_rules_dir).iterdir():
+            if f.is_file():
+                additional_rules.append(str(f))
+
     dummy_context = get_dummy_context(app_policy_node)
+
+    query_content = {
+        'user_persona': user_persona,
+        'website_url': website_url,
+        'dtou_reasoner_files': sorted(dtou_reasoner_files),
+        'additional_rules': sorted(additional_rules),
+        'query_file': str(query_file),
+    }
+
+    if cache_dir_path and is_cached(cache_dir_path, query_content, website_url):
+        return get_cached_result(cache_dir_path, query_content, website_url)
 
     with tempfile.NamedTemporaryFile('w', suffix='.ttl') as user_persona_file, tempfile.NamedTemporaryFile('w', suffix='.ttl') as app_policy_file, tempfile.NamedTemporaryFile('w', suffix='.ttl') as context_file:
         user_persona_file.write(user_persona)
@@ -79,9 +147,16 @@ def run_reasoning(user_persona, app_policy, app_policy_node):
         app_policy_file.flush()
         context_file.write(dummy_context)
         context_file.flush()
-        p = subprocess.Popen([reasoner_exec, '--quiet', '--nope', *dtou_reasoner_files, user_persona_file.name, app_policy_file.name, context_file.name, '--query', query_file], stdout=PIPE, stderr=PIPE)
+        p = subprocess.Popen([reasoner_exec, '--quiet', '--nope', *dtou_reasoner_files, user_persona_file.name, app_policy_file.name, context_file.name, *additional_rules, '--query', query_file], stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
-        return out.decode('utf-8'), err.decode('utf-8')
+
+        out_d = out.decode('utf-8')
+        err_d = err.decode('utf-8')
+
+        if cache_dir_path:
+            insert_to_cache(cache_dir_path, query_content, website_url, out_d, err_d)
+
+        return out_d, err_d
 
 
 def analyze_pp_with_user_persona(website_url: str, website_name: str, data_practices: list|None = None, user_persona_dir: str|None = None):
@@ -92,7 +167,7 @@ def analyze_pp_with_user_persona(website_url: str, website_name: str, data_pract
     if not data_practices:
         raise ValueError(f"No data practices found for {website_url}")
     app_policy, app_policy_node = convert_practices_to_app_policy(data_practices, website_url, website_name)
-    reasoning_result, err = run_reasoning(user_persona, app_policy, app_policy_node)
+    reasoning_result, err = run_reasoning(user_persona, app_policy, app_policy_node, website_url)
     g = Graph()
     g.parse(data=reasoning_result, format='turtle')
     return g, err

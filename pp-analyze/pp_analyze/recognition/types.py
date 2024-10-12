@@ -17,3 +17,8 @@ PARAM_OVERRIDE_CACHE = T_OVERRIDE_CACHE | bool | None
 class MalformedDataError(Exception):
     '''Raised when the data is not in the expected format'''
     pass
+
+
+class UnexpectedEntryError(MalformedDataError):
+    '''Raised when an unexpected entry is found in the data, such as a missing field or unexpected value in the field'''
+    pass

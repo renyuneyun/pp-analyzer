@@ -10,6 +10,7 @@ from .data_model import (
     Party,
 )
 from .kg import convert_to_kg, one, A, NS, NS_DPV
+from .recognition import UnexpectedEntryError
 
 
 NS_DTOU = Namespace("urn:dtou:core#")
@@ -116,7 +117,7 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
         elif (party, A, NS['ThirdParty']) in kg:
             return one(kg.objects(party, NS['name'])).toPython()
         else:
-            raise ValueError("`User` should not appear in this context")
+            raise UnexpectedEntryError("`User` should not appear in this context")
 
     def construct_downstream_from_data_sharing(n_practice):
         ds_text = kg.value(kg.value(n_practice, NS['text']), NS['value']).toPython()
@@ -129,11 +130,18 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
                 purpose=purpose_list
             )]
         else:
-            return [Downstream(
+            res = []
+            for user in receiver_list:
+                try:
+                    ds = Downstream(
                         text=ds_text,
                         user=to_user_field(user),
                         purpose=purpose_list
-                    ) for user in receiver_list]
+                    )
+                    res.append(ds)
+                except UnexpectedEntryError:
+                    pass
+            return res
 
 
     for n_practice in kg.objects(n_pp, NS['hasDataPractice']):
@@ -156,14 +164,17 @@ def convert_to_app_policy(data_practices: list[SegmentedDataPractice], app_name:
                 downstream_nodes.append(n_practice_share)
                 downstreams.extend(construct_downstream_from_data_sharing(n_practice_share))
 
-            input_spec = InputSpec(
-                data=data,
-                text=text,
-                user=to_user_field(user),
-                purpose=purpose_list,
-                downstream=downstreams
-            )
-            app_policy.input_spec.append(input_spec)
+            try:
+                input_spec = InputSpec(
+                    data=data,
+                    text=text,
+                    user=to_user_field(user),
+                    purpose=purpose_list,
+                    downstream=downstreams
+                )
+                app_policy.input_spec.append(input_spec)
+            except UnexpectedEntryError:
+                pass
 
     for n_practice in kg.objects(n_pp, NS['hasDataPractice']):
         if (n_practice, A, NS['DataSharingDisclosure']) not in kg:
