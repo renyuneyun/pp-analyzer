@@ -9,15 +9,16 @@ from pp_analyze import user_preference_analyze as upa
 from pp_analyze.data_model import DataEntity, PurposeEntity
 from .dtou import NS_DTOU
 from .kg import NS
+from .pp_analyze import get_relative_file_path_for_pp
 
 
-def get_pesonas_under_dir(persona_base_dir):
+def get_pesonas_under_dir(persona_base_dir) -> list[str]:
     simple_persona_dir = Path(persona_base_dir)
     personas = []
 
     for sub in simple_persona_dir.iterdir():
         if sub.is_dir():
-            personas.append(sub.absolute())
+            personas.append(str(sub.absolute()))
     return personas
 
 
@@ -40,7 +41,7 @@ def get_number_of_conflicting_segments(graph: Graph) -> int:
     return len(distinct_segments)
 
 
-async def analyze_personas(personas, practices, max_concurrency=5):
+async def analyze_personas(personas, practices, max_concurrency=5) -> tuple[dict[str, dict[str, Graph]], dict[str, dict[str, str]]]:
     '''
     Run compliance reasoning over personas and practices.
     This function is async, for running multiple compliance reasoning tasks concurrently.
@@ -52,15 +53,15 @@ async def analyze_personas(personas, practices, max_concurrency=5):
         }
     }
     '''
-    conflicts = {}
+    conflicts: dict[str, dict[str, Graph]] = {}
     all_errors = {}
 
     sem_max_personas = Semaphore(3)
     sem_max_jobs = Semaphore(max_concurrency)
 
-    async def analyze_for_persona(persona):
-        results = {}
-        errors = {}
+    async def analyze_for_persona(persona: str) -> tuple[dict[str, Graph], dict[str, str]]:
+        results: dict[str, Graph] = {}
+        errors: dict[str, str] = {}
 
         user_persona_dir = Path(persona)
         subs = list(user_persona_dir.iterdir())
@@ -72,7 +73,7 @@ async def analyze_personas(personas, practices, max_concurrency=5):
             async with sem_max_jobs:
                 upa.guarantee_cache_dir(website_choice)
                 res, err = await asyncio.to_thread(upa.analyze_pp_with_user_persona, website_choice, website_choice, data_practices=practices[website_choice],
-                                                            user_persona_dir=user_persona_dir.absolute())
+                                                            user_persona_dir=str(user_persona_dir.absolute()))
             if res.serialize().strip():
                 results[website_choice] = res
             if err:
@@ -90,10 +91,7 @@ async def analyze_personas(personas, practices, max_concurrency=5):
     async def run_process_for_persona(persona):
         async with sem_max_personas:
             results, errors = await analyze_for_persona(persona)
-        if isinstance(persona, Path):
-            persona_name = persona.name
-        else:
-            persona_name = persona
+        persona_name = str(Path(persona).absolute())
         if results:
             conflicts[persona_name] = results
         if errors:
@@ -146,3 +144,20 @@ def to_personas_by_num_conflicts(conflicts, personas) -> dict[int, list[str]]:
     personas_by_conflicts = dict(personas_by_conflicts)
 
     return personas_by_conflicts
+
+def websites_with_same_pp(website_list):
+    pp_dict = {}
+    for ws in website_list:
+        p = get_relative_file_path_for_pp(ws)
+        content = Path(p).read_text().strip()
+        content = content.split('\n', 1)[1]
+        if content in pp_dict:
+            pp_dict[content].append(ws)
+        else:
+            pp_dict[content] = [ws]
+
+    res = []
+    for pp, ws_list in pp_dict.items():
+        if len(ws_list) > 1:
+            res.append(ws_list)
+    return res
