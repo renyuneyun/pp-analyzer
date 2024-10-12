@@ -7,6 +7,7 @@ class DataType(Enum):
     PROTECTION_METHOD = 'protection_method'
     PARTY = 'party'
     RELATION = 'relation'
+    SUBSUMPTION = 'subsumption'
     RETENTION_DETAILS = 'retention_details'
 
 
@@ -27,7 +28,7 @@ def heuristic_extract_entities(parsed_model_output, data_type: DataType = DataTy
             extracted_output.append(obj)
         else:
             grp1 = ['context_type', 'context', 'type', 'contextType']
-            grp2 = ['data_entity', 'purpose', 'text', 'data', 'entity', 'dataEntity', 'data entity']
+            grp2 = ['data_entity', 'purpose', 'text', 'data', 'entity', 'dataEntity', 'data entity', 'purpose_text', 'purpose_entity']
             grp1_exists = None
             grp2_exists = None
             for key in grp1:
