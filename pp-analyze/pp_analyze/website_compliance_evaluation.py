@@ -71,8 +71,7 @@ async def analyze_personas(personas, practices, max_concurrency=5) -> tuple[dict
 
         async def analyze_website(website_choice):
             async with sem_max_jobs:
-                upa.guarantee_cache_dir(website_choice)
-                res, err = await asyncio.to_thread(upa.analyze_pp_with_user_persona, website_choice, website_choice, data_practices=practices[website_choice],
+                res, err = await upa.analyze_pp_with_user_persona(website_choice, website_choice, data_practices=practices[website_choice],
                                                             user_persona_dir=str(user_persona_dir.absolute()))
             if res.serialize().strip():
                 results[website_choice] = res

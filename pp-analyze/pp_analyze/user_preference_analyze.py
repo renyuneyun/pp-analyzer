@@ -1,11 +1,12 @@
+import asyncio
+from asyncio import subprocess
+from asyncio.subprocess import PIPE
 from datetime import datetime
 from dotenv import load_dotenv
 import json
 import os
 from pathlib import Path
 from rdflib import Graph, Literal, RDF, URIRef, BNode
-import subprocess
-from subprocess import PIPE
 import tempfile
 from .pp_analyze import bulk_analyze_pp, analyze_pp_from_website_name
 from . import kg, dtou
@@ -63,12 +64,15 @@ def get_dummy_context(app_policy_node: URIRef):
     g.add((NS_EX['usageContext1'], NS_DTOU['time'], Literal(datetime.now().strftime("%Y%m%d"))))
     return g.serialize(format='turtle')
 
+_sem_dir_creation = asyncio.Semaphore(1)
 
-def guarantee_cache_dir(website_url: str):
+async def guarantee_cache_dir(website_url: str):
     if cache_dir_path:
         website_cache_dir = cache_dir_path / website_url
         if not website_cache_dir.exists():
-            website_cache_dir.mkdir(parents=True)
+            async with _sem_dir_creation:
+                if not website_cache_dir.exists():
+                    website_cache_dir.mkdir(parents=True)
 
 
 def get_cache_file(cache_dir_path: Path, query_content: dict, website: str):
@@ -76,7 +80,7 @@ def get_cache_file(cache_dir_path: Path, query_content: dict, website: str):
     return cache_dir_path / website / f"{query_hash}.json"
 
 
-def get_cached_result(cache_dir_path: Path, query_content: dict, website: str):
+async def get_cached_result(cache_dir_path: Path, query_content: dict, website: str):
     file_path = get_cache_file(cache_dir_path, query_content, website)
     if not file_path.exists():
         raise FileNotFoundError(f"Cache file not found: {file_path}")
@@ -85,9 +89,9 @@ def get_cached_result(cache_dir_path: Path, query_content: dict, website: str):
         return content['reasoning_result'], content['reasoning_errors']
 
 
-def is_cached(cache_dir_path: Path, query_content: dict, website: str):
+async def is_cached(cache_dir_path: Path, query_content: dict, website: str):
     try:
-        content = get_cached_result(cache_dir_path, query_content, website)
+        content = await get_cached_result(cache_dir_path, query_content, website)
         # if dict_equal(content['query_content'], query_content):
         #     return True
         return True
@@ -96,17 +100,18 @@ def is_cached(cache_dir_path: Path, query_content: dict, website: str):
     return False
 
 
-def insert_to_cache(cache_dir_path: Path, query_content: dict, website: str, reasoning_result: str, reasoning_errors: str):
+async def insert_to_cache(cache_dir_path: Path, query_content: dict, website: str, reasoning_result: str, reasoning_errors: str):
     content = {
         'query_content': query_content,
         'reasoning_result': reasoning_result,
         'reasoning_errors': reasoning_errors,
     }
+    await guarantee_cache_dir(website)
     with open(get_cache_file(cache_dir_path, query_content, website), 'w') as f:
         json.dump(content, f)
 
 
-def run_reasoning(user_persona, app_policy, app_policy_node, website_url):
+async def run_reasoning(user_persona, app_policy, app_policy_node, website_url) -> tuple[str, str]:
     '''
     Call external eye reasoner to perform the reasoning, and return the result (stdout) of the reasoner.
     Internally, it uses subprocess to call the external reasoner.
@@ -137,8 +142,8 @@ def run_reasoning(user_persona, app_policy, app_policy_node, website_url):
         'query_file': str(query_file),
     }
 
-    if cache_dir_path and is_cached(cache_dir_path, query_content, website_url):
-        return get_cached_result(cache_dir_path, query_content, website_url)
+    if cache_dir_path and await is_cached(cache_dir_path, query_content, website_url):
+        return await get_cached_result(cache_dir_path, query_content, website_url)
 
     with tempfile.NamedTemporaryFile('w', suffix='.ttl') as user_persona_file, tempfile.NamedTemporaryFile('w', suffix='.ttl') as app_policy_file, tempfile.NamedTemporaryFile('w', suffix='.ttl') as context_file:
         user_persona_file.write(user_persona)
@@ -147,19 +152,21 @@ def run_reasoning(user_persona, app_policy, app_policy_node, website_url):
         app_policy_file.flush()
         context_file.write(dummy_context)
         context_file.flush()
-        p = subprocess.Popen([reasoner_exec, '--quiet', '--nope', *dtou_reasoner_files, user_persona_file.name, app_policy_file.name, context_file.name, *additional_rules, '--query', query_file], stdout=PIPE, stderr=PIPE)
-        out, err = p.communicate()
+        p = await asyncio.create_subprocess_exec(reasoner_exec, '--quiet', '--nope', *dtou_reasoner_files, user_persona_file.name, app_policy_file.name, context_file.name, *additional_rules, '--query', query_file, stdout=PIPE, stderr=PIPE)
+        out, err = await p.communicate()
+        # p = subprocess.Popen([reasoner_exec, '--quiet', '--nope', *dtou_reasoner_files, user_persona_file.name, app_policy_file.name, context_file.name, *additional_rules, '--query', query_file], stdout=PIPE, stderr=PIPE)
+        # out, err = p.communicate()
 
         out_d = out.decode('utf-8')
         err_d = err.decode('utf-8')
 
         if cache_dir_path:
-            insert_to_cache(cache_dir_path, query_content, website_url, out_d, err_d)
+            await insert_to_cache(cache_dir_path, query_content, website_url, out_d, err_d)
 
         return out_d, err_d
 
 
-def analyze_pp_with_user_persona(website_url: str, website_name: str, data_practices: list|None = None, user_persona_dir: str|None = None):
+async def analyze_pp_with_user_persona(website_url: str, website_name: str, data_practices: list|None = None, user_persona_dir: str|None = None):
     user_persona_list = get_user_persona(persona_dir=user_persona_dir)
     user_persona = '\n'.join(user_persona_list)
     if not data_practices:
@@ -167,7 +174,7 @@ def analyze_pp_with_user_persona(website_url: str, website_name: str, data_pract
     if not data_practices:
         raise ValueError(f"No data practices found for {website_url}")
     app_policy, app_policy_node = convert_practices_to_app_policy(data_practices, website_url, website_name)
-    reasoning_result, err = run_reasoning(user_persona, app_policy, app_policy_node, website_url)
+    reasoning_result, err = await run_reasoning(user_persona, app_policy, app_policy_node, website_url)
     g = Graph()
     g.parse(data=reasoning_result, format='turtle')
     return g, err
