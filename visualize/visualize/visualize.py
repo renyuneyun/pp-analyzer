@@ -1,6 +1,8 @@
+import pandas as pd
 from pandas import DataFrame
 import plotly.express as px
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 T_EXACT = 'Exact'
@@ -16,8 +18,8 @@ T_F1 = 'F1 (overall)'
 T_F1_NON_EMPTY = 'F1 (non-empty)'
 T_F1_EMPTY = 'F1 (empty)'
 
-
-sns.set_palette("muted")
+colour = ["#F3D266", "#96C37D", "#2F7FC1"]
+sns.set_palette(colour)
 
 
 def from_data_quick(data):
@@ -50,7 +52,7 @@ def from_data_quick(data):
 
 
 DATA = {
-    'data extraction': {
+    'Data extraction': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.546, 0.967, 0.927],
             T_RELAXED: [0.722, 0.967, 0.944],
@@ -62,7 +64,7 @@ DATA = {
             T_SUPER_RELAXED: [0.699, 0.968, 0.938],
         },
     },
-    'data classification': {
+    'Data classification': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.732, 1, 0.787],
             T_RELAXED: [0.747, 1, 0.975],
@@ -74,7 +76,7 @@ DATA = {
             T_SUPER_RELAXED: [0.892, 1, 0.990],
         },
     },
-    'purpose recognition': {
+    'Purpose recognition': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.598, 0.938, 0.886],
             T_RELAXED: [0.729, 0.938, 0.906],
@@ -91,7 +93,7 @@ DATA = {
             T_SUPER_RELAXED: [0.704, 0.970, 0.929],
         },
     },
-    'purpose classification': {
+    'Purpose classification': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.526, 1, 0.927],
             T_RELAXED: [0.571, 1, 0.934],
@@ -103,7 +105,7 @@ DATA = {
             T_SUPER_RELAXED: [0.766, 1, 0.964],
         },
     },
-    'action (event) recognition': {
+    'Action (event) recognition': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.642, 0.766, 0.750],
             T_RELAXED: [0.651, 0.766, 0.751],
@@ -117,6 +119,7 @@ DATA = {
         T_GPT_4O_FT: {
             T_EXACT: [0.596, 0.847, 0.817],
             T_RELAXED: [0.615, 0.847, 0.819],
+            T_SUPER_RELAXED: [0.615, 0.847, 0.819],
         },
     },
     # 'protection method recognition & classification': {
@@ -127,7 +130,7 @@ DATA = {
     #         T_SUPER_RELAXED: [0.265, 0.977, 0.966],
     #     },
     # },
-    'first-party/Third-party entity recognition & classification': {
+    'Party recognition': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.470, 0.858, 0.807],
             T_RELAXED: [0.488, 0.858, 0.810],
@@ -139,7 +142,7 @@ DATA = {
             T_SUPER_RELAXED: [0.596, 0.705, 0.691],
         },
     },
-    'relation recognition/classification': {
+    'Relation recognition': {
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.573, 1, 0.871],
             # T_RELAXED: [0.868, 1, 0.960],
@@ -156,8 +159,23 @@ DATA = {
 
 
 def plot_group_4(data, title=None):
-    g = sns.catplot(data=data, x='Metric type', y='Score', hue='Score type', col='Model', kind='bar')
-    g.figure.suptitle(title)
+    g = sns.catplot(data=data, x='Metric type', y='Score', hue='Score type', col='Model', kind='bar', width=0.6, aspect=1, legend_out=True)
+
+    for ax in g.axes.ravel():  
+    # add annotations
+        for c in ax.containers:
+            ax.bar_label(c, label_type='edge', fontsize=10, rotation=300)
+        ax.margins(y=0.2)
+    
+    g.figure.suptitle(title, fontsize=16, x=0.5, y=1.15)
+    g.set_titles("{col_name}", size=14, x=0.5, y=1.1)
+    g.set(ylim=(0, 1), yticks=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
+    # plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 0.9, 1])
+    g.set_xlabels(fontsize=13)
+    g.set_ylabels(fontsize=13)
+    g.set_xticklabels(fontsize=12)
+    # g.set_yticklabels(fontsize=12)
+    g.savefig(title + ".pdf")
 
 
 def get_data(query_type):
@@ -176,6 +194,7 @@ def main(query_type=None, title=None):
         # fig = px.bar(data_d, x='Model', y='Score', color='Metric type', barmode='group')
         # fig.show()
         plot_group_4(data_d, title=qt)
+
 
 
 if __name__ == '__main__':
