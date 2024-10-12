@@ -106,16 +106,17 @@ async def analyze_personas(personas, practices, max_concurrency=5) -> tuple[dict
     return conflicts, all_errors
 
 
-def to_websites_by_num_conflicts(conflicts, websites) -> dict[int, list[str]]:
+def to_websites_by_num_conflicts(conflicts, websites_of_interest) -> dict[int, list[str]]:
     '''
     Convert the conflicts dictionary to a dictionary of websites by number of conflicts (as key).
     '''
     num_persona_conflicts_per_website = {}
-    for ws in websites:
+    for ws in websites_of_interest:
         num_persona_conflicts_per_website[ws] = 0
     for persona, results in conflicts.items():
         for ws, res in results.items():
-            num_persona_conflicts_per_website[ws] += 1
+            if ws in websites_of_interest:
+                num_persona_conflicts_per_website[ws] += 1
 
     websites_by_conflicts = defaultdict(list)
     for ws, num_conflicts in num_persona_conflicts_per_website.items():
@@ -125,7 +126,7 @@ def to_websites_by_num_conflicts(conflicts, websites) -> dict[int, list[str]]:
     return websites_by_conflicts
 
 
-def to_personas_by_num_conflicts(conflicts, personas) -> dict[int, list[str]]:
+def to_personas_by_num_conflicts(conflicts, personas, websites_of_interest=None) -> dict[int, list[str]]:
     '''
     Convert the conflicts dictionary to a dictionary of websites by number of conflicts (as key).
     '''
@@ -133,7 +134,11 @@ def to_personas_by_num_conflicts(conflicts, personas) -> dict[int, list[str]]:
     for persona in personas:
         num_conflicts_per_persona[persona] = 0
     for persona, results in conflicts.items():
-        num_conflicts_per_persona[persona] = len(results)
+        num = 0
+        for ws, res in results.items():
+            if websites_of_interest is None or ws in websites_of_interest:
+                num += 1
+        num_conflicts_per_persona[persona] = num
 
     personas_by_conflicts = defaultdict(list)
     for persona, num_conflicts in num_conflicts_per_persona.items():
