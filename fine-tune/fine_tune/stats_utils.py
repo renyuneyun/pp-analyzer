@@ -239,6 +239,9 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
         K_EITHER_EMPTY: [],
     }
 
+    def add_scoring(key, score):
+        addition_scoring[key].append(score)
+
     failed = {}
     for i, (model_output, correct_output) in enumerate([(query['output'], query['correct_output']) for query in saved_queries]):
         try:
@@ -265,17 +268,20 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
             continue
         result_score_list.append(result_score)
         if correct_output_parsed:
-            addition_scoring[K_EXPECT_NON_EMPTY].append(result_score)
-            addition_scoring[K_EITHER_NON_EMPTY].append(result_score)
+            add_scoring(K_EXPECT_NON_EMPTY, result_score)
+            add_scoring(K_EITHER_NON_EMPTY, result_score)
         else:
-            addition_scoring[K_EXPECT_EMPTY].append(result_score)
-            addition_scoring[K_EITHER_EMPTY].append(result_score)
+            add_scoring(K_EXPECT_EMPTY, result_score)
+            add_scoring(K_EITHER_EMPTY, result_score)
+
         if model_output_parsed:
-            addition_scoring[K_PREDICT_NON_EMPTY].append(result_score)
-            addition_scoring[K_EITHER_NON_EMPTY].append(result_score)
+            add_scoring(K_PREDICT_NON_EMPTY, result_score)
+            if not correct_output_parsed:  # Haven't been added to K_EITHER_NON_EMPTY; otherwise it's already there so no need to add again
+                add_scoring(K_EITHER_NON_EMPTY, result_score)
         else:
-            addition_scoring[K_PREDICT_EMPTY].append(result_score)
-            addition_scoring[K_EITHER_EMPTY].append(result_score)
+            add_scoring(K_PREDICT_EMPTY, result_score)
+            if not correct_output_parsed:  # Haven't been added to K_EITHER_EMPTY; otherwise it's already there so no need to add again
+                add_scoring(K_EITHER_EMPTY, result_score)
 
     return result_score_list, addition_scoring, failed
 
