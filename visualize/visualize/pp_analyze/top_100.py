@@ -710,7 +710,7 @@ WEBSITES_AND_CONFLICT_SEGMENTS_BY_CONFLICTS = {
 }
 
 
-PERSONA_AND_CONFLICG_SEGMENTS_BY_CONFLICTS = {
+PERSONA_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS = {
     0: {
         "comm-internal-1st-allow": {},
         "comm-internal-1st-no": {},
