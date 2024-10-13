@@ -60,15 +60,9 @@ PERSONAS_BY_CONFLICTS = {
         "location-ad-3rd-no",
         "location-ad-no",
     ],
-    2: [
-        "contact-analytics-no"
-    ],
-    4: [
-        "picture-pubsec-allow"
-    ],
-    5: [
-        "health-research-allow"
-    ],
+    2: ["contact-analytics-no"],
+    4: ["picture-pubsec-allow"],
+    5: ["health-research-allow"],
     12: [
         "contact-analytics-all-allow",
         "location-analytics-no",
@@ -79,9 +73,7 @@ PERSONAS_BY_CONFLICTS = {
     ],
     17: ["contact-1st-only"],
     20: ["data-ad-3rd-no"],
-    21: [
-        "location-analytics-all-allow"
-    ],
+    21: ["location-analytics-all-allow"],
     23: [
         "location-analytics-1st-allow",
         "location-internal-1st-allow",
@@ -91,7 +83,7 @@ PERSONAS_BY_CONFLICTS = {
 }
 
 
-WEBSITES_AND_CONFLICT_SEGMENTS_BY_CONFLICTS = {
+WEBSITES_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS = {
     0: {
         "amazonaws.com": {},
         "europa.eu": {},
@@ -100,51 +92,21 @@ WEBSITES_AND_CONFLICT_SEGMENTS_BY_CONFLICTS = {
         "opera.com": {},
     },
     1: {
-        "bit.ly": {
-            "data-ad-3rd-no": 8
-        },
-        "comcast.net": {
-            "data-ad-3rd-no": 8
-        },
-        "digicert.com": {
-            "data-ad-3rd-no": 5
-        },
-        "gandi.net": {
-            "location-3rd-no": 3
-        },
-        "github.com": {
-            "health-research-allow": 1
-        },
-        "goo.gl": {
-            "location-3rd-no": 1
-        },
-        "google.com": {
-            "location-3rd-no": 1
-        },
-        "googleapis.com": {
-            "location-3rd-no": 1
-        },
-        "googletagmanager.com": {
-            "location-3rd-no": 1
-        },
-        "googlevideo.com": {
-            "location-3rd-no": 1
-        },
-        "gstatic.com": {
-            "location-3rd-no": 1
-        },
-        "reddit.com": {
-            "location-3rd-no": 1
-        },
-        "snapchat.com": {
-            "location-3rd-no": 1
-        },
-        "wordpress.org": {
-            "data-ad-3rd-no": 2
-        },
-        "youtube.com": {
-            "location-3rd-no": 1
-        },
+        "bit.ly": {"data-ad-3rd-no": 8},
+        "comcast.net": {"data-ad-3rd-no": 8},
+        "digicert.com": {"data-ad-3rd-no": 5},
+        "gandi.net": {"location-3rd-no": 3},
+        "github.com": {"health-research-allow": 1},
+        "goo.gl": {"location-3rd-no": 1},
+        "google.com": {"location-3rd-no": 1},
+        "googleapis.com": {"location-3rd-no": 1},
+        "googletagmanager.com": {"location-3rd-no": 1},
+        "googlevideo.com": {"location-3rd-no": 1},
+        "gstatic.com": {"location-3rd-no": 1},
+        "reddit.com": {"location-3rd-no": 1},
+        "snapchat.com": {"location-3rd-no": 1},
+        "wordpress.org": {"data-ad-3rd-no": 2},
+        "youtube.com": {"location-3rd-no": 1},
     },
     2: {
         "samsung.com": {
@@ -445,6 +407,324 @@ WEBSITES_AND_CONFLICT_SEGMENTS_BY_CONFLICTS = {
 }
 
 
+WEBSITES_AND_CONFLICTING_PRACTICES_BY_CONFLICTS = {
+    0: {
+        "amazonaws.com": {},
+        "europa.eu": {},
+        "googleusercontent.com": {},
+        "mozilla.org": {},
+        "opera.com": {},
+    },
+    1: {
+        "bit.ly": {"data-ad-3rd-no": 8},
+        "comcast.net": {"data-ad-3rd-no": 8},
+        "digicert.com": {"data-ad-3rd-no": 5},
+        "gandi.net": {"location-3rd-no": 3},
+        "github.com": {"health-research-allow": 1},
+        "goo.gl": {"location-3rd-no": 1},
+        "google.com": {"location-3rd-no": 1},
+        "googleapis.com": {"location-3rd-no": 1},
+        "googletagmanager.com": {"location-3rd-no": 1},
+        "googlevideo.com": {"location-3rd-no": 1},
+        "gstatic.com": {"location-3rd-no": 1},
+        "reddit.com": {"location-3rd-no": 1},
+        "snapchat.com": {"location-3rd-no": 1},
+        "wordpress.org": {"data-ad-3rd-no": 2},
+        "youtube.com": {"location-3rd-no": 1},
+    },
+    2: {
+        "samsung.com": {"data-ad-3rd-no": 7, "location-3rd-no": 1},
+        "yahoo.com": {"data-ad-3rd-no": 3, "location-3rd-no": 1},
+    },
+    3: {
+        "azure.com": {
+            "contact-1st-only": 1,
+            "health-research-allow": 1,
+            "location-3rd-no": 1,
+        },
+        "tiktok.com": {
+            "contact-1st-only": 3,
+            "data-ad-3rd-no": 5,
+            "location-3rd-no": 1,
+        },
+    },
+    4: {
+        "office.net": {
+            "contact-1st-only": 1,
+            "contact-ad-allow": 1,
+            "contact-analytics-1st-allow": 1,
+            "contact-analytics-all-allow": 1,
+        }
+    },
+    5: {
+        "adobe.com": {
+            "location-3rd-no": 2,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 1,
+        },
+        "dropbox.com": {
+            "location-3rd-no": 2,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 2,
+            "location-analytics-no": 2,
+            "location-internal-1st-allow": 2,
+        },
+        "fastly.net": {
+            "contact-1st-only": 2,
+            "contact-ad-allow": 1,
+            "contact-analytics-1st-allow": 1,
+            "contact-analytics-all-allow": 1,
+            "location-3rd-no": 1,
+        },
+        "netflix.com": {
+            "location-3rd-no": 1,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 1,
+        },
+    },
+    6: {
+        "amazon.com": {
+            "data-ad-3rd-no": 2,
+            "location-3rd-no": 1,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 1,
+        },
+        "bing.com": {
+            "data-ad-3rd-no": 8,
+            "location-3rd-no": 1,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 1,
+        },
+        "linkedin.com": {
+            "contact-1st-only": 1,
+            "location-3rd-no": 1,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 1,
+        },
+        "pinterest.com": {
+            "data-ad-3rd-no": 6,
+            "location-3rd-no": 2,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 2,
+        },
+        "spotify.com": {
+            "data-ad-3rd-no": 7,
+            "location-3rd-no": 1,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 1,
+        },
+        "unity3d.com": {
+            "contact-1st-only": 1,
+            "contact-ad-allow": 1,
+            "contact-analytics-1st-allow": 1,
+            "contact-analytics-no": 1,
+            "data-ad-3rd-no": 19,
+            "location-3rd-no": 3,
+        },
+        "vimeo.com": {
+            "data-ad-3rd-no": 10,
+            "location-3rd-no": 1,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 1,
+        },
+        "wikipedia.org": {
+            "location-3rd-no": 5,
+            "location-ad-allow": 3,
+            "location-analytics-1st-allow": 5,
+            "location-analytics-all-allow": 2,
+            "location-analytics-no": 5,
+            "location-internal-1st-allow": 5,
+        },
+    },
+    7: {
+        "icloud.com": {
+            "contact-1st-only": 1,
+            "location-3rd-no": 4,
+            "location-ad-allow": 4,
+            "location-analytics-1st-allow": 4,
+            "location-analytics-all-allow": 4,
+            "location-analytics-no": 4,
+            "location-internal-1st-allow": 4,
+        },
+        "intuit.com": {
+            "data-ad-3rd-no": 8,
+            "location-3rd-no": 2,
+            "location-ad-allow": 2,
+            "location-analytics-1st-allow": 2,
+            "location-analytics-all-allow": 2,
+            "location-analytics-no": 2,
+            "location-internal-1st-allow": 2,
+        },
+    },
+    8: {
+        "zoom.us": {
+            "data-ad-3rd-no": 17,
+            "location-3rd-no": 4,
+            "location-ad-allow": 3,
+            "location-analytics-1st-allow": 4,
+            "location-analytics-all-allow": 2,
+            "location-analytics-no": 4,
+            "location-internal-1st-allow": 4,
+            "picture-pubsec-allow": 1,
+        }
+    },
+    9: {
+        "cloudflare.com": {
+            "contact-1st-only": 1,
+            "contact-ad-allow": 1,
+            "contact-analytics-1st-allow": 1,
+            "contact-analytics-all-allow": 1,
+            "location-3rd-no": 1,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 1,
+        },
+        "facebook.com": {
+            "contact-1st-only": 1,
+            "contact-ad-allow": 1,
+            "contact-analytics-1st-allow": 1,
+            "contact-analytics-all-allow": 1,
+            "location-3rd-no": 2,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 2,
+        },
+        "instagram.com": {
+            "contact-1st-only": 1,
+            "contact-ad-allow": 1,
+            "contact-analytics-1st-allow": 1,
+            "contact-analytics-all-allow": 1,
+            "location-3rd-no": 1,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-no": 1,
+            "location-internal-1st-allow": 1,
+        },
+        "tumblr.com": {
+            "contact-1st-only": 1,
+            "contact-ad-allow": 1,
+            "contact-analytics-1st-allow": 1,
+            "contact-analytics-all-allow": 1,
+            "location-3rd-no": 2,
+            "location-ad-allow": 1,
+            "location-analytics-1st-allow": 1,
+            "location-analytics-all-allow": 1,
+            "location-internal-1st-allow": 2,
+        },
+    },
+    10: {
+        "apple.com": {
+            "contact-1st-only": 1,
+            "contact-ad-allow": 1,
+            "contact-analytics-1st-allow": 1,
+            "contact-analytics-all-allow": 1,
+            "location-3rd-no": 4,
+            "location-ad-allow": 4,
+            "location-analytics-1st-allow": 4,
+            "location-analytics-all-allow": 4,
+            "location-analytics-no": 4,
+            "location-internal-1st-allow": 4,
+        }
+    },
+    12: {
+        "wordpress.com": {
+            "contact-1st-only": 2,
+            "contact-ad-allow": 2,
+            "contact-analytics-1st-allow": 2,
+            "contact-analytics-all-allow": 2,
+            "contact-analytics-no": 2,
+            "data-ad-3rd-no": 6,
+            "location-3rd-no": 3,
+            "location-ad-allow": 3,
+            "location-analytics-1st-allow": 3,
+            "location-analytics-all-allow": 2,
+            "location-analytics-no": 3,
+            "location-internal-1st-allow": 3,
+        }
+    },
+    13: {
+        "microsoftonline.com": {
+            "contact-1st-only": 7,
+            "contact-ad-allow": 4,
+            "contact-analytics-1st-allow": 4,
+            "contact-analytics-all-allow": 4,
+            "data-ad-3rd-no": 34,
+            "health-research-allow": 2,
+            "location-3rd-no": 12,
+            "location-ad-allow": 12,
+            "location-analytics-1st-allow": 12,
+            "location-analytics-all-allow": 12,
+            "location-analytics-no": 12,
+            "location-internal-1st-allow": 12,
+            "picture-pubsec-allow": 1,
+        },
+        "office.com": {
+            "contact-1st-only": 6,
+            "contact-ad-allow": 4,
+            "contact-analytics-1st-allow": 4,
+            "contact-analytics-all-allow": 4,
+            "data-ad-3rd-no": 39,
+            "health-research-allow": 9,
+            "location-3rd-no": 9,
+            "location-ad-allow": 9,
+            "location-analytics-1st-allow": 9,
+            "location-analytics-all-allow": 9,
+            "location-analytics-no": 9,
+            "location-internal-1st-allow": 9,
+            "picture-pubsec-allow": 5,
+        },
+        "roblox.com": {
+            "contact-1st-only": 3,
+            "contact-ad-allow": 3,
+            "contact-analytics-1st-allow": 3,
+            "contact-analytics-all-allow": 3,
+            "data-ad-3rd-no": 4,
+            "location-3rd-no": 3,
+            "location-ad-3rd-no": 3,
+            "location-ad-allow": 3,
+            "location-ad-no": 3,
+            "location-analytics-1st-allow": 3,
+            "location-analytics-all-allow": 3,
+            "location-analytics-no": 3,
+            "location-internal-1st-allow": 3,
+        },
+        "windows.net": {
+            "contact-1st-only": 7,
+            "contact-ad-allow": 5,
+            "contact-analytics-1st-allow": 5,
+            "contact-analytics-all-allow": 5,
+            "data-ad-3rd-no": 39,
+            "health-research-allow": 1,
+            "location-3rd-no": 11,
+            "location-ad-allow": 11,
+            "location-analytics-1st-allow": 11,
+            "location-analytics-all-allow": 11,
+            "location-analytics-no": 11,
+            "location-internal-1st-allow": 11,
+            "picture-pubsec-allow": 5,
+        },
+    },
+}
+
+
 PERSONA_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS = {
     0: {
         "comm-internal-1st-allow": {},
@@ -456,12 +736,8 @@ PERSONA_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS = {
         "social-sns-no": {},
     },
     1: {
-        "location-ad-3rd-no": {
-            "roblox.com": 3
-        },
-        "location-ad-no": {
-            "roblox.com": 3
-        },
+        "location-ad-3rd-no": {"roblox.com": 3},
+        "location-ad-no": {"roblox.com": 3},
     },
     2: {
         "contact-analytics-no": {
