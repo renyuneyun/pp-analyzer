@@ -1,4 +1,4 @@
-WEBSITES_BY_CONFLICTS__50 = {
+WEBSITES_BY_CONFLICTS = {
     0: [
         "amazonaws.com",
         "googleusercontent.com",
@@ -46,7 +46,7 @@ WEBSITES_BY_CONFLICTS__50 = {
 }
 
 
-PERSONAS_BY_CONFLICTS__50 = {
+PERSONAS_BY_CONFLICTS = {
     0: [
         "comm-internal-1st-allow",
         "comm-internal-1st-no",
@@ -91,7 +91,7 @@ PERSONAS_BY_CONFLICTS__50 = {
 }
 
 
-WEBSITES_AND_CONFLICT_SEGMENTS_BY_CONFLICTS__50 = {
+WEBSITES_AND_CONFLICT_SEGMENTS_BY_CONFLICTS = {
     0: {
         "amazonaws.com": {},
         "europa.eu": {},
@@ -445,7 +445,7 @@ WEBSITES_AND_CONFLICT_SEGMENTS_BY_CONFLICTS__50 = {
 }
 
 
-PERSONA_AND_CONFLICG_SEGMENTS_BY_CONFLICTS__50 = {
+PERSONA_AND_CONFLICG_SEGMENTS_BY_CONFLICTS = {
     0: {
         "comm-internal-1st-allow": {},
         "comm-internal-1st-no": {},
@@ -747,7 +747,7 @@ PERSONA_AND_CONFLICG_SEGMENTS_BY_CONFLICTS__50 = {
 # For across number of conflicts, when the number of conflicts is higher, if the detailing status is roughly the same, this ratio is expected to be higher in the same rate. If there is a sudden drop, it means that the privacy policy is more detailed.
 # rate(website) = num_conflicting_profiles / num_segments_in_privacy_policy
 # Grouping is the number of conflicting profiles, same from to_websites_by_num_conflicts()
-AVERAGE_CONFLICT_RATE_0__50 = {
+AVERAGE_CONFLICT_RATE_0 = {
     0: 0.0,
     1: 0.010186640082404304,
     2: 0.022161172161172162,
@@ -764,9 +764,9 @@ AVERAGE_CONFLICT_RATE_0__50 = {
 }
 
 
-# This follows a similar setting to AVERAGE_CONFLICT_RATE_2__50, but is not meaningful.
+# This follows a similar setting to AVERAGE_CONFLICT_RATE_2, but is not meaningful.
 # It uses the sum of number of (distinct) conflicting segments (per persona) as the denominator. No intuition can be drawn from this.
-AVERAGE_CONFLICT_RATE_1__50 = {
+AVERAGE_CONFLICT_RATE_1 = {
     0: 0.0,
     1: 0.7522222222222222,
     2: 0.375,
@@ -789,7 +789,7 @@ AVERAGE_CONFLICT_RATE_1__50 = {
 # For across number of conflicts, this number is expected to be the same, if the privacy-respecting level is the same. If there is a sudden increase, it means that the privacy policy is more complex/controversal; if there is a sudden drop, it means that the privacy policy is more privacy-respecting.
 # This number aims to reduce the impact of the length of the privacy policy document, such as because of more contextual description or more new lines (thus more segments).
 # The implication is that if only a few segments are in conflict in a long document, this ratio will be higher (i.e. more sensitive).
-AVERAGE_CONFLICT_RATE_2__50 = {
+AVERAGE_CONFLICT_RATE_2 = {
     0: 0.0,
     1: 0.7522222222222222,
     2: 0.375,
