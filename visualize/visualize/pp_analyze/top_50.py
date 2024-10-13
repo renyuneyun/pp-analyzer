@@ -741,21 +741,6 @@ PERSONA_AND_CONFLICG_SEGMENTS_BY_CONFLICTS__50 = {
 }
 
 
-WEBSITES_WITH_SAME_POLICY = [
-    ["googleapis.com", "google-analytics.com"],
-    ["gstatic.com", "doubleclick.net"],
-    [
-        "office.com",
-        "live.com",
-        "sharepoint.com",
-        "skype.com",
-        "msn.com",
-        "office365.com",
-    ],
-    ["googletagmanager.com", "youtu.be"],
-]
-
-
 # Average conflict rate for each number of conflicting profiles; denominator is the total number of segments in the privacy policy
 # This measures how easy a website's privacy policy (based on the number of segments in the PP) is to conflict with a/some profile. Higher number implies that the website's privacy policy is more likely to conflict with a profile.
 # More intuitively, at the same number of conflicts, this measures how detailed a privacy policy is -- a lower number means the privacy policy is more detailed (each segment is less likely to conflict with a profile).

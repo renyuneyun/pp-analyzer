@@ -1,0 +1,21 @@
+WEBSITES_WITH_SAME_POLICY = [
+    ["googleapis.com", "google-analytics.com"],
+    ["azure.com", "azurewebsites.net"],
+    ["gstatic.com", "doubleclick.net", "googleadservices.com"],
+    [
+        "office.com",
+        "live.com",
+        "sharepoint.com",
+        "skype.com",
+        "msn.com",
+        "office365.com",
+        "outlook.com",
+    ],
+    ["googletagmanager.com", "youtu.be"],
+    ["netflix.com", "netflix.net"],
+    ["github.com", "github.io"],
+    ["adobe.com", "macromedia.com"],
+    ["zoom.us", "ampproject.org"],
+    ["wordpress.com", "gravatar.com"],
+    ["webex.com", "cisco.com"],
+]
