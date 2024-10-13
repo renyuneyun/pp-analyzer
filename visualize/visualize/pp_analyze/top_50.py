@@ -764,12 +764,8 @@ AVERAGE_CONFLICT_RATE_0__50 = {
 }
 
 
-# Average conflict rate for each number of conflicting profiles; denominator is the number of conflicting segments
-# This also measures how easy a website's privacy policy is to conflict with a profile. But different from above, this emphasis more on how more likely each conflicting segment invokes a conflict (rather than the whole privacy policy document).
-# More intuitively, at the same number of conflicts, this number indicates how complex/controversal a segment is (average in the group), if the segment is in conflict with some profile.
-# For across number of conflicts, this number is expected to be the same, if the privacy-respecting level is the same. If there is a sudden increase, it means that the privacy policy is more complex/controversal; if there is a sudden drop, it means that the privacy policy is more privacy-respecting.
-# This number aims to reduce the impact of the length of the privacy policy document, such as because of more contextual description or more new lines (thus more segments).
-# The implication is that if only a few segments are in conflict in a long document, this ratio will be higher (i.e. more sensitive).
+# This follows a similar setting to AVERAGE_CONFLICT_RATE_2__50, but is not meaningful.
+# It uses the sum of number of (distinct) conflicting segments (per persona) as the denominator. No intuition can be drawn from this.
 AVERAGE_CONFLICT_RATE_1__50 = {
     0: 0.0,
     1: 0.7522222222222222,
@@ -787,6 +783,12 @@ AVERAGE_CONFLICT_RATE_1__50 = {
 }
 
 
+# Average conflict rate for each number of conflicting profiles; denominator is the number of conflicting segments
+# This also measures how easy a website's privacy policy is to conflict with a profile. But different from above, this emphasis more on how more likely each conflicting segment invokes a conflict (rather than the whole privacy policy document).
+# More intuitively, at the same number of conflicts, this number indicates how complex/controversal a segment is (average in the group), if the segment is in conflict with some profile.
+# For across number of conflicts, this number is expected to be the same, if the privacy-respecting level is the same. If there is a sudden increase, it means that the privacy policy is more complex/controversal; if there is a sudden drop, it means that the privacy policy is more privacy-respecting.
+# This number aims to reduce the impact of the length of the privacy policy document, such as because of more contextual description or more new lines (thus more segments).
+# The implication is that if only a few segments are in conflict in a long document, this ratio will be higher (i.e. more sensitive).
 AVERAGE_CONFLICT_RATE_2__50 = {
     0: 0.0,
     1: 0.7522222222222222,
