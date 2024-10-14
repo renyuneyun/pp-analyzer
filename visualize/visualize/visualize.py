@@ -52,11 +52,21 @@ def from_data_quick(data):
 
 
 DATA = {
-    'Data extraction': {
+    'Data Recognition': {
+        T_GPT_4O_MINI: {
+            T_EXACT: [0.140, 0.880, 0.764],
+            T_RELAXED: [0.185, 0.880, 0.771],
+            T_SUPER_RELAXED: [0.195, 0.880, 0.773],
+        },
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.546, 0.967, 0.927],
             T_RELAXED: [0.722, 0.967, 0.944],
             T_SUPER_RELAXED: [0.761, 0.967, 0.947],
+        },
+        T_GPT_4O: {
+            T_EXACT: [0.276, 0.923, 0.839],
+            T_RELAXED: [0.372, 0.923, 0.852],
+            T_SUPER_RELAXED: [0.391, 0.923, 0.854],
         },
         T_GPT_4O_FT: {
             T_EXACT: [0.602, 0.968, 0.927],
@@ -64,11 +74,21 @@ DATA = {
             T_SUPER_RELAXED: [0.699, 0.968, 0.938],
         },
     },
-    'Data classification': {
+    'Data Classification': {
+        T_GPT_4O_MINI: {
+            T_EXACT: [0.675, 1, 0.949],
+            T_RELAXED: [0.680, 1, 0.950],
+            T_SUPER_RELAXED: [0.781, 1, 0.966],
+        },
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.732, 1, 0.787],
             T_RELAXED: [0.747, 1, 0.975],
             T_SUPER_RELAXED: [0.865, 1, 0.987],
+        },
+        T_GPT_4O: {
+            T_EXACT: [0.668, 1, 0.948],
+            T_RELAXED: [0.705, 1, 0.954],
+            T_SUPER_RELAXED: [0.829, 1, 0.973],
         },
         T_GPT_4O_FT: {
             T_EXACT: [0.792, 1, 0.980],
@@ -76,7 +96,12 @@ DATA = {
             T_SUPER_RELAXED: [0.892, 1, 0.990],
         },
     },
-    'Purpose recognition': {
+    'Purpose Recognition': {
+        T_GPT_4O_MINI: {
+            T_EXACT: [0.070, 0.889, 0.713],
+            T_RELAXED: [0.202, 0.889, 0.741],
+            T_SUPER_RELAXED: [0.316, 0.889, 0.766],
+        },
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.598, 0.938, 0.886],
             T_RELAXED: [0.729, 0.938, 0.906],
@@ -93,11 +118,21 @@ DATA = {
             T_SUPER_RELAXED: [0.704, 0.970, 0.929],
         },
     },
-    'Purpose classification': {
+    'Purpose Classification': {
+        T_GPT_4O_MINI: {
+            T_EXACT: [0.563, 1, 0.906],
+            T_RELAXED: [0.601, 1, 0.914],
+            T_SUPER_RELAXED: [0.762, 1, 0.949],
+        },
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.526, 1, 0.927],
             T_RELAXED: [0.571, 1, 0.934],
             T_SUPER_RELAXED: [0.747, 1, 0.961],
+        },
+        T_GPT_4O: {
+            T_EXACT: [0.505, 1, 0.893],
+            T_RELAXED: [0.582, 1, 0.910],
+            T_SUPER_RELAXED: [0.750, 1, 0.946],
         },
         T_GPT_4O_FT: {
             T_EXACT: [0.555, 1, 0.932],
@@ -105,7 +140,12 @@ DATA = {
             T_SUPER_RELAXED: [0.766, 1, 0.964],
         },
     },
-    'Action (event) recognition': {
+    'Action Recognition': {
+        T_GPT_4O_MINI: {
+            T_EXACT: [0, 0.840, 0.706],
+            T_RELAXED: [0.369, 0.840, 0.765],
+            T_SUPER_RELAXED: [0.377, 0.840, 0.766],
+        },
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.642, 0.766, 0.750],
             T_RELAXED: [0.651, 0.766, 0.751],
@@ -130,11 +170,21 @@ DATA = {
     #         T_SUPER_RELAXED: [0.265, 0.977, 0.966],
     #     },
     # },
-    'Party recognition': {
+    'Party Recognition': {
+        T_GPT_4O_MINI: {
+            T_EXACT: [0.259, 0.741, 0.655],
+            T_RELAXED: [0.325, 0.741, 0.667],
+            T_SUPER_RELAXED: [0.354, 0.741, 0.672],
+        },
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.470, 0.858, 0.807],
             T_RELAXED: [0.488, 0.858, 0.810],
             T_SUPER_RELAXED: [0.498, 0.858, 0.811],
+        },
+        T_GPT_4O: {
+            T_EXACT: [0.380, 0.607, 0.565],
+            T_RELAXED: [0.472, 0.607, 0.582],
+            T_SUPER_RELAXED: [0.519, 0.607, 0.591],
         },
         T_GPT_4O_FT: {
             T_EXACT: [0.544, 0.705, 0.684],
@@ -142,7 +192,10 @@ DATA = {
             T_SUPER_RELAXED: [0.596, 0.705, 0.691],
         },
     },
-    'Relation recognition': {
+    'Relation Recognition': {
+        T_GPT_4O_MINI: {
+            T_EXACT: [0.387, 1, 0.824],
+        },
         T_GPT_4O_MINI_FT: {
             T_EXACT: [0.573, 1, 0.871],
             # T_RELAXED: [0.868, 1, 0.960],
@@ -158,15 +211,15 @@ DATA = {
 }
 
 
-def plot_group_4(data, title=None):
+def plot_group_4(data, title: str):
     g = sns.catplot(data=data, x='Metric type', y='Score', hue='Score type', col='Model', kind='bar', width=0.6, aspect=1, legend_out=True)
 
-    for ax in g.axes.ravel():  
+    for ax in g.axes.ravel():
     # add annotations
         for c in ax.containers:
             ax.bar_label(c, label_type='edge', fontsize=10, rotation=300)
         ax.margins(y=0.2)
-    
+
     g.figure.suptitle(title, fontsize=16, x=0.5, y=1.15)
     g.set_titles("{col_name}", size=14, x=0.5, y=1.1)
     g.set(ylim=(0, 1), yticks=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
@@ -175,7 +228,9 @@ def plot_group_4(data, title=None):
     g.set_ylabels(fontsize=13)
     g.set_xticklabels(fontsize=12)
     # g.set_yticklabels(fontsize=12)
-    g.savefig(title + ".pdf")
+    filename = title.replace(' ', '-').lower()
+    g.savefig(filename + ".pdf", dpi=300)
+    g.savefig(filename + ".png", dpi=300)
 
 
 def get_data(query_type):
@@ -183,17 +238,17 @@ def get_data(query_type):
 
 
 def main(query_type=None, title=None):
-    if not query_type:
-        query_type = DATA.keys()
-    else:
-        query_type = [query_type]
-    for qt in query_type:
-        data_d = get_data(query_type=qt)
-        # data_d = get_data(query_type=query_type)
-        # Plot all data points, grouped by model
-        # fig = px.bar(data_d, x='Model', y='Score', color='Metric type', barmode='group')
-        # fig.show()
-        plot_group_4(data_d, title=qt)
+    # if not query_type:
+    #     query_type = DATA.keys()
+    # else:
+    #     query_type = [query_type]
+    # for qt in query_type:
+    #     data_d = get_data(query_type=qt)
+    #     # data_d = get_data(query_type=query_type)
+    #     # Plot all data points, grouped by model
+    #     # fig = px.bar(data_d, x='Model', y='Score', color='Metric type', barmode='group')
+    #     # fig.show()
+    #     plot_group_4(data_d, title=qt)
 
 
 
