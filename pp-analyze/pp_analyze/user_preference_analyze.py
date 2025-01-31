@@ -111,7 +111,7 @@ async def insert_to_cache(cache_dir_path: Path, query_content: dict, website: st
         json.dump(content, f)
 
 
-async def run_reasoning(user_persona, app_policy, app_policy_node, website_url) -> tuple[str, str]:
+async def run_reasoning(user_persona, app_policy, app_policy_node, website_url, override_cache = False) -> tuple[str, str]:
     '''
     Call external eye reasoner to perform the reasoning, and return the result (stdout) of the reasoner.
     Internally, it uses subprocess to call the external reasoner.
@@ -142,8 +142,9 @@ async def run_reasoning(user_persona, app_policy, app_policy_node, website_url) 
         'query_file': str(query_file),
     }
 
-    if cache_dir_path and await is_cached(cache_dir_path, query_content, website_url):
-        return await get_cached_result(cache_dir_path, query_content, website_url)
+    if not override_cache:
+        if cache_dir_path and await is_cached(cache_dir_path, query_content, website_url):
+            return await get_cached_result(cache_dir_path, query_content, website_url)
 
     with tempfile.NamedTemporaryFile('w', suffix='.ttl') as user_persona_file, tempfile.NamedTemporaryFile('w', suffix='.ttl') as app_policy_file, tempfile.NamedTemporaryFile('w', suffix='.ttl') as context_file:
         user_persona_file.write(user_persona)
@@ -166,7 +167,7 @@ async def run_reasoning(user_persona, app_policy, app_policy_node, website_url) 
         return out_d, err_d
 
 
-async def analyze_pp_with_user_persona(website_url: str, website_name: str, data_practices: list|None = None, user_persona_dir: str|None = None):
+async def analyze_pp_with_user_persona(website_url: str, website_name: str, data_practices: list|None = None, user_persona_dir: str|None = None, override_cache: bool = False):
     user_persona_list = get_user_persona(persona_dir=user_persona_dir)
     user_persona = '\n'.join(user_persona_list)
     if not data_practices:
@@ -174,7 +175,7 @@ async def analyze_pp_with_user_persona(website_url: str, website_name: str, data
     if not data_practices:
         raise ValueError(f"No data practices found for {website_url}")
     app_policy, app_policy_node = convert_practices_to_app_policy(data_practices, website_url, website_name)
-    reasoning_result, err = await run_reasoning(user_persona, app_policy, app_policy_node, website_url)
+    reasoning_result, err = await run_reasoning(user_persona, app_policy, app_policy_node, website_url, override_cache=override_cache)
     g = Graph()
     g.parse(data=reasoning_result, format='turtle')
     return g, err
