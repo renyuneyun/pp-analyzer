@@ -280,7 +280,7 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
                 add_scoring(K_EITHER_NON_EMPTY, result_score)
         else:
             add_scoring(K_PREDICT_EMPTY, result_score)
-            if not correct_output_parsed:  # Haven't been added to K_EITHER_EMPTY; otherwise it's already there so no need to add again
+            if correct_output_parsed:  # Haven't been added to K_EITHER_EMPTY; otherwise it's already there so no need to add again
                 add_scoring(K_EITHER_EMPTY, result_score)
 
     return result_score_list, addition_scoring, failed
