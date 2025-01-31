@@ -284,6 +284,13 @@ def as_training_data_for_party_entity_of_sentence_v2(protection_method_entities_
                                          lambda segment: json.dumps([{"party_type": e["type"], "text": e["text"]} for e in segment["entities"]]))
 
 
+def as_training_data_for_party_entity_of_sentence_v3(protection_method_entities_of_sentences):
+    return _as_training_data_entity_general(protection_method_entities_of_sentences,
+                                            SYSTEM_MESSAGE_PARTY_RECOGNITION_V3,
+                                         lambda segment: USER_MESSAGE_TEMPLATE_PARTY_RECOGNITION_SENTENCE.format(**segment),
+                                         lambda segment: json.dumps([{"party_type": e["type"], "text": e["text"]} for e in segment["entities"]]))
+
+
 def _as_training_data_for_relation_of_segment(relation_entities_of_segments, system_message, user_message_templace):
     data_template = {
         "messages": [
