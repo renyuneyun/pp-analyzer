@@ -22,6 +22,8 @@ def to_csv(module):
             for ws, v2 in v.items():
                 for persona, num_conflict_segments in v2.items():
                     writer.writerow([num_conflict_persona, ws, persona, num_conflict_segments])
+                if not v2:
+                    writer.writerow([num_conflict_persona, ws, '', 0])
 
     with open('websites_and_conflicting_practices_by_conflicts.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
@@ -29,13 +31,17 @@ def to_csv(module):
             for ws, v2 in v.items():
                 for persona, num_conflict_practices in v2.items():
                     writer.writerow([num_conflict_persona, ws, persona, num_conflict_practices])
+                if not v2:
+                    writer.writerow([num_conflict_persona, ws, '', 0])
 
     with open('persona_and_conflicting_segments_by_conflicts.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
-        for num_conflict_persona, v in module.PERSONA_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS.items():
+        for num_conflict_ws, v in module.PERSONA_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS.items():
             for persona, v2 in v.items():
                 for ws, num_conflicts in v2.items():
-                    writer.writerow([num_conflict_persona, persona, ws, num_conflicts])
+                    writer.writerow([num_conflict_ws, persona, ws, num_conflicts])
+                if not v2:
+                    writer.writerow([num_conflict_ws, persona, '', 0])
 
     with open('average_conflict_rate_0.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
@@ -45,6 +51,11 @@ def to_csv(module):
     with open('average_conflict_rate_2.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
         for num_conflict_persona, v in module.AVERAGE_CONFLICT_RATE_2.items():
+            writer.writerow([num_conflict_persona, v])
+
+    with open('average_conflict_rage_5.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        for num_conflict_persona, v in module.AVERAGE_CONFLICT_RATE_5.items():
             writer.writerow([num_conflict_persona, v])
 
     if hasattr(module, 'CONFLICT_RATE_0'):
@@ -61,9 +72,16 @@ def to_csv(module):
                 for ws, rate in v.items():
                     writer.writerow([num_conflict_persona, ws, rate])
 
+    if hasattr(module, 'CONFLICT_RATE_5'):
+        with open('conflict_rate_5.csv', 'w') as csvfile:
+            writer = csv.writer(csvfile)
+            for num_conflict_persona, v in module.CONFLICT_RATE_5.items():
+                for ws, rate in v.items():
+                    writer.writerow([num_conflict_persona, ws, rate])
+
 
 def main():
-    to_csv(top_100)
+    to_csv(top_50)
 
 
 if __name__ == '__main__':

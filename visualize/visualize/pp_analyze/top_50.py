@@ -1,3 +1,5 @@
+## Fig 3 (blue bar)
+### Simplified version of WEBSITES_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS (? or WEBSITES_AND_CONFLICTING_PRACTICES_BY_CONFLICTS?)
 WEBSITES_BY_CONFLICTS = {
     0: [
         "amazonaws.com",
@@ -46,6 +48,8 @@ WEBSITES_BY_CONFLICTS = {
 }
 
 
+## Fig 5
+### Simplified version of PERSONA_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS
 PERSONAS_BY_CONFLICTS = {
     0: [
         "comm-internal-1st-allow",
@@ -83,6 +87,7 @@ PERSONAS_BY_CONFLICTS = {
 }
 
 
+## Fig 4 (half)
 WEBSITES_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS = {
     0: {
         "amazonaws.com": {},
@@ -407,6 +412,7 @@ WEBSITES_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS = {
 }
 
 
+## Fig 4 (half)
 WEBSITES_AND_CONFLICTING_PRACTICES_BY_CONFLICTS = {
     0: {
         "amazonaws.com": {},
@@ -725,6 +731,7 @@ WEBSITES_AND_CONFLICTING_PRACTICES_BY_CONFLICTS = {
 }
 
 
+## Fig 5 website data
 PERSONA_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS = {
     0: {
         "comm-internal-1st-allow": {},
@@ -1017,6 +1024,7 @@ PERSONA_AND_CONFLICTING_SEGMENTS_BY_CONFLICTS = {
 }
 
 
+## R_pp
 # Average conflict rate for each number of conflicting profiles; denominator is the total number of segments in the privacy policy
 # This measures how easy a website's privacy policy (based on the number of segments in the PP) is to conflict with a/some profile. Higher number implies that the website's privacy policy is more likely to conflict with a profile.
 # More intuitively, at the same number of conflicts, this measures how detailed a privacy policy is -- a lower number means the privacy policy is more detailed (each segment is less likely to conflict with a profile).
@@ -1059,6 +1067,7 @@ AVERAGE_CONFLICT_RATE_1 = {
 }
 
 
+## R_cs
 # Average conflict rate for each number of conflicting profiles; denominator is the number of conflicting segments
 # This also measures how easy a website's privacy policy is to conflict with a profile. But different from above, this emphasis more on how more likely each conflicting segment invokes a conflict (rather than the whole privacy policy document).
 # More intuitively, at the same number of conflicts, this number indicates how complex/controversal a segment is (average in the group), if the segment is in conflict with some profile.
@@ -1079,4 +1088,82 @@ AVERAGE_CONFLICT_RATE_2 = {
     10: 2.5,
     12: 1.2,
     13: 0.48757765973090217,
+}
+
+
+CONFLICT_RATE_5 = {
+    0: {
+        "amazonaws.com": 0,
+        "europa.eu": 0,
+        "googleusercontent.com": 0,
+        "mozilla.org": 0,
+        "opera.com": 0,
+    },
+    1: {
+        "bit.ly": 0.011494252873563218,
+        "comcast.net": 0.022222222222222223,
+        "digicert.com": 0.008403361344537815,
+        "gandi.net": 0.0033003300330033004,
+        "github.com": 0.004784688995215311,
+        "goo.gl": 0.009009009009009009,
+        "google.com": 0.009009009009009009,
+        "googleapis.com": 0.00909090909090909,
+        "googletagmanager.com": 0.00909090909090909,
+        "googlevideo.com": 0.009009009009009009,
+        "gstatic.com": 0.009345794392523364,
+        "reddit.com": 0.012048192771084338,
+        "snapchat.com": 0.012195121951219513,
+        "wordpress.org": 0.014705882352941176,
+        "youtube.com": 0.00909090909090909,
+    },
+    2: {"samsung.com": 0.005494505494505495, "yahoo.com": 0.016666666666666666},
+    3: {"azure.com": 0.019230769230769232, "tiktok.com": 0.011111111111111112},
+    4: {"office.net": 0.013513513513513514},
+    5: {
+        "adobe.com": 0.0136986301369863,
+        "dropbox.com": 0.020833333333333332,
+        "fastly.net": 0.00684931506849315,
+        "netflix.com": 0.009900990099009901,
+    },
+    6: {
+        "amazon.com": 0.016129032258064516,
+        "bing.com": 0.018518518518518517,
+        "linkedin.com": 0.02,
+        "pinterest.com": 0.012345679012345678,
+        "spotify.com": 0.003663003663003663,
+        "unity3d.com": 0.0030120481927710845,
+        "vimeo.com": 0.0070921985815602835,
+        "wikipedia.org": 0.0035842293906810036,
+    },
+    7: {"icloud.com": 0.015873015873015872, "intuit.com": 0.008695652173913044},
+    8: {"zoom.us": 0.0053475935828877},
+    9: {
+        "cloudflare.com": 0.008620689655172414,
+        "facebook.com": 0.00980392156862745,
+        "instagram.com": 0.00980392156862745,
+        "tumblr.com": 0.015151515151515152,
+    },
+    10: {"apple.com": 0.013888888888888888},
+    12: {"wordpress.com": 0.005235602094240838},
+    13: {
+        "microsoftonline.com": 0.0018115942028985507,
+        "office.com": 0.0013003901170351106,
+        "roblox.com": 0.0048543689320388345,
+        "windows.net": 0.0015408320493066256,
+    },
+}
+AVERAGE_CONFLICT_RATE_5 = {
+    0: 0.0,
+    1: 0.010186640082404304,
+    2: 0.011080586080586081,
+    3: 0.015170940170940173,
+    4: 0.013513513513513514,
+    5: 0.01282056715945567,
+    6: 0.010543088702118094,
+    7: 0.012284334023464457,
+    8: 0.0053475935828877,
+    9: 0.010845011985985618,
+    10: 0.013888888888888888,
+    12: 0.005235602094240838,
+    13: 0.0023767963253197803,
 }
