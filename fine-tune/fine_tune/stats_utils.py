@@ -220,7 +220,7 @@ def calc_stats_item(expected, predicted, data_type=DataType.ENTITY, lcs_threshol
     return prec, acc, f1
 
 
-def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, **kwargs):
+def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, already_parsed=False, **kwargs):
 
     K_EXPECT_EMPTY = '(Expected) Empty'
     K_EXPECT_NON_EMPTY = '(Expected) Non-empty'
@@ -244,23 +244,29 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
 
     failed = {}
     for i, (model_output, correct_output) in enumerate([(query['output'], query['correct_output']) for query in saved_queries]):
-        try:
-            model_output_parsed = json.loads(model_output)
-        except json.JSONDecodeError as e:
-            really_failed = True
-            if try_heuristic_parse:
-                try:
-                    _, model_output_parsed = try_parse_json_object(model_output)
-                    if model_output_parsed is not None:
-                        really_failed = False
-                except SyntaxError as e:
-                    pass
-            if really_failed:
-                failed[i] = (model_output, correct_output)
-                continue
+        if already_parsed:
+            model_output_parsed = model_output
+        else:
+            try:
+                model_output_parsed = json.loads(model_output)
+            except json.JSONDecodeError as e:
+                really_failed = True
+                if try_heuristic_parse:
+                    try:
+                        _, model_output_parsed = try_parse_json_object(model_output)
+                        if model_output_parsed is not None:
+                            really_failed = False
+                    except SyntaxError as e:
+                        pass
+                if really_failed:
+                    failed[i] = (model_output, correct_output)
+                    continue
         if try_heuristic_parse:
             model_output_parsed = heuristic_extract_entities(model_output_parsed, data_type=data_type)
-        correct_output_parsed = json.loads(correct_output)
+        if already_parsed:
+            correct_output_parsed = correct_output
+        else:
+            correct_output_parsed = json.loads(correct_output)
         try:
             result_score = calc_stats_item(correct_output_parsed, model_output_parsed, data_type=data_type, **kwargs)
         except TypeError as e:
@@ -291,8 +297,8 @@ def calc_group(result_score_list):
     return np.mean(precision_recall_f1_list, axis=0)
 
 
-def calc_and_print_statistics(desc, saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True):
-    result_score_list, addition_scoring, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted, ignore_order=ignore_order)
+def calc_and_print_statistics(desc, saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, already_parsed=False, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True):
+    result_score_list, addition_scoring, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, already_parsed=already_parsed, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted, ignore_order=ignore_order)
 
     print(f"Stat for eval with desc: {desc}")
     print(f"  {len(result_score_list)} valid datapoints, avg. precission, recall, f1:", calc_group(result_score_list))

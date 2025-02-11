@@ -543,3 +543,15 @@ def as_training_data_for_retention_details_of_sentence(retention_details_of_sent
                                                 'targets': json.dumps([a['text'] for a in segment['items']]),
                                             }),
                                             get_assistant_message)
+
+
+def as_query_data_directly(data_entities_of_segments):
+    '''
+    Return the list of entity texts directly, without prompt templates.
+    '''
+    data_list = []
+    for segment in data_entities_of_segments:
+        phrases = [e["text"] for e in segment["entities"]]
+        results = [e["type"] for e in segment["entities"]]
+        data_list.append((phrases, results))
+    return data_list

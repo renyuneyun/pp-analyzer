@@ -6,6 +6,10 @@ def has_no_entities(segment):
     return not segment["entities"]
 
 
+def no_split(data_entities):
+    return [], []
+
+
 def simple_split(data_entities):
     NUM_TRAIN_HAS_ENTITY = 20
     NUM_TRAIN_NO_ENTITY = 10

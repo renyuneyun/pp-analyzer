@@ -20,6 +20,7 @@ class JobPreset:
     load_data: Callable[[], DATA_ENTITIES]
     as_training_data: Callable[[DATA_ENTITIES], DATA_AS_MESSAGES]
     training_data_splitter: Callable[[DATA_ENTITIES], tuple[list[int], list[int]]]
+    type: str | None = None
 
 
 f_d4 = partial(std.better_split, num_split=[40, 80, 10, 20])
@@ -123,6 +124,20 @@ _job_presets = [
         training_data_splitter=std.better_split,
     ),
     JobPreset(
+        desc="data_class-retrieval",
+        load_data=a_utils.load_data_entities_of_segments,
+        as_training_data=m_utils.as_query_data_directly,
+        training_data_splitter=std.no_split,
+        type="retrieval",
+    ),
+    JobPreset(
+        desc="data_class-retrieval_sent",
+        load_data=a_utils.load_data_entities_of_sentences,
+        as_training_data=m_utils.as_query_data_directly,
+        training_data_splitter=std.no_split,
+        type="retrieval",
+    ),
+    JobPreset(
         desc="purpose_span-seg_entity-v2-d3",
         load_data=a_utils.load_purpose_entities_of_segments,
         as_training_data=m_utils.as_training_data_for_purpose_span_of_segment,
@@ -169,6 +184,13 @@ _job_presets = [
         load_data=a_utils.load_purpose_entities_of_sentences,
         as_training_data=m_utils.as_training_data_for_purpose_classification_of_sentence,
         training_data_splitter=f_d4,
+    ),
+    JobPreset(
+        desc="purpose_class-retrieval_sent",
+        load_data=a_utils.load_purpose_entities_of_sentences,
+        as_training_data=m_utils.as_query_data_directly,
+        training_data_splitter=std.no_split,
+        type="retrieval",
     ),
     JobPreset(
         desc="action-seg-v2",

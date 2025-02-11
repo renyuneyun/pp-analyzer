@@ -17,6 +17,7 @@ scikit-learn = "^1.5.2"
 json-repair = "^0.29.2"
 pylcs = "^0.1.1"
 ppa-commons = {path = "../ppa-commons", develop = true}
+chromadb = "^0.6.3"
 
 
 [build-system]

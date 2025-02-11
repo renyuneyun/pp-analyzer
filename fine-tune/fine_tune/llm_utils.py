@@ -10,6 +10,8 @@ from openai import OpenAI
 import time
 import logging
 import re
+import chromadb
+import os
 from . import annotation_utils as a_utils
 from .utils import path_default
 from .env import (
@@ -19,6 +21,7 @@ from .env import (
 
 load_dotenv()
 client = OpenAI()
+chroma_client = chromadb.HttpClient(host=os.environ['CHROMADB_HOST'], port=os.environ.get('CHROMADB_PORT', 8000))
 
 OUT_PATH = Path('../out/')
 
@@ -446,3 +449,65 @@ def clear_server_data(types = ["fine-tune", 'batch']):
         previous_files = client.files.list(purpose=t)
         for file in tqdm(previous_files, desc=f'Clearing {t} data', leave=False):
             client.files.delete(file.id)
+
+
+def query_similarity(collection_name: str, queries, correct_outputs=[], dir_name=None, desc=None, batch=True):
+    '''
+    Query the LLM, and also automatically saves the responses in case needed further
+
+    @param correct_outputs: list of additional outputs to be saved along with the input and output; useful to store metadata or other forms of the correct output data
+    @param dir_name: the name of the directory to save the outputs; if not provided, a timestamped directory name will be created; it will be relative to `OUT_PATH`
+    '''
+    if not dir_name:
+        dir_name = f"eval-{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}-{collection_name}"
+    dir_path = OUT_PATH / dir_name
+    existing_queries = []
+    if dir_path.exists():
+        for file_path in dir_path.iterdir():
+            if file_path.name in F_EVAL_AUX.values():
+                continue
+            if m := RE_QUERY_RESULTS.match(file_path.name):
+                existing_queries.append(int(m.group(1)))
+    else:
+        dir_path.mkdir()
+
+    fl = OUT_PATH / F_LAST_EVAL
+    if fl.exists(follow_symlinks=False): fl.unlink()
+    fl.symlink_to(dir_path)
+
+    desc_file = dir_path / 'desc.json'
+    d = {
+        'method': 'Similarity-based retrieval',
+        'collection': collection_name,
+        }
+    if desc:
+        d['description'] = desc
+
+    collection = chroma_client.get_collection(collection_name)
+
+    with open(desc_file, 'w') as f:
+        json.dump(d, f)
+    model_output_list = []
+    for i, messages in enumerate(tqdm(queries)):
+        if i in existing_queries:
+            continue
+
+        resp = collection.query(
+            query_texts = messages,
+            n_results = 1,
+        )
+
+        original_output = resp['metadatas']
+        model_output = [x[0]['name'] for x in original_output]
+
+        output_file_path = dir_path / f'{i}.json'
+        output = {
+            'input': messages,
+            'output': model_output
+        }
+        if i < len(correct_outputs):
+            output['correct_output'] = correct_outputs[i]
+        with open(output_file_path, 'w') as f:
+            json.dump(output, f)
+        model_output_list.append(output)
+    return dir_name, model_output_list
