@@ -517,6 +517,86 @@ def get_relations_of_segment_sentences_no_subsume_v3(annotations):
     return res
 
 
+def get_relations_of_sentences_no_subsume(annotations):
+    '''
+    (Derived from `get_relations_of_segment_sentences_no_subsume`)
+    Get all relations of each action in sentences.
+    Output has the structure:
+    [
+        {
+            "segment": SEGMENT,
+            "sentence": SENTENCE,
+            "entities": [
+                {
+                    "action_type": ACTION_TYPE,
+                    "relations": [
+                        {
+                            "relation_type": RELATION_TYPE,
+                            "entity": TEXT_OF_THE_RELATED_ENTITY,
+                            "entity_type": ENTITY_TYPE
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    where the same action type of the same sentence is always grouped together.
+
+    Note: This function currently doesn't handle cross-sentence relations.
+    '''
+
+    action_entities = get_actions_of_sentences(annotations)
+    action_entities_dict = {(x["segment"], x["sentence"]): x["entities"] for x in action_entities}
+
+    res = {}
+    for x in annotations:
+        segment_text = x.text
+        sentences = get_sentences_with_spans(x)
+
+        for span, sentence in sentences.items():
+            if (segment_text, sentence) not in res:  # This should always be true. But better check first.
+                res[(segment_text, sentence)] = {}
+
+        for e in x.events:
+            action_type = e.type
+            span = e.trigger.spans[0]
+            for span2 in sentences.keys():
+                if is_within_sentence(span, span2):
+                    sentence = sentences[span2]
+                    break
+            assert sentence
+            sub_dict = res[(segment_text, sentence)]
+            if action_type not in sub_dict:
+                sub_dict[action_type] = []
+            parts = sub_dict[action_type]
+            for arg in e.arguments:
+                role = arg.role
+                entity = arg.object
+                entity_type = entity.type
+                entity_mention = entity.mention
+                parts.append({
+                    "relation_type": role,
+                    "entity": entity_mention,
+                    "entity_type": entity_type,
+                })
+
+    ret = []
+    for (segement_text, sentence), v in res.items():
+        l2 = []
+        for action_type, relations in v.items():
+            l2.append({
+                "action_type": action_type,
+                "relations": relations,
+            })
+        l1 = {
+            'segment': segement_text,
+            'sentence': sentence,
+            'entities': l2,
+        }
+        ret.append(l1)
+    return ret
+
+
 def get_subsume_relations_of_segment_sentences(annotations):
     '''
     Get all relations of type "SUBSUME" of each action in sentences in the same segment, paired together.

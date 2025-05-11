@@ -355,6 +355,12 @@ _job_presets = [
         training_data_splitter=std.better_split_equal,
     ),
     JobPreset(
+        desc="relation-sent-v5-d2",
+        load_data=partial(a_utils.load_and_get, a_utils.get_relations_of_sentences_no_subsume),
+        as_training_data=m_utils.as_training_data_for_relation_of_sentence_v2,
+        training_data_splitter=std.better_split,
+    ),
+    JobPreset(
         desc="subsume-sent-d2",
         load_data=partial(a_utils.load_and_get, a_utils.get_subsume_relations_of_sentences),
         as_training_data=m_utils.as_training_data_for_subsume_relation_of_sentence,

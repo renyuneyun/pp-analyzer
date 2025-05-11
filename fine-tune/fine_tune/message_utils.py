@@ -419,6 +419,64 @@ def as_training_data_for_relation_of_sentence(relation_entities_of_segments):
     return data_list
 
 
+def as_training_data_for_relation_of_sentence_v2(relation_entities_of_segments):
+    '''
+    Uses the real sentence data from `get_relations_of_sentences_no_subsume()`
+    '''
+    data_template = {
+        "messages": [
+            {"role": "system", "content": SYSTEM_MESSAGE_RELATION_RECOGNITION_RENAMED_MORE_INSTRUCT},
+            {"role": "user", "content": None},
+            {"role": "assistant", "content": None},
+        ]}
+
+    data_list = []
+
+    for segment in relation_entities_of_segments:
+        sentence = segment['sentence']
+        action_type_list = []
+        entity_list = []
+        relations = []
+        for e in segment['entities']:
+            action_type = e['action_type']
+            action_id = f"C{len(action_type_list)}"
+            action_type_list.append({
+                "id": action_id,
+                "action_type": action_type,
+                "text": sentence,
+            })
+            for r in e['relations']:
+                relation_type = r['relation_type']
+                entity_text = r['entity']
+                entity_type = r['entity_type']
+                entity_id = f"D{len(entity_list)}"
+                entity_list.append({
+                    "id": entity_id,
+                    "type": entity_type,
+                    "text": entity_text,
+                })
+                relations.append({
+                    "action_id": action_id,
+                    "entity_id": entity_id,
+                    "relation": relation_type,
+                })
+
+        user_message = USER_MESSAGE_TEMPLATE_RELATION_RECOGNITION_SENTENCE.format(**{
+            'sentence': sentence,
+            'targets': {
+                "action_contexts": action_type_list,
+                "entities": entity_list,
+            }
+        })
+        reply = json.dumps(relations)
+
+        data = deepcopy(data_template)
+        data["messages"][1]["content"] = user_message
+        data["messages"][2]["content"] = reply
+        data_list.append(data)
+    return data_list
+
+
 def as_training_data_for_subsume_relation_of_segment_sentence(subsume_relation_entities_of_segments):
     data_template = {
         "messages": [
