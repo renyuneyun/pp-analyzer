@@ -23,7 +23,7 @@ load_dotenv()
 client = OpenAI()
 try:
     chroma_client = chromadb.HttpClient(host=os.environ['CHROMADB_HOST'], port=os.environ.get('CHROMADB_PORT', 8000))
-except chromadb.errors.NotFoundException:
+except ValueError:
     # Chroma client is not available, so we won't use it.
     # Will error out later if chroma-related functions are called.
     pass
