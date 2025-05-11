@@ -128,7 +128,10 @@ def precision_recall_f1(tp, n_expected, n_predicted, tolerate_additionally_predi
     return precision, recall, f1
 
 
-def calc_precision_recall_f1(expected, predicted, data_type=DataType.ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True, **kwargs):
+def calc_precision_recall_f1(expected, predicted, data_type=DataType.ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True, check_contains=False, **kwargs):
+    '''
+    @param check_contains: bool, whether to check if the predicted output contains the expected output. If True, each predicted output is a list, and this function will check if the expected output is a subset of the predicted output. If False, the expected output and predicted output are compared element-wise.
+    '''
 
     if ignore_order:
         expected = set(expected)
@@ -165,13 +168,17 @@ def calc_precision_recall_f1(expected, predicted, data_type=DataType.ENTITY, lcs
     else:
         tp0 = 0
         for i in range(min(len(expected), len(predicted))):
-            if expected[i] == predicted[i]:
-                tp0 += 1
+            if check_contains:
+                if expected[i] in predicted[i]:
+                    tp0 += 1
             else:
-                if lcs_threshold:
-                    ilcs_rate = lcs_rate(expected[i], predicted[i])
-                    if ilcs_rate >= lcs_threshold:
-                        tp0 += ilcs_rate
+                if expected[i] == predicted[i]:
+                    tp0 += 1
+                else:
+                    if lcs_threshold:
+                        ilcs_rate = lcs_rate(expected[i], predicted[i])
+                        if ilcs_rate >= lcs_threshold:
+                            tp0 += ilcs_rate
         i = 0
         j = 0
         tp1 = 0
@@ -194,6 +201,7 @@ def calc_precision_recall_f1(expected, predicted, data_type=DataType.ENTITY, lcs
 
 
 def calc_stats_item(expected, predicted, data_type=DataType.ENTITY, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True, **kwargs):
+
     if data_type == DataType.PARTY and tolerate_additionally_predicted is None:
         tolerate_additionally_predicted = True
 
@@ -221,6 +229,13 @@ def calc_stats_item(expected, predicted, data_type=DataType.ENTITY, lcs_threshol
 
 
 def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, already_parsed=False, **kwargs):
+    '''
+    @param saved_queries: list of dict, each dict contains 'output' and 'correct_output'. The 'output' and 'correct_output' are either JSON string or already parsed object.
+    @param data_type: DataType, the type of data to be evaluated.
+    @param try_heuristic_parse: bool, whether to try to extract entities from the output through heuristics found from existing outputs.
+    @param already_parsed: bool, whether the output and correct_output (of save_queries) are already parsed objects.
+    @param kwargs: other arguments to be passed to calc_stats_item.
+    '''
 
     K_EXPECT_EMPTY = '(Expected) Empty'
     K_EXPECT_NON_EMPTY = '(Expected) Non-empty'
@@ -297,8 +312,8 @@ def calc_group(result_score_list):
     return np.mean(precision_recall_f1_list, axis=0)
 
 
-def calc_and_print_statistics(desc, saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, already_parsed=False, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True):
-    result_score_list, addition_scoring, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, already_parsed=already_parsed, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted, ignore_order=ignore_order)
+def calc_and_print_statistics(desc, saved_queries, data_type=DataType.ENTITY, try_heuristic_parse=True, already_parsed=False, lcs_threshold=None, tolerate_additionally_predicted=None, ignore_order=True, check_contains=False):
+    result_score_list, addition_scoring, failed = calc_statistics(saved_queries, data_type=data_type, try_heuristic_parse=try_heuristic_parse, already_parsed=already_parsed, lcs_threshold=lcs_threshold, tolerate_additionally_predicted=tolerate_additionally_predicted, ignore_order=ignore_order, check_contains=check_contains)
 
     print(f"Stat for eval with desc: {desc}")
     print(f"  {len(result_score_list)} valid datapoints, avg. precission, recall, f1:", calc_group(result_score_list))
