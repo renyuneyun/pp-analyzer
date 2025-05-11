@@ -21,7 +21,12 @@ from .env import (
 
 load_dotenv()
 client = OpenAI()
-chroma_client = chromadb.HttpClient(host=os.environ['CHROMADB_HOST'], port=os.environ.get('CHROMADB_PORT', 8000))
+try:
+    chroma_client = chromadb.HttpClient(host=os.environ['CHROMADB_HOST'], port=os.environ.get('CHROMADB_PORT', 8000))
+except chromadb.errors.NotFoundException:
+    # Chroma client is not available, so we won't use it.
+    # Will error out later if chroma-related functions are called.
+    pass
 
 OUT_PATH = Path('../out/')
 
@@ -451,12 +456,14 @@ def clear_server_data(types = ["fine-tune", 'batch']):
             client.files.delete(file.id)
 
 
-def query_similarity(collection_name: str, queries, correct_outputs=[], dir_name=None, desc=None, batch=True):
+def query_similarity(collection_name: str, queries, correct_outputs=[], dir_name=None, desc=None, n_results=None):
     '''
-    Query the LLM, and also automatically saves the responses in case needed further
+    Query Chroma for similarity-based classification (of data types and purposes).
+    Saves result similar to `query_llm`, but with its different description.
 
     @param correct_outputs: list of additional outputs to be saved along with the input and output; useful to store metadata or other forms of the correct output data
     @param dir_name: the name of the directory to save the outputs; if not provided, a timestamped directory name will be created; it will be relative to `OUT_PATH`
+    @param n_results: number of results to return for each query; if None, directly use the only result (removing brackets); otherwise, return a list of results for each query
     '''
     if not dir_name:
         dir_name = f"eval-{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}-{collection_name}"
@@ -482,6 +489,8 @@ def query_similarity(collection_name: str, queries, correct_outputs=[], dir_name
         }
     if desc:
         d['description'] = desc
+    if n_results:
+        d['n_results'] = n_results
 
     collection = chroma_client.get_collection(collection_name)
 
@@ -494,11 +503,14 @@ def query_similarity(collection_name: str, queries, correct_outputs=[], dir_name
 
         resp = collection.query(
             query_texts = messages,
-            n_results = 1,
+            n_results = n_results,
         )
 
         original_output = resp['metadatas']
-        model_output = [x[0]['name'] for x in original_output]
+        if n_results:
+            model_output = [[x['name'] for x in lst] for lst in original_output]
+        else:
+            model_output = [x[0]['name'] for x in original_output]
 
         output_file_path = dir_path / f'{i}.json'
         output = {
