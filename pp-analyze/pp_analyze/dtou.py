@@ -93,7 +93,7 @@ class AppPolicy(BaseModel):
                     g.add((n_downstream, NS_DTOU['app_name'], Literal(downstream.app_name)))
                 for purpose in downstream.purpose:
                     n_pe = BNode()
-                    g.add((n_input_spec, NS_DTOU['purpose'], n_pe))
+                    g.add((n_downstream, NS_DTOU['purpose'], n_pe))
                     g.add((n_pe, A, NS_DPV['Expectation']))
                     g.add((n_pe, NS_DTOU['category'], NS_DTOU['PurposeCategory']))
                     g.add((n_pe, NS_DTOU['descriptor'], purpose))
