@@ -235,7 +235,7 @@ def load_eval_info(job_desc_dir=None, all_data=None):
 RE_QUERY_RESULTS = re.compile(r'^(\d+)\.json$')
 
 
-def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc=None, batch=True):
+def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc=None, batch=True, reasoning_model=False):
     '''
     Query the LLM, and also automatically saves the responses in case needed further
 
@@ -262,6 +262,7 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
     desc_file = dir_path / 'desc.json'
     d = {
         'model': model,
+        'reasoning_model': reasoning_model,
         }
     if desc:
         d['description'] = desc
@@ -282,11 +283,14 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
                 'url': '/v1/chat/completions',
                 'body': {
                     'model': model,
-                    'temperature': TEMPERATURE,
                     'seed': SEED,
                     'messages': messages,
+                } | {
+                    'max_completion_tokens': MAX_TOKENS,
+                } if reasoning_model else {
                     'max_tokens': MAX_TOKENS,
-                }
+                    'temperature': TEMPERATURE,
+                },
             }
             batch_input_list.append(data_item)
         batch_input_file = dir_path / 'batch_data.jsonl'
@@ -334,10 +338,14 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
                 try:
                     completion = client.chat.completions.create(
                         model=model,
-                        temperature=TEMPERATURE,
                         seed=SEED,
-                        max_tokens=MAX_TOKENS,
-                        messages=messages
+                        **({
+                            'max_completion_tokens': MAX_TOKENS,
+                        } if reasoning_model else {
+                            'max_tokens': MAX_TOKENS,
+                            'temperature': TEMPERATURE,
+                        }),
+                        messages=messages,
                     )
                     break
                 except openai.RateLimitError as e:
