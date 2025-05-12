@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from pprint import pprint
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 import pylcs
 from typing import Optional
 from ppa_commons import (
@@ -284,7 +284,7 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
             correct_output_parsed = json.loads(correct_output)
         try:
             result_score = calc_stats_item(correct_output_parsed, model_output_parsed, data_type=data_type, **kwargs)
-        except TypeError as e:
+        except (TypeError, ValidationError) as e:
             failed[i] = (model_output, correct_output)
             continue
         result_score_list.append(result_score)
