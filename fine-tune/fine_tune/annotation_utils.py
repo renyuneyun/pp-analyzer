@@ -426,7 +426,7 @@ def get_relations_of_segment_sentences_no_subsume(annotations):
                     break
             assert sentence
             sub_dict = res[segment_text]
-            if action_type not in sub_dict:
+            if (sentence, action_type) not in sub_dict:
                 sub_dict[(sentence, action_type)] = []
             parts = sub_dict[(sentence, action_type)]
             for arg in e.arguments:
