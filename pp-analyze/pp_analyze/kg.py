@@ -65,6 +65,8 @@ def convert_to_kg(data_practices: list[SegmentedDataPractice], app_name: str, fi
     (?p a {NS["PrivacyPolicy"]})
     '''
     g = Graph()
+    g.namespace_manager.bind('dpv', NS_DPV)
+    g.namespace_manager.bind('pr2g', NS)
     n_first_party = None
     n_user = None
     n_data_general = None
@@ -116,6 +118,7 @@ def convert_to_kg(data_practices: list[SegmentedDataPractice], app_name: str, fi
                 node_text = n_t
             if node_text is None:
                 node_text = BNode()
+                g.add((node_text, A, NS['Text']))
                 g.add((node_text, NS['value'], Literal(segment_text)))
             n_practice = BNode()
             g.add((n_site, NS['hasDataPractice'], n_practice))
