@@ -15,7 +15,11 @@ def lcs_rate(a, b):
     if isinstance(a, str) and isinstance(b, str):
         rate = pylcs.lcs_sequence_length(a, b) / len(a) if a else 0  # Similar to precision
     else:
-        rate = a.lcs_rate(b)
+        if hasattr(a, 'lcs_rate'):
+            rate = a.lcs_rate(b)
+        else:  # It's meaningless to calculate LCS rate for non-str and non-supported data types
+            # A plausible cause is when the two objects don't have consistent types, which is rare but possible.
+            rate = 0  # Set to 0. TODO: A better way is to throw this and display error
     if rate > 1:
         rate = 1
     return rate
@@ -46,7 +50,11 @@ class ActionDataPoint(DataPoint):
         if self.action_type != o.action_type:
             return 0
         if self.sentence is None:
-            return pylcs.lcs_sequence_length(self.text, o.text) / len(self.text)
+            lcs_length = pylcs.lcs_sequence_length(self.text, o.text)
+            rate1 = lcs_length / len(self.text)
+            rate2 = lcs_length / len(o.text)
+            rate = min(rate1, rate2)
+            return rate
         else:
             return min(pylcs.lcs_sequence_length(self.text, o.text) / len(self.text), pylcs.lcs_sequence_length(self.sentence, o.sentence) / len(self.sentence))
 
