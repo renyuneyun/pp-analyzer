@@ -266,7 +266,7 @@ def calc_statistics(saved_queries, data_type=DataType.ENTITY, try_heuristic_pars
                 model_output_parsed = json.loads(model_output)
             except (json.JSONDecodeError, TypeError) as e:
                 really_failed = True
-                if try_heuristic_parse:
+                if try_heuristic_parse and isinstance(model_output, str):
                     try:
                         _, model_output_parsed = try_parse_json_object(model_output)
                         if model_output_parsed is not None:
