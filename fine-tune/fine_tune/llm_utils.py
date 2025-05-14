@@ -285,12 +285,12 @@ def query_llm(model: str, messages_list, correct_outputs=[], dir_name=None, desc
                     'model': model,
                     'seed': SEED,
                     'messages': messages,
-                } | {
+                } | ({
                     'max_completion_tokens': MAX_TOKENS,
                 } if reasoning_model else {
                     'max_tokens': MAX_TOKENS,
                     'temperature': TEMPERATURE,
-                },
+                }),
             }
             batch_input_list.append(data_item)
         batch_input_file = dir_path / 'batch_data.jsonl'
