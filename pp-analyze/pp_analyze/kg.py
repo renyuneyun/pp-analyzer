@@ -1,5 +1,6 @@
 from rdflib import Graph, Literal, Namespace, URIRef, BNode
 from rdflib.namespace import RDF
+import uuid
 from .data_model import (
     SegmentedDataPractice,
     DataCollectionUse,
@@ -16,6 +17,7 @@ from .data_model import (
 
 
 NS = Namespace("urn:pp-analyze:core#")
+NS_POLICY = Namespace("urn:pp-analyze:policy#")
 NS_DPV = Namespace("https://w3id.org/dpv#")
 A = RDF.type
 
@@ -67,6 +69,7 @@ def convert_to_kg(data_practices: list[SegmentedDataPractice], app_name: str, fi
     g = Graph()
     g.namespace_manager.bind('dpv', NS_DPV)
     g.namespace_manager.bind('pr2g', NS)
+    g.namespace_manager.bind('pol', NS_POLICY)
     n_first_party = None
     n_user = None
     n_data_general = None
@@ -107,8 +110,12 @@ def convert_to_kg(data_practices: list[SegmentedDataPractice], app_name: str, fi
         n_purpose = to_purpose_category_uri(purpose.category)
         g.add((n_purpose, A, NS["Purpose"]))
         return n_purpose
-    n_site = BNode()
+    n_site = URIRef(NS_POLICY[str(uuid.uuid4())])
     g.add((n_site, A, NS['PrivacyPolicy']))
+    n_srv = BNode()
+    g.add((n_srv, A, NS['Website']))
+    g.add((n_srv, NS['hasDomain'], Literal(app_name)))
+    g.add((n_site, NS['for'], n_srv))
     for data_practice in data_practices:
         for practice in data_practice.practices:
             segment_text = data_practice.segment
